@@ -103,3 +103,9 @@ npm run build
 This will:
 1. Clean the previous build
 2. Compile TypeScript files
+
+## Contact
+
+* [Open an Issue](https://github.com/aviaryhq/cloudglue-js/issues/new)
+* [Email](mailto:support@aviaryhq.com)
+

@@ -1,11 +1,12 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { File } from "./common";
+// TODO: this needs to be manually added to the generated file
+import { File as CloudglueFile } from "./common";
 
 type FileList = {
   object: "list";
-  data: Array<File>;
+  data: Array<CloudglueFile>;
   total: number;
   limit: number;
   offset: number;
@@ -14,7 +15,7 @@ type FileList = {
 const FileList: z.ZodType<FileList> = z
   .object({
     object: z.literal("list"),
-    data: z.array(File),
+    data: z.array(CloudglueFile),
     total: z.number().int(),
     limit: z.number().int(),
     offset: z.number().int(),
@@ -23,7 +24,8 @@ const FileList: z.ZodType<FileList> = z
   .passthrough();
 const FileUpload = z
   .object({
-    file: z.instanceof(globalThis.File),
+    // This should actually be referencing the file primitive from node
+    file: z.instanceof(File),
     metadata: z.object({}).partial().strict().passthrough().optional(),
   })
   .strict()
@@ -54,7 +56,7 @@ const endpoints = makeApi([
         schema: FileUpload,
       },
     ],
-    response: File,
+    response: CloudglueFile,
     errors: [
       {
         status: 400,
@@ -150,7 +152,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: File,
+    response: CloudglueFile,
     errors: [
       {
         status: 404,

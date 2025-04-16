@@ -1,0 +1,46 @@
+{
+  "name": "@aviaryhq/cloudglue-js",
+  "version": "0.0.9",
+  "description": "CloudGlue API client for Node.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "generate": "openapi-zod-client spec/spec/openapi.json --group-strategy=tag-file -o generated --export-schemas=true --export-types=true --base-url=https://api.cloudglue.dev/v1 --strict-objects && sed -i '' 's/z.instanceof(File)/z.instanceof(globalThis.File)/' generated/Files.ts",
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aviaryhq/cloudglue-js.git"
+  },
+  "keywords": [
+    "cloudglue",
+    "api",
+    "sdk"
+  ],
+  "author": "Aviary Inc.",
+  "license": "Elastic-2.0",
+  "bugs": {
+    "url": "https://github.com/aviaryhq/cloudglue-js/issues"
+  },
+  "homepage": "https://github.com/aviaryhq/cloudglue-js#readme",
+  "dependencies": {
+    "@zodios/core": "^10.0.0",
+    "axios": "^1.6.7",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "openapi-zod-client": "^1.18.3",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "@zodios/core": "^10.0.0"
+  }
+}

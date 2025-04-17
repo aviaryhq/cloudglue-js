@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "generate": "openapi-zod-client spec/spec/openapi.json --group-strategy=tag-file -o generated --export-schemas=true --export-types=true --base-url=https://api.cloudglue.dev/v1 --strict-objects ",
+    "generate": "node generate.js",
     "build": "tsc",
     "watch": "tsc --watch",
     "prepare": "npm run build"

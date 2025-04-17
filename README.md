@@ -107,5 +107,5 @@ This will:
 ## Contact
 
 * [Open an Issue](https://github.com/aviaryhq/cloudglue-js/issues/new)
-* [Email](mailto:support@aviaryhq.com)
+* [Email](mailto:support@cloudglue.dev)
 

@@ -1,3 +1,13 @@
+// This script generates the Cloudglue API client from the OpenAPI spec
+// It runs the openapi-zod-client command to generate the client code, 
+// then runs some custom transforms to make the generated code work with
+// the Cloudglue API.
+
+// The transforms are:
+// - Uses a renamed alias for File called CloudglueFile in the Files.ts file for instances where it
+//  should be CloudglueFile vs the global File type, due to naming conflicts.
+
+
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');

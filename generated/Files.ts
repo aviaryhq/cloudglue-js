@@ -1,7 +1,5 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
-
-// TODO: this needs to be manually added to the generated file
 import { File as CloudglueFile } from "./common";
 
 type FileList = {
@@ -24,7 +22,6 @@ const FileList: z.ZodType<FileList> = z
   .passthrough();
 const FileUpload = z
   .object({
-    // This should actually be referencing the file primitive from node
     file: z.instanceof(File),
     metadata: z.object({}).partial().strict().passthrough().optional(),
   })

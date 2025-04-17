@@ -1,0 +1,2 @@
+# Mark files in generated directory as generated
+generated/** linguist-generated=true 

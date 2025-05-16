@@ -28,6 +28,9 @@ export type {
   Transcribe,
   TranscribeList,
   Extract,
+  // TODO: Remove these two once we have a new endpoint for this setup
+  DescriptionSegment,
+  CollectionVideoDescription,
   EntitySegment,
   CollectionVideoEntities,
   NewCollectionParams,

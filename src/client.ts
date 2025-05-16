@@ -179,6 +179,14 @@ class EnhancedCollectionsApi {
     } as any);
   }
 
+  // TODO: Remove this once we have a new endpoint for this setup
+  async getDescription(collectionId: string, fileId: string, limit?: number, offset?: number) {
+    return this.api.getDescription({
+      params: { collection_id: collectionId, file_id: fileId },
+      queries: { limit, offset }
+    } as any);
+  }
+
   async addYouTubeVideo(collectionId: string, url: string, metadata?: Record<string, any>) {
     return this.api.addYouTubeVideo({ url, metadata }, { params: { collection_id: collectionId } });
   }

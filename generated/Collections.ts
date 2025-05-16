@@ -165,6 +165,69 @@ const FileEntities = z
   })
   .strict()
   .passthrough();
+
+// TODO: Remove this once we have a new endpoint for this setup
+const FileDescription = z
+  .object({
+    collection_id: z.string(),
+    file_id: z.string(),
+    title: z.string().optional(),
+    summary: z.string().optional(),
+    segment_docs: z
+      .array(
+        z
+          .object({
+            segment_id: z.union([z.string(), z.number()]),
+            start_time: z.number(),
+            end_time: z.number(),
+            title: z.string(),
+            summary: z.string(),
+            visual_description: z.array(
+              z
+                .object({
+                  text: z.string(),
+                  start_time: z.number(),
+                  end_time: z.number(),
+                })
+                .partial()
+                .strict()
+                .passthrough()
+            ),
+            scene_text: z.array(
+              z
+                .object({
+                  text: z.string(),
+                  start_time: z.number(),
+                  end_time: z.number(),
+                })
+                .partial()
+                .strict()
+                .passthrough()
+            ),
+            speech: z.array(
+              z
+                .object({
+                  speaker: z.string(),
+                  text: z.string(),
+                  start_time: z.number(),
+                  end_time: z.number(),
+                })
+                .partial()
+                .strict()
+                .passthrough()
+            ),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
+    total: z.number().int().optional(),
+    limit: z.number().int().optional(),
+    offset: z.number().int().optional(),
+  })
+  .strict()
+  .passthrough();
 const AddYouTubeCollectionFile = z
   .object({
     url: z.string(),
@@ -182,6 +245,8 @@ export const schemas = {
   CollectionDelete,
   CollectionFileDelete,
   FileEntities,
+  // TODO: Remove this once we have a new endpoint for this setup
+  FileDescription,
   AddYouTubeCollectionFile,
 };
 
@@ -529,6 +594,49 @@ const endpoints = makeApi([
       },
     ],
   },
+  {
+    // TODO: Remove this once we have a new endpoint for this setup
+    method: "get",
+    path: "/collections/:collection_id/videos/:file_id/description",
+    alias: "getDescription",
+    description: `Retrieve the processed video summary description and segment documents for a file in a collection`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "collection_id",
+        type: "Path",
+        schema: z.string(),
+      },
+      {
+        name: "file_id",
+        type: "Path",
+        schema: z.string(),
+      },
+      {
+        name: "limit",
+        type: "Query",
+        schema: z.number().int().lte(100).optional().default(50),
+      },
+      {
+        name: "offset",
+        type: "Query",
+        schema: z.number().int().optional().default(0),
+      },
+    ],
+    response: FileDescription,
+    errors: [
+      {
+        status: 404,
+        description: `Collection or file not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },    
   {
     method: "post",
     path: "/collections/:collection_id/youtube",

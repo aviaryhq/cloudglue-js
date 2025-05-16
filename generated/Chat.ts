@@ -24,7 +24,7 @@ type ChatCompletionResponse = Partial<{
               text: string;
             }>
           >;
-          visual_description: Array<
+          visual_scene_description: Array<
             Partial<{
               text: string;
               start_time: number;
@@ -169,7 +169,7 @@ const ChatCompletionResponse: z.ZodType<ChatCompletionResponse> = z
                     .strict()
                     .passthrough()
                 ),
-                visual_description: z.array(
+                visual_scene_description: z.array(
                   z
                     .object({
                       text: z.string(),
@@ -262,17 +262,12 @@ const endpoints = makeApi([
       },
       {
         status: 429,
-        description: `Too many requests`,
+        description: `Chat completion limits reached (monthly or daily)`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {
         status: 500,
         description: `An unexpected error occurred on the server`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-      {
-        status: 509,
-        description: `Chat completion limits reached (monthly or daily)`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],

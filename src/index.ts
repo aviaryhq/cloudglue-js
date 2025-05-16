@@ -11,7 +11,7 @@ export {
   FilesApi,
   CollectionsApi,
   ChatApi,
-  DescribeApi,
+  TranscribeApi,
   ExtractApi
 } from '../generated';
 
@@ -25,10 +25,13 @@ export type {
   CollectionFileList,
   ChatMessage,
   ChatCompletionResponse,
-  Describe,
-  Extract,
+  // TODO: Remove these two once we have a new endpoint for this setup
   DescriptionSegment,
   CollectionVideoDescription,
+  Transcribe,
+  TranscribeList,
+  Extract,
+  ExtractList,
   EntitySegment,
   CollectionVideoEntities,
   NewCollectionParams,

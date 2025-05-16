@@ -43,7 +43,7 @@ const endpoints = makeApi([
     method: "post",
     path: "/files",
     alias: "uploadFile",
-    description: `Upload a video file that can be used with CloudGlue services`,
+    description: `Upload a video file that can be used with Cloudglue services`,
     requestFormat: "form-data",
     parameters: [
       {
@@ -67,17 +67,12 @@ const endpoints = makeApi([
       },
       {
         status: 429,
-        description: `Too many requests`,
+        description: `Resource limits exceeded (monthly upload limit, total duration, file size, or total files)`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {
         status: 500,
         description: `An unexpected error occurred on the server`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-      {
-        status: 509,
-        description: `Resource limits exceeded (monthly upload limit, total duration, file size, or total files)`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],
@@ -86,7 +81,7 @@ const endpoints = makeApi([
     method: "get",
     path: "/files",
     alias: "listFiles",
-    description: `List files that have been uploaded to CloudGlue`,
+    description: `List files that have been uploaded to Cloudglue`,
     requestFormat: "json",
     parameters: [
       {
@@ -96,12 +91,21 @@ const endpoints = makeApi([
           .enum([
             "pending",
             "processing",
-            "ready",
             "completed",
             "failed",
             "not_applicable",
           ])
           .optional(),
+      },
+      {
+        name: "created_before",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "created_after",
+        type: "Query",
+        schema: z.string().optional(),
       },
       {
         name: "limit",

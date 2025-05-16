@@ -3,7 +3,7 @@ import {
   FilesApi,
   CollectionsApi,
   ChatApi,
-  DescribeApi,
+  TranscribeApi,
   ExtractApi
 } from '../generated';
 import type { File } from './types';
@@ -29,6 +29,8 @@ interface ListFilesParams {
   offset?: number;
   order?: 'created_at' | 'filename';
   sort?: 'asc' | 'desc';
+  created_before?: string;
+  created_after?: string;
 }
 
 interface UploadFileParams {
@@ -46,11 +48,6 @@ interface ListCollectionParams {
 interface CreateCollectionParams {
   name: string;
   description?: string;
-  describe_config?: {
-    enable_speech?: boolean;
-    enable_scene_text?: boolean;
-    enable_visual_scene_description?: boolean;
-  };
   extract_config?: {
     prompt?: string;
     schema?: Record<string, any>;
@@ -63,6 +60,8 @@ interface ListCollectionVideosParams {
   status?: 'pending' | 'processing' | 'ready' | 'completed' | 'failed' | 'not_applicable';
   order?: 'added_at' | 'filename';
   sort?: 'asc' | 'desc';
+  added_before?: string;
+  added_after?: string;
 }
 
 interface ChatCompletionParams {
@@ -184,6 +183,7 @@ class EnhancedCollectionsApi {
     } as any);
   }
 
+  // TODO: Remove this once we have a new endpoint for this setup
   async getDescription(collectionId: string, fileId: string, limit?: number, offset?: number) {
     return this.api.getDescription({
       params: { collection_id: collectionId, file_id: fileId },
@@ -207,22 +207,39 @@ class EnhancedChatApi {
   }
 }
 
-class EnhancedDescribeApi {
-  constructor(private readonly api: typeof DescribeApi) {}
+class EnhancedTranscribeApi {
+  constructor(private readonly api: typeof TranscribeApi) {}
 
-  async createDescribe(url: string, options: {
+  async createTranscribe(url: string, options: {
+    enable_summary?: boolean;
     enable_speech?: boolean;
     enable_scene_text?: boolean;
     enable_visual_scene_description?: boolean;
   } = {}) {
-    return this.api.createDescribe({
+    return this.api.createTranscribe({
       url,
       ...options
     } as any);
   }
 
-  async getDescribe(jobId: string) {
-    return this.api.getDescribe({ params: { job_id: jobId } } as any);
+  async getTranscribe(jobId: string, options: {
+    response_format?: 'json' | 'markdown';
+  } = {}) {
+    return this.api.getTranscribe({ 
+      params: { job_id: jobId },
+      queries: { response_format: options.response_format }
+    } as any);
+  }
+
+  async listTranscribes(params: {
+    limit?: number;
+    offset?: number;
+    status?: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
+    created_before?: string;
+    created_after?: string;
+    response_format?: 'json' | 'markdown';
+  } = {}) {
+    return this.api.listTranscribes({ queries: params } as any);
   }
 }
 
@@ -241,6 +258,16 @@ class EnhancedExtractApi {
 
   async getExtract(jobId: string) {
     return this.api.getExtract({ params: { job_id: jobId } } as any);
+  }
+
+  async listExtracts(params: {
+    limit?: number;
+    offset?: number;
+    status?: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
+    created_before?: string;
+    created_after?: string;
+  } = {}) {
+    return this.api.listExtracts({ queries: params } as any);
   }
 }
 
@@ -271,10 +298,10 @@ export class CloudGlue {
   public readonly chat: EnhancedChatApi;
 
   /**
-   * Describe API for generating rich descriptions of videos
+   * Transcribe API for generating rich descriptions of videos
    * Provides methods for getting detailed descriptions of video content
    */
-  public readonly describe: EnhancedDescribeApi;
+  public readonly transcribe: EnhancedTranscribeApi;
 
   /**
    * Extract API for extracting structured data from videos
@@ -300,11 +327,11 @@ export class CloudGlue {
     const filesApi = FilesApi;
     const collectionsApi = CollectionsApi;
     const chatApi = ChatApi;
-    const describeApi = DescribeApi;
+    const transcribeApi = TranscribeApi;
     const extractApi = ExtractApi;
 
     // Configure base URL and axios config for all clients
-    [filesApi, collectionsApi, chatApi, describeApi, extractApi].forEach(client => {
+    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi].forEach(client => {
       client.axios.defaults.baseURL = this.baseUrl;
       client.axios.interceptors.response.use(
         (response) => {
@@ -330,7 +357,7 @@ export class CloudGlue {
     this.files = new EnhancedFilesApi(filesApi);
     this.collections = new EnhancedCollectionsApi(collectionsApi);
     this.chat = new EnhancedChatApi(chatApi);
-    this.describe = new EnhancedDescribeApi(describeApi);
+    this.transcribe = new EnhancedTranscribeApi(transcribeApi);
     this.extract = new EnhancedExtractApi(extractApi);
   }
 }

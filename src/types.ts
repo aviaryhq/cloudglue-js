@@ -90,4 +90,9 @@ export type TranscribeList = z.infer<typeof transcribeSchemas.TranscribeList>;
  * Represents the result of a video information extraction request
  * Contains structured data extracted from the video
  */
-export type Extract = z.infer<typeof extractSchemas.Extract>; 
+export type Extract = z.infer<typeof extractSchemas.Extract>;
+
+/**
+ * Represents a list of extraction jobs
+ */
+export type ExtractList = z.infer<typeof extractSchemas.ExtractList>; 

@@ -29,6 +29,8 @@ interface ListFilesParams {
   offset?: number;
   order?: 'created_at' | 'filename';
   sort?: 'asc' | 'desc';
+  created_before?: string;
+  created_after?: string;
 }
 
 interface UploadFileParams {
@@ -58,6 +60,8 @@ interface ListCollectionVideosParams {
   status?: 'pending' | 'processing' | 'ready' | 'completed' | 'failed' | 'not_applicable';
   order?: 'added_at' | 'filename';
   sort?: 'asc' | 'desc';
+  added_before?: string;
+  added_after?: string;
 }
 
 interface ChatCompletionParams {
@@ -254,6 +258,16 @@ class EnhancedExtractApi {
 
   async getExtract(jobId: string) {
     return this.api.getExtract({ params: { job_id: jobId } } as any);
+  }
+
+  async listExtracts(params: {
+    limit?: number;
+    offset?: number;
+    status?: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
+    created_before?: string;
+    created_after?: string;
+  } = {}) {
+    return this.api.listExtracts({ queries: params } as any);
   }
 }
 

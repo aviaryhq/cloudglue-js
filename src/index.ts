@@ -11,7 +11,7 @@ export {
   FilesApi,
   CollectionsApi,
   ChatApi,
-  DescribeApi,
+  TranscribeApi,
   ExtractApi
 } from '../generated';
 
@@ -25,10 +25,9 @@ export type {
   CollectionFileList,
   ChatMessage,
   ChatCompletionResponse,
-  Describe,
+  Transcribe,
+  TranscribeList,
   Extract,
-  DescriptionSegment,
-  CollectionVideoDescription,
   EntitySegment,
   CollectionVideoEntities,
   NewCollectionParams,

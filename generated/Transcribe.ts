@@ -1,41 +1,57 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-type Extract = {
+type Transcribe = {
   job_id: string;
   status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
   url?: string | undefined;
   created_at?: number | undefined;
-  extract_config?:
+  transcribe_config?:
     | Partial<{
-        prompt: string;
-        schema: {};
+        "enable_summary ": boolean;
+        enable_speech: boolean;
+        enable_visual_scene_description: boolean;
+        enable_scene_text: boolean;
       }>
     | undefined;
   data?:
     | Partial<{
-        entities: {};
-        segment_entities: Array<
+        content: string;
+        title: string;
+        summary: string;
+        speech: Array<
           Partial<{
-            segment_id: string | number;
+            text: string;
             start_time: number;
             end_time: number;
-            entities: {};
+          }>
+        >;
+        visual_scene_description: Array<
+          Partial<{
+            text: string;
+            start_time: number;
+            end_time: number;
+          }>
+        >;
+        scene_text: Array<
+          Partial<{
+            text: string;
+            start_time: number;
+            end_time: number;
           }>
         >;
       }>
     | undefined;
   error?: string | undefined;
 };
-type ExtractList = {
+type TranscribeList = {
   object: "list";
-  data: Array<Extract>;
+  data: Array<Transcribe>;
   total: number;
   limit: number;
-  offset: number;
 };
 
-const Extract: z.ZodType<Extract> = z
+const Transcribe: z.ZodType<Transcribe> = z
   .object({
     job_id: z.string(),
     status: z.enum([
@@ -47,10 +63,12 @@ const Extract: z.ZodType<Extract> = z
     ]),
     url: z.string().optional(),
     created_at: z.number().int().optional(),
-    extract_config: z
+    transcribe_config: z
       .object({
-        prompt: z.string(),
-        schema: z.object({}).partial().strict().passthrough(),
+        "enable_summary ": z.boolean(),
+        enable_speech: z.boolean(),
+        enable_visual_scene_description: z.boolean(),
+        enable_scene_text: z.boolean(),
       })
       .partial()
       .strict()
@@ -58,14 +76,37 @@ const Extract: z.ZodType<Extract> = z
       .optional(),
     data: z
       .object({
-        entities: z.object({}).partial().strict().passthrough(),
-        segment_entities: z.array(
+        content: z.string(),
+        title: z.string(),
+        summary: z.string(),
+        speech: z.array(
           z
             .object({
-              segment_id: z.union([z.string(), z.number()]),
+              text: z.string(),
               start_time: z.number(),
               end_time: z.number(),
-              entities: z.object({}).partial().strict().passthrough(),
+            })
+            .partial()
+            .strict()
+            .passthrough()
+        ),
+        visual_scene_description: z.array(
+          z
+            .object({
+              text: z.string(),
+              start_time: z.number(),
+              end_time: z.number(),
+            })
+            .partial()
+            .strict()
+            .passthrough()
+        ),
+        scene_text: z.array(
+          z
+            .object({
+              text: z.string(),
+              start_time: z.number(),
+              end_time: z.number(),
             })
             .partial()
             .strict()
@@ -80,75 +121,76 @@ const Extract: z.ZodType<Extract> = z
   })
   .strict()
   .passthrough();
-const ExtractList: z.ZodType<ExtractList> = z
+const TranscribeList: z.ZodType<TranscribeList> = z
   .object({
     object: z.literal("list"),
-    data: z.array(Extract),
+    data: z.array(Transcribe),
     total: z.number().int(),
     limit: z.number().int(),
-    offset: z.number().int(),
   })
   .strict()
   .passthrough();
-const NewExtract = z
+const NewTranscribe = z
   .object({
     url: z.string(),
-    prompt: z.string().optional(),
-    schema: z.object({}).partial().strict().passthrough().optional(),
+    enable_summary: z.boolean().optional().default(true),
+    enable_speech: z.boolean().optional().default(true),
+    enable_visual_scene_description: z.boolean().optional().default(false),
+    enable_scene_text: z.boolean().optional().default(false),
   })
   .strict()
   .passthrough();
 
 export const schemas = {
-  Extract,
-  ExtractList,
-  NewExtract,
+  Transcribe,
+  TranscribeList,
+  NewTranscribe,
 };
 
 const endpoints = makeApi([
   {
     method: "post",
-    path: "/extract",
-    alias: "createExtract",
-    description: `Creates a new extract`,
+    path: "/transcribe",
+    alias: "createTranscribe",
+    description: `Creates a new transcription job for video content`,
     requestFormat: "json",
     parameters: [
       {
         name: "body",
-        description: `Extract structured data from a video`,
+        description: `Transcription job parameters`,
         type: "Body",
-        schema: NewExtract,
+        schema: NewTranscribe,
       },
     ],
-    response: Extract,
+    response: Transcribe,
     errors: [
       {
         status: 400,
-        description: `Invalid request or missing required prompt/schema`,
+        description: `Invalid request or missing required url/file_id`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {
         status: 404,
-        description: `Extract job not found`,
+        description: `File not found`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {
         status: 429,
-        description: `Monthly extract jobs limit reached`,
+        description: `Chat completion limits reached (monthly or daily)`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {
-        status: 500,
-        description: `An unexpected error occurred on the server`,
+        status: 509,
+        description: `Monthly transcription jobs limit reached`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],
   },
   {
     method: "get",
-    path: "/extract",
-    alias: "listExtracts",
-    description: `List all extract jobs with optional filtering`,
+    path: "/transcribe",
+    alias: "listTranscribes",
+    description: `List all transcription jobs with optional filtering`,
     requestFormat: "json",
     parameters: [
       {
@@ -184,22 +226,17 @@ const endpoints = makeApi([
         type: "Query",
         schema: z.string().optional(),
       },
+      {
+        name: "response_format",
+        type: "Query",
+        schema: z.enum(["json", "markdown"]).optional().default("json"),
+      },
     ],
-    response: ExtractList,
+    response: TranscribeList,
     errors: [
       {
         status: 400,
-        description: `Invalid request or extract config requires at least one option enabled`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-      {
-        status: 404,
-        description: `Extract job not found`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-      {
-        status: 429,
-        description: `Monthly extract jobs limit reached`,
+        description: `Invalid request parameters`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {
@@ -211,9 +248,9 @@ const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/extract/:job_id",
-    alias: "getExtract",
-    description: `Retrieve the current state of an extraction job`,
+    path: "/transcribe/:job_id",
+    alias: "getTranscribe",
+    description: `Retrieve the current state of a transcription job`,
     requestFormat: "json",
     parameters: [
       {
@@ -221,8 +258,13 @@ const endpoints = makeApi([
         type: "Path",
         schema: z.string(),
       },
+      {
+        name: "response_format",
+        type: "Query",
+        schema: z.enum(["json", "markdown"]).optional().default("json"),
+      },
     ],
-    response: Extract,
+    response: Transcribe,
     errors: [
       {
         status: 404,
@@ -238,7 +280,10 @@ const endpoints = makeApi([
   },
 ]);
 
-export const ExtractApi = new Zodios("https://api.cloudglue.dev/v1", endpoints);
+export const TranscribeApi = new Zodios(
+  "https://api.cloudglue.dev/v1",
+  endpoints
+);
 
 export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
   return new Zodios(baseUrl, endpoints, options);

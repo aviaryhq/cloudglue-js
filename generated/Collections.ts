@@ -8,13 +8,6 @@ type Collection = {
   object: "collection";
   name: string;
   description?: (string | null) | undefined;
-  describe_config?:
-    | Partial<{
-        enable_speech: boolean;
-        enable_scene_text: boolean;
-        enable_visual_scene_description: boolean;
-      }>
-    | undefined;
   extract_config?:
     | Partial<{
         prompt: string;
@@ -36,42 +29,12 @@ type CollectionFile = {
   file_id: string;
   object: "collection_file";
   added_at: number;
-  status:
-    | "pending"
-    | "processing"
-    | "ready"
-    | "completed"
-    | "failed"
-    | "not_applicable";
-  describe_status?:
-    | (
-        | "pending"
-        | "processing"
-        | "ready"
-        | "completed"
-        | "failed"
-        | "not_applicable"
-      )
-    | undefined;
+  status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
   extract_status?:
-    | (
-        | "pending"
-        | "processing"
-        | "ready"
-        | "completed"
-        | "failed"
-        | "not_applicable"
-      )
+    | ("pending" | "processing" | "completed" | "failed" | "not_applicable")
     | undefined;
   searchable_status?:
-    | (
-        | "pending"
-        | "processing"
-        | "ready"
-        | "completed"
-        | "failed"
-        | "not_applicable"
-      )
+    | ("pending" | "processing" | "completed" | "failed" | "not_applicable")
     | undefined;
   file?: File | undefined;
 };
@@ -89,16 +52,6 @@ const Collection: z.ZodType<Collection> = z
     object: z.literal("collection"),
     name: z.string(),
     description: z.union([z.string(), z.null()]).optional(),
-    describe_config: z
-      .object({
-        enable_speech: z.boolean().default(true),
-        enable_scene_text: z.boolean().default(true),
-        enable_visual_scene_description: z.boolean().default(true),
-      })
-      .partial()
-      .strict()
-      .passthrough()
-      .optional(),
     extract_config: z
       .object({
         prompt: z.string(),
@@ -132,40 +85,15 @@ const CollectionFile: z.ZodType<CollectionFile> = z
     status: z.enum([
       "pending",
       "processing",
-      "ready",
       "completed",
       "failed",
       "not_applicable",
     ]),
-    describe_status: z
-      .enum([
-        "pending",
-        "processing",
-        "ready",
-        "completed",
-        "failed",
-        "not_applicable",
-      ])
-      .optional(),
     extract_status: z
-      .enum([
-        "pending",
-        "processing",
-        "ready",
-        "completed",
-        "failed",
-        "not_applicable",
-      ])
+      .enum(["pending", "processing", "completed", "failed", "not_applicable"])
       .optional(),
     searchable_status: z
-      .enum([
-        "pending",
-        "processing",
-        "ready",
-        "completed",
-        "failed",
-        "not_applicable",
-      ])
+      .enum(["pending", "processing", "completed", "failed", "not_applicable"])
       .optional(),
     file: File.optional(),
   })
@@ -185,16 +113,6 @@ const NewCollection = z
   .object({
     name: z.string(),
     description: z.union([z.string(), z.null()]).optional(),
-    describe_config: z
-      .object({
-        enable_speech: z.boolean().default(true),
-        enable_scene_text: z.boolean().default(true),
-        enable_visual_scene_description: z.boolean().default(true),
-      })
-      .partial()
-      .strict()
-      .passthrough()
-      .optional(),
     extract_config: z
       .object({
         prompt: z.string(),
@@ -247,67 +165,6 @@ const FileEntities = z
   })
   .strict()
   .passthrough();
-const FileDescription = z
-  .object({
-    collection_id: z.string(),
-    file_id: z.string(),
-    title: z.string().optional(),
-    summary: z.string().optional(),
-    segment_docs: z
-      .array(
-        z
-          .object({
-            segment_id: z.union([z.string(), z.number()]),
-            start_time: z.number(),
-            end_time: z.number(),
-            title: z.string(),
-            summary: z.string(),
-            visual_description: z.array(
-              z
-                .object({
-                  text: z.string(),
-                  start_time: z.number(),
-                  end_time: z.number(),
-                })
-                .partial()
-                .strict()
-                .passthrough()
-            ),
-            scene_text: z.array(
-              z
-                .object({
-                  text: z.string(),
-                  start_time: z.number(),
-                  end_time: z.number(),
-                })
-                .partial()
-                .strict()
-                .passthrough()
-            ),
-            speech: z.array(
-              z
-                .object({
-                  speaker: z.string(),
-                  text: z.string(),
-                  start_time: z.number(),
-                  end_time: z.number(),
-                })
-                .partial()
-                .strict()
-                .passthrough()
-            ),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-      .optional(),
-    total: z.number().int().optional(),
-    limit: z.number().int().optional(),
-    offset: z.number().int().optional(),
-  })
-  .strict()
-  .passthrough();
 const AddYouTubeCollectionFile = z
   .object({
     url: z.string(),
@@ -325,7 +182,6 @@ export const schemas = {
   CollectionDelete,
   CollectionFileDelete,
   FileEntities,
-  FileDescription,
   AddYouTubeCollectionFile,
 };
 
@@ -358,17 +214,12 @@ const endpoints = makeApi([
       },
       {
         status: 429,
-        description: `Too many requests`,
+        description: `Resource limits exceeded (total collections or files per collection)`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {
         status: 500,
         description: `An unexpected error occurred on the server`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-      {
-        status: 509,
-        description: `Resource limits exceeded (total collections or files per collection)`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],
@@ -531,12 +382,21 @@ const endpoints = makeApi([
           .enum([
             "pending",
             "processing",
-            "ready",
             "completed",
             "failed",
             "not_applicable",
           ])
           .optional(),
+      },
+      {
+        name: "added_before",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "added_after",
+        type: "Query",
+        schema: z.string().optional(),
       },
       {
         name: "order",
@@ -656,48 +516,6 @@ const endpoints = makeApi([
       },
     ],
     response: FileEntities,
-    errors: [
-      {
-        status: 404,
-        description: `Collection or file not found`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-      {
-        status: 500,
-        description: `An unexpected error occurred on the server`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-    ],
-  },
-  {
-    method: "get",
-    path: "/collections/:collection_id/videos/:file_id/description",
-    alias: "getDescription",
-    description: `Retrieve the processed video summary description and segment documents for a file in a collection`,
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "collection_id",
-        type: "Path",
-        schema: z.string(),
-      },
-      {
-        name: "file_id",
-        type: "Path",
-        schema: z.string(),
-      },
-      {
-        name: "limit",
-        type: "Query",
-        schema: z.number().int().lte(100).optional().default(50),
-      },
-      {
-        name: "offset",
-        type: "Query",
-        schema: z.number().int().optional().default(0),
-      },
-    ],
-    response: FileDescription,
     errors: [
       {
         status: 404,

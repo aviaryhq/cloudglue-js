@@ -2,13 +2,7 @@ import { z } from "zod";
 
 export type File = {
   id: string;
-  status:
-    | "pending"
-    | "processing"
-    | "ready"
-    | "completed"
-    | "failed"
-    | "not_applicable";
+  status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
   bytes?: (number | null) | undefined;
   created_at?: number | undefined;
   filename?: string | undefined;
@@ -31,7 +25,6 @@ export const File = z
     status: z.enum([
       "pending",
       "processing",
-      "ready",
       "completed",
       "failed",
       "not_applicable",

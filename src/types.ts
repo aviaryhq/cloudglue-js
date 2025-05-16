@@ -3,7 +3,7 @@ import type { z } from 'zod';
 // Import schemas from generated files
 import { schemas as collectionsSchemas } from '../generated/Collections';
 import { schemas as chatSchemas } from '../generated/Chat';
-import { schemas as describeSchemas } from '../generated/Describe';
+import { schemas as transcribeSchemas } from '../generated/Transcribe';
 import { schemas as extractSchemas } from '../generated/Extract';
 
 /**
@@ -35,17 +35,6 @@ export type CollectionFile = z.infer<typeof collectionsSchemas.CollectionFile>;
 export type CollectionFileList = z.infer<typeof collectionsSchemas.CollectionFileList>;
 
 /**
- * Represents a segment of video description containing speech, text, and visual information
- * This is inferred from the FileDescription schema's segment_docs array type
- */
-export type DescriptionSegment = NonNullable<z.infer<typeof collectionsSchemas.FileDescription>['segment_docs']>[number];
-
-/**
- * Represents the full description response for a video in a collection
- */
-export type CollectionVideoDescription = z.infer<typeof collectionsSchemas.FileDescription>;
-
-/**
  * Represents a segment of video with extracted entities
  * This is inferred from the FileEntities schema's segment_entities array type
  */
@@ -73,10 +62,15 @@ export type ChatMessage = {
 export type ChatCompletionResponse = z.infer<typeof chatSchemas.ChatCompletionResponse>;
 
 /**
- * Represents the result of a video description request
- * Contains detailed information about the video content
+ * Represents the result of a video transcription request
+ * Contains detailed information about the video content including speech, text, and visual descriptions
  */
-export type Describe = z.infer<typeof describeSchemas.Describe>;
+export type Transcribe = z.infer<typeof transcribeSchemas.Transcribe>;
+
+/**
+ * Represents a list of transcription jobs
+ */
+export type TranscribeList = z.infer<typeof transcribeSchemas.TranscribeList>;
 
 /**
  * Represents the result of a video information extraction request

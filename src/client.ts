@@ -218,8 +218,13 @@ class EnhancedTranscribeApi {
     } as any);
   }
 
-  async getTranscribe(jobId: string) {
-    return this.api.getTranscribe({ params: { job_id: jobId } } as any);
+  async getTranscribe(jobId: string, options: {
+    response_format?: 'json' | 'markdown';
+  } = {}) {
+    return this.api.getTranscribe({ 
+      params: { job_id: jobId },
+      queries: { response_format: options.response_format }
+    } as any);
   }
 
   async listTranscribes(params: {

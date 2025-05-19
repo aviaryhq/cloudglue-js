@@ -32,4 +32,5 @@ export type {
   EntitySegment,
   CollectionVideoEntities,
   NewCollectionParams,
+  RichTranscript,
 } from './types';

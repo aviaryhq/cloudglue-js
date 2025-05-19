@@ -204,40 +204,46 @@ const RichTranscript = z
     file_id: z.string(),
     content: z.string().optional(),
     title: z.string(),
-    summary: z.string(),
-    speech: z.array(
-      z
-        .object({
-          text: z.string(),
-          start_time: z.number(),
-          end_time: z.number(),
-        })
-        .partial()
-        .strict()
-        .passthrough()
-    ),
-    visual_scene_description: z.array(
-      z
-        .object({
-          text: z.string(),
-          start_time: z.number(),
-          end_time: z.number(),
-        })
-        .partial()
-        .strict()
-        .passthrough()
-    ),
-    scene_text: z.array(
-      z
-        .object({
-          text: z.string(),
-          start_time: z.number(),
-          end_time: z.number(),
-        })
-        .partial()
-        .strict()
-        .passthrough()
-    ),
+    summary: z.string().optional(),
+    speech: z
+      .array(
+        z
+          .object({
+            text: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
+    visual_scene_description: z
+      .array(
+        z
+          .object({
+            text: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
+    scene_text: z
+      .array(
+        z
+          .object({
+            text: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
   })
   .strict()
   .passthrough();

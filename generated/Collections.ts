@@ -203,7 +203,7 @@ const RichTranscript = z
     collection_id: z.string(),
     file_id: z.string(),
     content: z.string().optional(),
-    title: z.string(),
+    title: z.string().optional(),
     summary: z.string().optional(),
     speech: z
       .array(

@@ -43,14 +43,22 @@ interface ListCollectionParams {
   offset?: number;
   order?: 'name' | 'created_at';
   sort?: 'asc' | 'desc';
+  collection_type?: 'entities' | 'rich-transcripts';
 }
 
 interface CreateCollectionParams {
+  collection_type: 'entities' | 'rich-transcripts';
   name: string;
   description?: string;
   extract_config?: {
     prompt?: string;
     schema?: Record<string, any>;
+  };
+  transcribe_config?: {
+    enable_summary?: boolean;
+    enable_speech?: boolean;
+    enable_scene_text?: boolean;
+    enable_visual_scene_description?: boolean;
   };
 }
 
@@ -81,7 +89,6 @@ interface ChatCompletionParams {
     }>;
   };
   force_search?: boolean;
-  result_format?: 'text' | 'markdown' | 'json';
   include_citations?: boolean;
   temperature?: number;
   top_p?: number;
@@ -183,9 +190,8 @@ class EnhancedCollectionsApi {
     } as any);
   }
 
-  // TODO: Remove this once we have a new endpoint for this setup
-  async getDescription(collectionId: string, fileId: string, limit?: number, offset?: number) {
-    return this.api.getDescription({
+  async getTranscripts(collectionId: string, fileId: string, limit?: number, offset?: number) {
+    return this.api.getTranscripts({
       params: { collection_id: collectionId, file_id: fileId },
       queries: { limit, offset }
     } as any);
@@ -237,6 +243,7 @@ class EnhancedTranscribeApi {
     status?: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
     created_before?: string;
     created_after?: string;
+    url?: string;
     response_format?: 'json' | 'markdown';
   } = {}) {
     return this.api.listTranscribes({ queries: params } as any);
@@ -266,6 +273,7 @@ class EnhancedExtractApi {
     status?: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
     created_before?: string;
     created_after?: string;
+    url?: string;
   } = {}) {
     return this.api.listExtracts({ queries: params } as any);
   }

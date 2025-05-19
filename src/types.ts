@@ -35,18 +35,6 @@ export type CollectionFile = z.infer<typeof collectionsSchemas.CollectionFile>;
  */
 export type CollectionFileList = z.infer<typeof collectionsSchemas.CollectionFileList>;
 
-/**
- * TODO: Remove this once we have a new endpoint for this setup
- * Represents a segment of video description containing speech, text, and visual information
- * This is inferred from the FileDescription schema's segment_docs array type
- */
-export type DescriptionSegment = NonNullable<z.infer<typeof collectionsSchemas.FileDescription>['segment_docs']>[number];
-
-/**
- * TODO: Remove this once we have a new endpoint for this setup
- * Represents the full description response for a video in a collection
- */
-export type CollectionVideoDescription = z.infer<typeof collectionsSchemas.FileDescription>;
 
 /**
  * Represents a segment of video with extracted entities
@@ -96,3 +84,10 @@ export type Extract = z.infer<typeof extractSchemas.Extract>;
  * Represents a list of extraction jobs
  */
 export type ExtractList = z.infer<typeof extractSchemas.ExtractList>; 
+
+/**
+ * Represents a rich transcript for a video
+ */
+export type RichTranscript = z.infer<typeof collectionsSchemas.RichTranscript>;
+
+

@@ -190,10 +190,10 @@ class EnhancedCollectionsApi {
     } as any);
   }
 
-  async getTranscripts(collectionId: string, fileId: string, limit?: number, offset?: number) {
+  async getTranscripts(collectionId: string, fileId: string, limit?: number, offset?: number, response_format?: 'markdown' | 'json') {
     return this.api.getTranscripts({
       params: { collection_id: collectionId, file_id: fileId },
-      queries: { limit, offset }
+      queries: { limit, offset, response_format }
     } as any);
   }
 

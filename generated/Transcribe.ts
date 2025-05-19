@@ -227,6 +227,11 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
       {
+        name: "url",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
         name: "response_format",
         type: "Query",
         schema: z.enum(["json", "markdown"]).optional().default("json"),

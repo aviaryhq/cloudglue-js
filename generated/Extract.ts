@@ -184,6 +184,11 @@ const endpoints = makeApi([
         type: "Query",
         schema: z.string().optional(),
       },
+      {
+        name: "url",
+        type: "Query",
+        schema: z.string().optional(),
+      },
     ],
     response: ExtractList,
     errors: [

@@ -25,9 +25,6 @@ export type {
   CollectionFileList,
   ChatMessage,
   ChatCompletionResponse,
-  // TODO: Remove these two once we have a new endpoint for this setup
-  DescriptionSegment,
-  CollectionVideoDescription,
   Transcribe,
   TranscribeList,
   Extract,
@@ -35,4 +32,5 @@ export type {
   EntitySegment,
   CollectionVideoEntities,
   NewCollectionParams,
+  RichTranscript,
 } from './types';

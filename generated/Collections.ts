@@ -8,10 +8,19 @@ type Collection = {
   object: "collection";
   name: string;
   description?: (string | null) | undefined;
+  collection_type: "entities" | "rich-transcripts";
   extract_config?:
     | Partial<{
         prompt: string;
         schema: {};
+      }>
+    | undefined;
+  transcribe_config?:
+    | Partial<{
+        enable_summary: boolean;
+        enable_speech: boolean;
+        enable_scene_text: boolean;
+        enable_visual_scene_description: boolean;
       }>
     | undefined;
   created_at: number;
@@ -52,10 +61,22 @@ const Collection: z.ZodType<Collection> = z
     object: z.literal("collection"),
     name: z.string(),
     description: z.union([z.string(), z.null()]).optional(),
+    collection_type: z.enum(["entities", "rich-transcripts"]),
     extract_config: z
       .object({
         prompt: z.string(),
         schema: z.object({}).partial().strict().passthrough(),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .optional(),
+    transcribe_config: z
+      .object({
+        enable_summary: z.boolean().default(true),
+        enable_speech: z.boolean().default(true),
+        enable_scene_text: z.boolean().default(false),
+        enable_visual_scene_description: z.boolean().default(false),
       })
       .partial()
       .strict()
@@ -111,12 +132,24 @@ const CollectionFileList: z.ZodType<CollectionFileList> = z
   .passthrough();
 const NewCollection = z
   .object({
+    collection_type: z.enum(["entities", "rich-transcripts"]),
     name: z.string(),
     description: z.union([z.string(), z.null()]).optional(),
     extract_config: z
       .object({
         prompt: z.string(),
         schema: z.object({}).partial().strict().passthrough(),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .optional(),
+    transcribe_config: z
+      .object({
+        enable_summary: z.boolean().default(true),
+        enable_speech: z.boolean().default(true),
+        enable_scene_text: z.boolean().default(false),
+        enable_visual_scene_description: z.boolean().default(false),
       })
       .partial()
       .strict()
@@ -165,66 +198,52 @@ const FileEntities = z
   })
   .strict()
   .passthrough();
-
-// TODO: Remove this once we have a new endpoint for this setup
-const FileDescription = z
+const RichTranscript = z
   .object({
     collection_id: z.string(),
     file_id: z.string(),
+    content: z.string().optional(),
     title: z.string().optional(),
     summary: z.string().optional(),
-    segment_docs: z
+    speech: z
       .array(
         z
           .object({
-            segment_id: z.union([z.string(), z.number()]),
+            text: z.string(),
             start_time: z.number(),
             end_time: z.number(),
-            title: z.string(),
-            summary: z.string(),
-            visual_description: z.array(
-              z
-                .object({
-                  text: z.string(),
-                  start_time: z.number(),
-                  end_time: z.number(),
-                })
-                .partial()
-                .strict()
-                .passthrough()
-            ),
-            scene_text: z.array(
-              z
-                .object({
-                  text: z.string(),
-                  start_time: z.number(),
-                  end_time: z.number(),
-                })
-                .partial()
-                .strict()
-                .passthrough()
-            ),
-            speech: z.array(
-              z
-                .object({
-                  speaker: z.string(),
-                  text: z.string(),
-                  start_time: z.number(),
-                  end_time: z.number(),
-                })
-                .partial()
-                .strict()
-                .passthrough()
-            ),
           })
           .partial()
           .strict()
           .passthrough()
       )
       .optional(),
-    total: z.number().int().optional(),
-    limit: z.number().int().optional(),
-    offset: z.number().int().optional(),
+    visual_scene_description: z
+      .array(
+        z
+          .object({
+            text: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
+    scene_text: z
+      .array(
+        z
+          .object({
+            text: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
   })
   .strict()
   .passthrough();
@@ -245,8 +264,7 @@ export const schemas = {
   CollectionDelete,
   CollectionFileDelete,
   FileEntities,
-  // TODO: Remove this once we have a new endpoint for this setup
-  FileDescription,
+  RichTranscript,
   AddYouTubeCollectionFile,
 };
 
@@ -255,7 +273,7 @@ const endpoints = makeApi([
     method: "post",
     path: "/collections",
     alias: "createCollection",
-    description: `Create a new collection to organize and process video files`,
+    description: `Create a new collection to organize and process video files. Collections are used to group files together and process them in a consistent way.`,
     requestFormat: "json",
     parameters: [
       {
@@ -315,6 +333,11 @@ const endpoints = makeApi([
         name: "sort",
         type: "Query",
         schema: z.enum(["asc", "desc"]).optional().default("desc"),
+      },
+      {
+        name: "collection_type",
+        type: "Query",
+        schema: z.enum(["entities", "rich-transcripts"]).optional(),
       },
     ],
     response: CollectionList,
@@ -556,7 +579,7 @@ const endpoints = makeApi([
     method: "get",
     path: "/collections/:collection_id/videos/:file_id/entities",
     alias: "getEntities",
-    description: `Retrieve all extracted entities for a specific file in a collection`,
+    description: `Retrieve all extracted entities for a specific file in a collection. This API is only available when the a collection is created with collection_type &#x27;entities&#x27;`,
     requestFormat: "json",
     parameters: [
       {
@@ -583,6 +606,11 @@ const endpoints = makeApi([
     response: FileEntities,
     errors: [
       {
+        status: 400,
+        description: `Collection type is not &#x27;entities&#x27;`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
         status: 404,
         description: `Collection or file not found`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
@@ -595,11 +623,10 @@ const endpoints = makeApi([
     ],
   },
   {
-    // TODO: Remove this once we have a new endpoint for this setup
     method: "get",
-    path: "/collections/:collection_id/videos/:file_id/description",
-    alias: "getDescription",
-    description: `Retrieve the processed video summary description and segment documents for a file in a collection`,
+    path: "/collections/:collection_id/videos/:file_id/rich-transcripts",
+    alias: "getTranscripts",
+    description: `Retrieve rich transcription data for a specific file in a collection. This API is only available when the a collection is created with collection_type &#x27;rich-transcripts&#x27;`,
     requestFormat: "json",
     parameters: [
       {
@@ -613,18 +640,18 @@ const endpoints = makeApi([
         schema: z.string(),
       },
       {
-        name: "limit",
+        name: "response_format",
         type: "Query",
-        schema: z.number().int().lte(100).optional().default(50),
-      },
-      {
-        name: "offset",
-        type: "Query",
-        schema: z.number().int().optional().default(0),
+        schema: z.enum(["json", "markdown"]).optional().default("json"),
       },
     ],
-    response: FileDescription,
+    response: RichTranscript,
     errors: [
+      {
+        status: 400,
+        description: `Collection type is not &#x27;rich-transcripts&#x27;`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
       {
         status: 404,
         description: `Collection or file not found`,
@@ -636,7 +663,7 @@ const endpoints = makeApi([
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],
-  },    
+  },
   {
     method: "post",
     path: "/collections/:collection_id/youtube",

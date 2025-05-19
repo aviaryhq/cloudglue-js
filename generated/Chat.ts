@@ -78,7 +78,6 @@ type ChatCompletionRequest = {
       }>
     | undefined;
   force_search?: boolean | undefined;
-  result_format?: ("text" | "markdown" | "json") | undefined;
   include_citations?: boolean | undefined;
   temperature?: number | undefined;
   top_p?: number | undefined;
@@ -130,10 +129,6 @@ const ChatCompletionRequest: z.ZodType<ChatCompletionRequest> = z
       .passthrough()
       .optional(),
     force_search: z.boolean().optional().default(false),
-    result_format: z
-      .enum(["text", "markdown", "json"])
-      .optional()
-      .default("text"),
     include_citations: z.boolean().optional().default(true),
     temperature: z.number().gte(0).lte(2).optional().default(0.7),
     top_p: z.number().gte(0).lte(1).optional().default(1),

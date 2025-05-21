@@ -18,8 +18,11 @@ export class CloudGlueError extends Error {
  * Configuration options for initializing the CloudGlue client
  */
 export interface CloudGlueConfig {
+  // Cloudglue API Key
   apiKey?: string;
   baseUrl?: string;
+  // Time limit in seconds before we timeout a request
+  timeout?: number;
 }
 
 // Enhanced API interfaces with flattened parameters
@@ -286,7 +289,7 @@ class EnhancedExtractApi {
 export class CloudGlue {
   private readonly baseUrl: string;
   private readonly apiKey: string;
-  
+  private readonly timeout: number;
   /**
    * Files API for managing video files
    * Provides methods for uploading, listing, and managing video files
@@ -320,15 +323,18 @@ export class CloudGlue {
   constructor(config: CloudGlueConfig = {}) {
     this.apiKey = config.apiKey || process.env.CLOUDGLUE_API_KEY || '';
     this.baseUrl = config.baseUrl || 'https://api.cloudglue.dev/v1';
-
+    this.timeout = config.timeout || 10000;
     if (!this.apiKey) {
       throw new Error('API key is required. Please provide an API key via constructor or CLOUDGLUE_API_KEY environment variable.');
     }
 
+
     const axiosConfig: AxiosRequestConfig = {
       headers: {
         Authorization: `Bearer ${this.apiKey}`
-      }
+      },
+      baseURL: this.baseUrl,
+      timeout: this.timeout
     };
 
     // Initialize all API clients with the configured base URL and auth
@@ -340,7 +346,8 @@ export class CloudGlue {
 
     // Configure base URL and axios config for all clients
     [filesApi, collectionsApi, chatApi, transcribeApi, extractApi].forEach(client => {
-      client.axios.defaults.baseURL = this.baseUrl;
+      Object.assign(client.axios.defaults, axiosConfig);
+
       client.axios.interceptors.response.use(
         (response) => {
           return response;
@@ -358,7 +365,6 @@ export class CloudGlue {
           return Promise.reject(new CloudGlueError(error.message, error.statusCode ?? 500, error.data, error.headers));
         }
       );
-      Object.assign(client.axios.defaults, axiosConfig);
     });
 
     // Create enhanced API clients

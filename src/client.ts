@@ -7,6 +7,11 @@ import {
   ExtractApi
 } from '../generated';
 import type { File } from './types';
+import { createApiClient as createFilesApiClient } from '../generated/Files';
+import { createApiClient as createCollectionsApiClient } from '../generated/Collections';
+import { createApiClient as createChatApiClient } from '../generated/Chat';
+import { createApiClient as createTranscribeApiClient } from '../generated/Transcribe';
+import { createApiClient as createExtractApiClient } from '../generated/Extract';
 
 export class CloudGlueError extends Error {
   constructor(message: string, public readonly statusCode?: number, public readonly data?: string, public readonly headers?: Record<string, any>) {
@@ -332,11 +337,11 @@ export class CloudGlue {
     };
 
     // Initialize all API clients with the configured base URL and auth
-    const filesApi = FilesApi;
-    const collectionsApi = CollectionsApi;
-    const chatApi = ChatApi;
-    const transcribeApi = TranscribeApi;
-    const extractApi = ExtractApi;
+    const filesApi = createFilesApiClient(this.baseUrl);
+    const collectionsApi = createCollectionsApiClient(this.baseUrl);
+    const chatApi = createChatApiClient(this.baseUrl);
+    const transcribeApi = createTranscribeApiClient(this.baseUrl);
+    const extractApi = createExtractApiClient(this.baseUrl);
 
     // Configure base URL and axios config for all clients
     [filesApi, collectionsApi, chatApi, transcribeApi, extractApi].forEach(client => {

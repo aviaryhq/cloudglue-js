@@ -31,7 +31,9 @@ export interface CloudGlueConfig {
   // Cloudglue API Key
   apiKey?: string;
   baseUrl?: string;
-  // Time limit in seconds before we timeout a request
+  /**
+   * Time limit in milliseconds before we timeout a request
+   */
   timeout?: number;
 }
 
@@ -532,7 +534,7 @@ class EnhancedExtractApi {
 export class CloudGlue {
   private readonly baseUrl: string;
   private readonly apiKey: string;
-  private readonly timeout: number;
+  private readonly timeout: number | undefined;
   /**
    * Files API for managing video files
    * Provides methods for uploading, listing, and managing video files
@@ -566,7 +568,7 @@ export class CloudGlue {
   constructor(config: CloudGlueConfig = {}) {
     this.apiKey = config.apiKey || process.env.CLOUDGLUE_API_KEY || "";
     this.baseUrl = config.baseUrl || "https://api.cloudglue.dev/v1";
-    this.timeout = config.timeout || 10000;
+    this.timeout = config.timeout || undefined;
     if (!this.apiKey) {
       throw new Error(
         "API key is required. Please provide an API key via constructor or CLOUDGLUE_API_KEY environment variable."

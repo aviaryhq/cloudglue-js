@@ -196,7 +196,7 @@ const endpoints = makeApi([
       {
         name: "limit",
         type: "Query",
-        schema: z.number().int().lte(100).optional().default(50),
+        schema: z.number().int().lte(100).optional().default(20),
       },
       {
         name: "offset",

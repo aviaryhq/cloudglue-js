@@ -90,4 +90,14 @@ export type ExtractList = z.infer<typeof extractSchemas.ExtractList>;
  */
 export type RichTranscript = z.infer<typeof collectionsSchemas.RichTranscript>;
 
+/**
+ * Represents a list of entities for files in a collection
+ */
+export type CollectionEntitiesList = z.infer<typeof collectionsSchemas.CollectionEntitiesList>;
+
+/**
+ * Represents a list of rich transcripts for files in a collection
+ */
+export type CollectionRichTranscriptsList = z.infer<typeof collectionsSchemas.CollectionRichTranscriptsList>;
+
 

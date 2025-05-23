@@ -33,4 +33,6 @@ export type {
   CollectionVideoEntities,
   NewCollectionParams,
   RichTranscript,
+  CollectionEntitiesList,
+  CollectionRichTranscriptsList,
 } from './types';

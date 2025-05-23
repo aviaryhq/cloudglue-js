@@ -17,7 +17,6 @@ type Extract = {
         entities: {};
         segment_entities: Array<
           Partial<{
-            segment_id: string | number;
             start_time: number;
             end_time: number;
             entities: {};
@@ -62,7 +61,6 @@ const Extract: z.ZodType<Extract> = z
         segment_entities: z.array(
           z
             .object({
-              segment_id: z.union([z.string(), z.number()]),
               start_time: z.number(),
               end_time: z.number(),
               entities: z.object({}).partial().strict().passthrough(),

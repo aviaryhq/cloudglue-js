@@ -99,6 +99,25 @@ interface ListCollectionVideosParams {
   added_after?: string;
 }
 
+interface ListCollectionEntitiesParams {
+  limit?: number;
+  offset?: number;
+  order?: "added_at" | "filename";
+  sort?: "asc" | "desc";
+  added_before?: string;
+  added_after?: string;
+}
+
+interface ListCollectionRichTranscriptsParams {
+  limit?: number;
+  offset?: number;
+  order?: "added_at" | "filename";
+  sort?: "asc" | "desc";
+  added_before?: string;
+  added_after?: string;
+  response_format?: "json" | "markdown";
+}
+
 interface ChatCompletionParams {
   model?: string;
   messages: Array<{
@@ -306,6 +325,26 @@ class EnhancedCollectionsApi {
       { url, metadata },
       { params: { collection_id: collectionId } }
     );
+  }
+
+  async listEntities(
+    collectionId: string,
+    params: ListCollectionEntitiesParams = {}
+  ) {
+    return this.api.listCollectionEntities({
+      params: { collection_id: collectionId },
+      queries: params,
+    } as any);
+  }
+
+  async listRichTranscripts(
+    collectionId: string,
+    params: ListCollectionRichTranscriptsParams = {}
+  ) {
+    return this.api.listCollectionRichTranscripts({
+      params: { collection_id: collectionId },
+      queries: params,
+    } as any);
   }
 
   /**

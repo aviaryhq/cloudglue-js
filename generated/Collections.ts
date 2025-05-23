@@ -174,15 +174,11 @@ const FileEntities = z
   .object({
     collection_id: z.string(),
     file_id: z.string(),
-    entities: z.union([
-      z.object({}).partial().strict().passthrough(),
-      z.array(z.any()),
-    ]),
+    entities: z.object({}).partial().strict().passthrough(),
     segment_entities: z
       .array(
         z
           .object({
-            segment_id: z.union([z.string(), z.number()]),
             start_time: z.number(),
             end_time: z.number(),
             entities: z.object({}).partial().strict().passthrough(),
@@ -254,6 +250,101 @@ const AddYouTubeCollectionFile = z
   })
   .strict()
   .passthrough();
+const CollectionEntitiesList = z
+  .object({
+    object: z.literal("list"),
+    data: z.array(
+      z
+        .object({
+          file_id: z.string(),
+          data: z
+            .object({
+              entities: z.object({}).partial().strict().passthrough(),
+              segment_entities: z
+                .array(
+                  z
+                    .object({
+                      start_time: z.number(),
+                      end_time: z.number(),
+                      entities: z.object({}).partial().strict().passthrough(),
+                    })
+                    .partial()
+                    .strict()
+                    .passthrough()
+                )
+                .optional(),
+            })
+            .strict()
+            .passthrough(),
+        })
+        .strict()
+        .passthrough()
+    ),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
+const CollectionRichTranscriptsList = z
+  .object({
+    object: z.literal("list"),
+    data: z.array(
+      z
+        .object({
+          file_id: z.string(),
+          data: z
+            .object({
+              content: z.string(),
+              title: z.string(),
+              summary: z.string(),
+              speech: z.array(
+                z
+                  .object({
+                    text: z.string(),
+                    start_time: z.number(),
+                    end_time: z.number(),
+                  })
+                  .partial()
+                  .strict()
+                  .passthrough()
+              ),
+              visual_scene_description: z.array(
+                z
+                  .object({
+                    text: z.string(),
+                    start_time: z.number(),
+                    end_time: z.number(),
+                  })
+                  .partial()
+                  .strict()
+                  .passthrough()
+              ),
+              scene_text: z.array(
+                z
+                  .object({
+                    text: z.string(),
+                    start_time: z.number(),
+                    end_time: z.number(),
+                  })
+                  .partial()
+                  .strict()
+                  .passthrough()
+              ),
+            })
+            .partial()
+            .strict()
+            .passthrough(),
+        })
+        .strict()
+        .passthrough()
+    ),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
 
 export const schemas = {
   Collection,
@@ -266,6 +357,8 @@ export const schemas = {
   FileEntities,
   RichTranscript,
   AddYouTubeCollectionFile,
+  CollectionEntitiesList,
+  CollectionRichTranscriptsList,
 };
 
 const endpoints = makeApi([
@@ -688,6 +781,135 @@ const endpoints = makeApi([
       {
         status: 400,
         description: `Invalid request or YouTube URL`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 404,
+        description: `Collection not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "get",
+    path: "/collections/:collection_id/entities",
+    alias: "listCollectionEntities",
+    description: `List all extracted entities for files in a collection. This API is only available when a collection is created with collection_type &#x27;entities&#x27;`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "collection_id",
+        type: "Path",
+        schema: z.string(),
+      },
+      {
+        name: "limit",
+        type: "Query",
+        schema: z.number().int().lte(100).optional().default(50),
+      },
+      {
+        name: "offset",
+        type: "Query",
+        schema: z.number().int().optional().default(0),
+      },
+      {
+        name: "order",
+        type: "Query",
+        schema: z.enum(["added_at", "filename"]).optional().default("added_at"),
+      },
+      {
+        name: "sort",
+        type: "Query",
+        schema: z.enum(["asc", "desc"]).optional().default("desc"),
+      },
+      {
+        name: "added_before",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "added_after",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+    ],
+    response: CollectionEntitiesList,
+    errors: [
+      {
+        status: 400,
+        description: `Collection type is not &#x27;entities&#x27;`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 404,
+        description: `Collection not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "get",
+    path: "/collections/:collection_id/rich-transcripts",
+    alias: "listCollectionRichTranscripts",
+    description: `List all rich transcription data for files in a collection. This API is only available when a collection is created with collection_type &#x27;rich-transcripts&#x27;`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "collection_id",
+        type: "Path",
+        schema: z.string(),
+      },
+      {
+        name: "limit",
+        type: "Query",
+        schema: z.number().int().lte(100).optional().default(20),
+      },
+      {
+        name: "offset",
+        type: "Query",
+        schema: z.number().int().optional().default(0),
+      },
+      {
+        name: "order",
+        type: "Query",
+        schema: z.enum(["added_at", "filename"]).optional().default("added_at"),
+      },
+      {
+        name: "sort",
+        type: "Query",
+        schema: z.enum(["asc", "desc"]).optional().default("desc"),
+      },
+      {
+        name: "added_before",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "added_after",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "response_format",
+        type: "Query",
+        schema: z.enum(["json", "markdown"]).optional().default("json"),
+      },
+    ],
+    response: CollectionRichTranscriptsList,
+    errors: [
+      {
+        status: 400,
+        description: `Collection type is not &#x27;rich-transcripts&#x27;`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {

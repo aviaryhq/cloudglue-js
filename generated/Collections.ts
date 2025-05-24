@@ -13,6 +13,8 @@ type Collection = {
     | Partial<{
         prompt: string;
         schema: {};
+        enable_video_level_entities: boolean;
+        enable_segment_level_entities: boolean;
       }>
     | undefined;
   transcribe_config?:
@@ -66,6 +68,8 @@ const Collection: z.ZodType<Collection> = z
       .object({
         prompt: z.string(),
         schema: z.object({}).partial().strict().passthrough(),
+        enable_video_level_entities: z.boolean().default(true),
+        enable_segment_level_entities: z.boolean().default(true),
       })
       .partial()
       .strict()
@@ -139,6 +143,8 @@ const NewCollection = z
       .object({
         prompt: z.string(),
         schema: z.object({}).partial().strict().passthrough(),
+        enable_video_level_entities: z.boolean().default(true),
+        enable_segment_level_entities: z.boolean().default(true),
       })
       .partial()
       .strict()
@@ -188,9 +194,6 @@ const FileEntities = z
           .passthrough()
       )
       .optional(),
-    total: z.number().int(),
-    limit: z.number().int(),
-    offset: z.number().int(),
   })
   .strict()
   .passthrough();
@@ -684,16 +687,6 @@ const endpoints = makeApi([
         name: "file_id",
         type: "Path",
         schema: z.string(),
-      },
-      {
-        name: "limit",
-        type: "Query",
-        schema: z.number().int().lte(100).optional().default(50),
-      },
-      {
-        name: "offset",
-        type: "Query",
-        schema: z.number().int().optional().default(0),
       },
     ],
     response: FileEntities,

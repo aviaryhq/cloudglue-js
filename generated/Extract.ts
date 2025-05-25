@@ -10,6 +10,8 @@ type Extract = {
     | Partial<{
         prompt: string;
         schema: {};
+        enable_video_level_entities: boolean;
+        enable_segment_level_entities: boolean;
       }>
     | undefined;
   data?:
@@ -50,6 +52,8 @@ const Extract: z.ZodType<Extract> = z
       .object({
         prompt: z.string(),
         schema: z.object({}).partial().strict().passthrough(),
+        enable_video_level_entities: z.boolean().default(false),
+        enable_segment_level_entities: z.boolean().default(true),
       })
       .partial()
       .strict()
@@ -93,6 +97,8 @@ const NewExtract = z
     url: z.string(),
     prompt: z.string().optional(),
     schema: z.object({}).partial().strict().passthrough().optional(),
+    enable_video_level_entities: z.boolean().optional().default(false),
+    enable_segment_level_entities: z.boolean().optional().default(true),
   })
   .strict()
   .passthrough();

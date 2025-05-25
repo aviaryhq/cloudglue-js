@@ -74,6 +74,8 @@ interface CreateCollectionParams {
   extract_config?: {
     prompt?: string;
     schema?: Record<string, any>;
+    enable_video_level_entities?: boolean;
+    enable_segment_level_entities?: boolean;
   };
   transcribe_config?: {
     enable_summary?: boolean;
@@ -293,13 +295,10 @@ class EnhancedCollectionsApi {
 
   async getEntities(
     collectionId: string,
-    fileId: string,
-    limit?: number,
-    offset?: number
+    fileId: string
   ) {
     return this.api.getEntities({
-      params: { collection_id: collectionId, file_id: fileId },
-      queries: { limit, offset },
+      params: { collection_id: collectionId, file_id: fileId }
     } as any);
   }
 
@@ -501,6 +500,8 @@ class EnhancedExtractApi {
     options?: {
       prompt?: string;
       schema?: Record<string, any>;
+      enable_video_level_entities?: boolean;
+      enable_segment_level_entities?: boolean;
     }
   ) {
     return this.api.createExtract({

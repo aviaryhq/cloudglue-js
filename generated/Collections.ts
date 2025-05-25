@@ -68,7 +68,7 @@ const Collection: z.ZodType<Collection> = z
       .object({
         prompt: z.string(),
         schema: z.object({}).partial().strict().passthrough(),
-        enable_video_level_entities: z.boolean().default(true),
+        enable_video_level_entities: z.boolean().default(false),
         enable_segment_level_entities: z.boolean().default(true),
       })
       .partial()
@@ -143,7 +143,7 @@ const NewCollection = z
       .object({
         prompt: z.string(),
         schema: z.object({}).partial().strict().passthrough(),
-        enable_video_level_entities: z.boolean().default(true),
+        enable_video_level_entities: z.boolean().default(false),
         enable_segment_level_entities: z.boolean().default(true),
       })
       .partial()

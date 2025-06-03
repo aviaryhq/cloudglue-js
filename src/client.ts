@@ -142,6 +142,32 @@ interface ChatCompletionParams {
       valueText?: string;
       valueTextArray?: string[];
     }>;
+    video_info?: Array<{
+      path: string;
+      operator:
+        | "NotEqual"
+        | "Equal"
+        | "LessThan"
+        | "GreaterThan"
+        | "In"
+        | "ContainsAny"
+        | "ContainsAll";
+      valueText?: string;
+      valueTextArray?: string[];
+    }>;
+    file?: Array<{
+      path: string;
+      operator:
+        | "NotEqual"
+        | "Equal"
+        | "LessThan"
+        | "GreaterThan"
+        | "In"
+        | "ContainsAny"
+        | "ContainsAll";
+      valueText?: string;
+      valueTextArray?: string[];
+    }>;
   };
   force_search?: boolean;
   include_citations?: boolean;

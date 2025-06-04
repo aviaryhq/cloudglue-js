@@ -75,6 +75,32 @@ type ChatCompletionRequest = {
           valueText?: string | undefined;
           valueTextArray?: Array<string> | undefined;
         }>;
+        video_info: Array<{
+          path: string;
+          operator:
+            | "NotEqual"
+            | "Equal"
+            | "LessThan"
+            | "GreaterThan"
+            | "In"
+            | "ContainsAny"
+            | "ContainsAll";
+          valueText?: string | undefined;
+          valueTextArray?: Array<string> | undefined;
+        }>;
+        file: Array<{
+          path: string;
+          operator:
+            | "NotEqual"
+            | "Equal"
+            | "LessThan"
+            | "GreaterThan"
+            | "In"
+            | "ContainsAny"
+            | "ContainsAll";
+          valueText?: string | undefined;
+          valueTextArray?: Array<string> | undefined;
+        }>;
       }>
     | undefined;
   force_search?: boolean | undefined;
@@ -105,6 +131,44 @@ const ChatCompletionRequest: z.ZodType<ChatCompletionRequest> = z
     filter: z
       .object({
         metadata: z.array(
+          z
+            .object({
+              path: z.string(),
+              operator: z.enum([
+                "NotEqual",
+                "Equal",
+                "LessThan",
+                "GreaterThan",
+                "In",
+                "ContainsAny",
+                "ContainsAll",
+              ]),
+              valueText: z.string().optional(),
+              valueTextArray: z.array(z.string()).optional(),
+            })
+            .strict()
+            .passthrough()
+        ),
+        video_info: z.array(
+          z
+            .object({
+              path: z.string(),
+              operator: z.enum([
+                "NotEqual",
+                "Equal",
+                "LessThan",
+                "GreaterThan",
+                "In",
+                "ContainsAny",
+                "ContainsAll",
+              ]),
+              valueText: z.string().optional(),
+              valueTextArray: z.array(z.string()).optional(),
+            })
+            .strict()
+            .passthrough()
+        ),
+        file: z.array(
           z
             .object({
               path: z.string(),

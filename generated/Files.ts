@@ -31,11 +31,20 @@ const FileDelete = z
   .object({ id: z.string(), object: z.literal("file") })
   .strict()
   .passthrough();
+const FileUpdate = z
+  .object({
+    metadata: z.object({}).partial().strict().passthrough(),
+    filename: z.string(),
+  })
+  .partial()
+  .strict()
+  .passthrough();
 
 export const schemas = {
   FileList,
   FileUpload,
   FileDelete,
+  FileUpdate,
 };
 
 const endpoints = makeApi([
@@ -190,6 +199,34 @@ const endpoints = makeApi([
       {
         status: 500,
         description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "put",
+    path: "/files/:file_id",
+    alias: "updateFile",
+    description: `Update a file`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "body",
+        description: `File update parameters`,
+        type: "Body",
+        schema: FileUpdate,
+      },
+      {
+        name: "file_id",
+        type: "Path",
+        schema: z.string(),
+      },
+    ],
+    response: CloudglueFile,
+    errors: [
+      {
+        status: 400,
+        description: `Invalid request or malformed file update parameters`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],

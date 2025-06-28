@@ -13,6 +13,15 @@ import { schemas as extractSchemas } from '../generated/Extract';
 export type { File } from '../generated/common';
 
 /**
+ * Parameters for updating an existing file
+ */
+export interface UpdateFileParams {
+  filename?: string;
+  metadata?: Record<string, any>;
+  [key: string]: any;
+}
+
+/**
  * Parameters for creating a new collection
  */
 export type NewCollectionParams = z.infer<typeof collectionsSchemas.NewCollection>;

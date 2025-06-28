@@ -6,7 +6,7 @@ import {
   TranscribeApi,
   ExtractApi,
 } from "../generated";
-import type { File } from "./types";
+import type { File, UpdateFileParams } from "./types";
 import { createApiClient as createFilesApiClient } from "../generated/Files";
 import { createApiClient as createCollectionsApiClient } from "../generated/Collections";
 import { createApiClient as createChatApiClient } from "../generated/Chat";
@@ -226,6 +226,13 @@ class EnhancedFilesApi {
     return this.api.deleteFile({ params: { file_id: fileId } } as any, {
       params: { file_id: fileId },
     });
+  }
+
+  async updateFile(fileId: string, params: UpdateFileParams) {
+    return this.api.updateFile(
+      params,
+      { params: { file_id: fileId } }
+    );
   }
 
   /**

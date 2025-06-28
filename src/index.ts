@@ -20,6 +20,7 @@ export {
  */
 export type {
   File,
+  UpdateFileParams,
   Collection,
   CollectionFile,
   CollectionFileList,

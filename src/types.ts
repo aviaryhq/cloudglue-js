@@ -8,10 +8,17 @@ import { schemas as extractSchemas } from '../generated/Extract';
 import { SegmentationUniformConfig as SegmentationUniformConfigType, SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType, SegmentationConfig as SegmentationConfigType } from '../generated/common';
 
 /**
- * Represents a video file in the CloudGlue system
+ * Represents a video file in the Cloudglue system
  * Contains metadata about the file including its status, size, and video information
  */
 export type { File } from '../generated/common';
+
+
+/**
+ * Represents the status of a job
+ * TODO: would be better to use a common type for all jobs
+ */
+export type JobStatus = z.infer<typeof transcribeSchemas.Transcribe>['status'];
 
 /**
  * Parameters for updating an existing file

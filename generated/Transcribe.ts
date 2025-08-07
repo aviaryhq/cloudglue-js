@@ -13,7 +13,7 @@ type Transcribe = {
   created_at?: number | undefined;
   transcribe_config?:
     | Partial<{
-        "enable_summary ": boolean;
+        enable_summary: boolean;
         enable_speech: boolean;
         enable_visual_scene_description: boolean;
         enable_scene_text: boolean;
@@ -88,7 +88,7 @@ const Transcribe: z.ZodType<Transcribe> = z
     created_at: z.number().int().optional(),
     transcribe_config: z
       .object({
-        "enable_summary ": z.boolean(),
+        enable_summary: z.boolean(),
         enable_speech: z.boolean(),
         enable_visual_scene_description: z.boolean(),
         enable_scene_text: z.boolean(),

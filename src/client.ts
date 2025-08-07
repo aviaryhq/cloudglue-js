@@ -20,7 +20,8 @@ export class CloudGlueError extends Error {
     message: string,
     public readonly statusCode?: number,
     public readonly data?: string,
-    public readonly headers?: Record<string, any>
+    public readonly headers?: Record<string, any>,
+    public readonly responseData?: any
   ) {
     super(message);
   }
@@ -735,7 +736,8 @@ export class CloudGlue {
                   data.error,
                   error.response.status,
                   error.config.data,
-                  error.response.headers
+                  error.response.headers,
+                  error.response.data,
                 )
               );
             }
@@ -746,7 +748,8 @@ export class CloudGlue {
                 error.message,
                 error.statusCode ?? 500,
                 error.data,
-                error.headers
+                error.headers,
+                error.response?.data,
               )
             );
           }

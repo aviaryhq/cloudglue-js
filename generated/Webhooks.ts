@@ -19,9 +19,9 @@ type Webhook = {
   subscribed_events: Array<WebhookEvents>;
 };
 type WebhookEvents =
-  | "transcribe.job.processing"
-  | "transcribe.job.completed"
-  | "transcribe.job.failed"
+  | "describe.job.processing"
+  | "describe.job.completed"
+  | "describe.job.failed"
   | "extract.job.processing"
   | "extract.job.completed"
   | "extract.job.failed"
@@ -46,9 +46,9 @@ type WebhookUpdateRequest = Partial<{
 }>;
 
 const WebhookEvents = z.enum([
-  "transcribe.job.processing",
-  "transcribe.job.completed",
-  "transcribe.job.failed",
+  "describe.job.processing",
+  "describe.job.completed",
+  "describe.job.failed",
   "extract.job.processing",
   "extract.job.completed",
   "extract.job.failed",

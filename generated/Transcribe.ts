@@ -1,6 +1,11 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { FileSegmentationConfig } from "./common";
+import { SegmentationConfig } from "./common";
+import { SegmentationUniformConfig } from "./common";
+import { SegmentationShotDetectorConfig } from "./common";
+
 type Transcribe = {
   job_id: string;
   status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
@@ -44,6 +49,13 @@ type Transcribe = {
     | undefined;
   error?: string | undefined;
 };
+type NewTranscribe = {
+  url: string;
+  enable_summary?: boolean | undefined;
+  enable_speech?: boolean | undefined;
+  enable_visual_scene_description?: boolean | undefined;
+  enable_scene_text?: boolean | undefined;
+} & FileSegmentationConfig;
 type TranscribeList = {
   object: "list";
   data: Array<Transcribe>;
@@ -51,6 +63,17 @@ type TranscribeList = {
   limit: number;
 };
 
+const NewTranscribe: z.ZodType<NewTranscribe> = z
+  .object({
+    url: z.string(),
+    enable_summary: z.boolean().optional().default(true),
+    enable_speech: z.boolean().optional().default(true),
+    enable_visual_scene_description: z.boolean().optional().default(false),
+    enable_scene_text: z.boolean().optional().default(false),
+  })
+  .strict()
+  .passthrough()
+  .and(FileSegmentationConfig);
 const Transcribe: z.ZodType<Transcribe> = z
   .object({
     job_id: z.string(),
@@ -130,21 +153,11 @@ const TranscribeList: z.ZodType<TranscribeList> = z
   })
   .strict()
   .passthrough();
-const NewTranscribe = z
-  .object({
-    url: z.string(),
-    enable_summary: z.boolean().optional().default(true),
-    enable_speech: z.boolean().optional().default(true),
-    enable_visual_scene_description: z.boolean().optional().default(false),
-    enable_scene_text: z.boolean().optional().default(false),
-  })
-  .strict()
-  .passthrough();
 
 export const schemas = {
+  NewTranscribe,
   Transcribe,
   TranscribeList,
-  NewTranscribe,
 };
 
 const endpoints = makeApi([

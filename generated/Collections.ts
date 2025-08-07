@@ -1,7 +1,11 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { SegmentationConfig } from "./common";
+import { SegmentationUniformConfig } from "./common";
+import { SegmentationShotDetectorConfig } from "./common";
 import { File } from "./common";
+import { FileSegmentationConfig } from "./common";
 
 type Collection = {
   id: string;
@@ -25,8 +29,31 @@ type Collection = {
         enable_visual_scene_description: boolean;
       }>
     | undefined;
+  default_segmentation_config?: SegmentationConfig | undefined;
   created_at: number;
   file_count: number;
+};
+type NewCollection = {
+  collection_type: "entities" | "rich-transcripts";
+  name: string;
+  description?: (string | null) | undefined;
+  extract_config?:
+    | Partial<{
+        prompt: string;
+        schema: {};
+        enable_video_level_entities: boolean;
+        enable_segment_level_entities: boolean;
+      }>
+    | undefined;
+  transcribe_config?:
+    | Partial<{
+        enable_summary: boolean;
+        enable_speech: boolean;
+        enable_scene_text: boolean;
+        enable_visual_scene_description: boolean;
+      }>
+    | undefined;
+  default_segmentation_config?: SegmentationConfig | undefined;
 };
 type CollectionList = {
   object: "list";
@@ -41,14 +68,24 @@ type CollectionFile = {
   object: "collection_file";
   added_at: number;
   status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
-  extract_status?:
-    | ("pending" | "processing" | "completed" | "failed" | "not_applicable")
-    | undefined;
-  searchable_status?:
-    | ("pending" | "processing" | "completed" | "failed" | "not_applicable")
-    | undefined;
   file?: File | undefined;
+  segmentation?:
+    | {
+        id: string;
+        status:
+          | "pending"
+          | "processing"
+          | "completed"
+          | "failed"
+          | "not_applicable";
+        file_id: string;
+        segmentation_config: SegmentationConfig;
+      }
+    | undefined;
 };
+type AddCollectionFile = {
+  file_id: string;
+} & FileSegmentationConfig;
 type CollectionFileList = {
   object: "list";
   data: Array<CollectionFile>;
@@ -56,6 +93,10 @@ type CollectionFileList = {
   limit: number;
   offset: number;
 };
+type AddYouTubeCollectionFile = {
+  url: string;
+  metadata?: {} | undefined;
+} & FileSegmentationConfig;
 
 const Collection: z.ZodType<Collection> = z
   .object({
@@ -86,55 +127,13 @@ const Collection: z.ZodType<Collection> = z
       .strict()
       .passthrough()
       .optional(),
+    default_segmentation_config: SegmentationConfig.optional(),
     created_at: z.number().int(),
     file_count: z.number().int(),
   })
   .strict()
   .passthrough();
-const CollectionList: z.ZodType<CollectionList> = z
-  .object({
-    object: z.literal("list"),
-    data: z.array(Collection),
-    total: z.number().int(),
-    limit: z.number().int(),
-    offset: z.number().int(),
-  })
-  .strict()
-  .passthrough();
-const CollectionFile: z.ZodType<CollectionFile> = z
-  .object({
-    collection_id: z.string(),
-    file_id: z.string(),
-    object: z.literal("collection_file"),
-    added_at: z.number().int(),
-    status: z.enum([
-      "pending",
-      "processing",
-      "completed",
-      "failed",
-      "not_applicable",
-    ]),
-    extract_status: z
-      .enum(["pending", "processing", "completed", "failed", "not_applicable"])
-      .optional(),
-    searchable_status: z
-      .enum(["pending", "processing", "completed", "failed", "not_applicable"])
-      .optional(),
-    file: File.optional(),
-  })
-  .strict()
-  .passthrough();
-const CollectionFileList: z.ZodType<CollectionFileList> = z
-  .object({
-    object: z.literal("list"),
-    data: z.array(CollectionFile),
-    total: z.number().int(),
-    limit: z.number().int(),
-    offset: z.number().int(),
-  })
-  .strict()
-  .passthrough();
-const NewCollection = z
+const NewCollection: z.ZodType<NewCollection> = z
   .object({
     collection_type: z.enum(["entities", "rich-transcripts"]),
     name: z.string(),
@@ -161,6 +160,73 @@ const NewCollection = z
       .strict()
       .passthrough()
       .optional(),
+    default_segmentation_config: SegmentationConfig.optional(),
+  })
+  .strict()
+  .passthrough();
+const CollectionList: z.ZodType<CollectionList> = z
+  .object({
+    object: z.literal("list"),
+    data: z.array(Collection),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
+const AddCollectionFile: z.ZodType<AddCollectionFile> = z
+  .object({ file_id: z.string() })
+  .strict()
+  .passthrough()
+  .and(FileSegmentationConfig);
+const AddYouTubeCollectionFile: z.ZodType<AddYouTubeCollectionFile> = z
+  .object({
+    url: z.string(),
+    metadata: z.object({}).partial().strict().passthrough().optional(),
+  })
+  .strict()
+  .passthrough()
+  .and(FileSegmentationConfig);
+const CollectionFile: z.ZodType<CollectionFile> = z
+  .object({
+    collection_id: z.string(),
+    file_id: z.string(),
+    object: z.literal("collection_file"),
+    added_at: z.number().int(),
+    status: z.enum([
+      "pending",
+      "processing",
+      "completed",
+      "failed",
+      "not_applicable",
+    ]),
+    file: File.optional(),
+    segmentation: z
+      .object({
+        id: z.string().uuid(),
+        status: z.enum([
+          "pending",
+          "processing",
+          "completed",
+          "failed",
+          "not_applicable",
+        ]),
+        file_id: z.string().uuid(),
+        segmentation_config: SegmentationConfig,
+      })
+      .strict()
+      .passthrough()
+      .optional(),
+  })
+  .strict()
+  .passthrough();
+const CollectionFileList: z.ZodType<CollectionFileList> = z
+  .object({
+    object: z.literal("list"),
+    data: z.array(CollectionFile),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
   })
   .strict()
   .passthrough();
@@ -243,13 +309,6 @@ const RichTranscript = z
           .passthrough()
       )
       .optional(),
-  })
-  .strict()
-  .passthrough();
-const AddYouTubeCollectionFile = z
-  .object({
-    url: z.string(),
-    metadata: z.object({}).partial().strict().passthrough().optional(),
   })
   .strict()
   .passthrough();
@@ -351,15 +410,16 @@ const CollectionRichTranscriptsList = z
 
 export const schemas = {
   Collection,
+  NewCollection,
   CollectionList,
+  AddCollectionFile,
+  AddYouTubeCollectionFile,
   CollectionFile,
   CollectionFileList,
-  NewCollection,
   CollectionDelete,
   CollectionFileDelete,
   FileEntities,
   RichTranscript,
-  AddYouTubeCollectionFile,
   CollectionEntitiesList,
   CollectionRichTranscriptsList,
 };
@@ -510,7 +570,7 @@ const endpoints = makeApi([
         name: "body",
         description: `File association parameters`,
         type: "Body",
-        schema: z.object({ file_id: z.string() }).strict().passthrough(),
+        schema: AddCollectionFile,
       },
       {
         name: "collection_id",

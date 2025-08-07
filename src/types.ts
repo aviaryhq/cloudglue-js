@@ -5,6 +5,7 @@ import { schemas as collectionsSchemas } from '../generated/Collections';
 import { schemas as chatSchemas } from '../generated/Chat';
 import { schemas as transcribeSchemas } from '../generated/Transcribe';
 import { schemas as extractSchemas } from '../generated/Extract';
+import { SegmentationUniformConfig as SegmentationUniformConfigType, SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType, SegmentationConfig as SegmentationConfigType } from '../generated/common';
 
 /**
  * Represents a video file in the CloudGlue system
@@ -110,4 +111,13 @@ export type CollectionEntitiesList = z.infer<typeof collectionsSchemas.Collectio
  */
 export type CollectionRichTranscriptsList = z.infer<typeof collectionsSchemas.CollectionRichTranscriptsList>;
 
+/**
+ * Segmentation config for the Uniform strategy
+ */
+export type SegmentationUniformConfig = z.infer<typeof SegmentationUniformConfigType>;
 
+/**
+ * Segmentation config for the Shot Detector strategy
+ */
+export type SegmentationShotDetectorConfig = z.infer<typeof SegmentationShotDetectorConfigType>;
+export type SegmentationConfig = z.infer<typeof SegmentationConfigType>;

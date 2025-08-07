@@ -6,12 +6,14 @@ import {
   TranscribeApi,
   ExtractApi,
 } from "../generated";
-import type { File, UpdateFileParams } from "./types";
+import type { File, SegmentationConfig, UpdateFileParams } from "./types";
 import { createApiClient as createFilesApiClient } from "../generated/Files";
 import { createApiClient as createCollectionsApiClient } from "../generated/Collections";
 import { createApiClient as createChatApiClient } from "../generated/Chat";
 import { createApiClient as createTranscribeApiClient } from "../generated/Transcribe";
 import { createApiClient as createExtractApiClient } from "../generated/Extract";
+import { createApiClient as createSegmentationsApiClient, SegmentationsApi } from "../generated/Segmentations";
+import { ZodiosOptions } from "@zodios/core";
 
 export class CloudGlueError extends Error {
   constructor(
@@ -42,7 +44,6 @@ interface ListFilesParams {
   status?:
     | "pending"
     | "processing"
-    | "ready"
     | "completed"
     | "failed"
     | "not_applicable";
@@ -83,6 +84,7 @@ interface CreateCollectionParams {
     enable_scene_text?: boolean;
     enable_visual_scene_description?: boolean;
   };
+  default_segmentation_config?: SegmentationConfig; 
 }
 
 interface ListCollectionVideosParams {
@@ -91,7 +93,6 @@ interface ListCollectionVideosParams {
   status?:
     | "pending"
     | "processing"
-    | "ready"
     | "completed"
     | "failed"
     | "not_applicable";
@@ -188,7 +189,7 @@ class EnhancedFilesApi {
   constructor(private readonly api: typeof FilesApi) {}
 
   async listFiles(params: ListFilesParams = {}) {
-    return this.api.listFiles({ queries: params } as any);
+    return this.api.listFiles({ queries: params });
   }
 
   async uploadFile(params: UploadFileParams) {
@@ -219,11 +220,11 @@ class EnhancedFilesApi {
   }
 
   async getFile(fileId: string) {
-    return this.api.getFile({ params: { file_id: fileId } } as any);
+    return this.api.getFile({ params: { file_id: fileId } });
   }
 
   async deleteFile(fileId: string) {
-    return this.api.deleteFile({ params: { file_id: fileId } } as any, {
+    return this.api.deleteFile(undefined, {
       params: { file_id: fileId },
     });
   }
@@ -233,6 +234,20 @@ class EnhancedFilesApi {
       params,
       { params: { file_id: fileId } }
     );
+  }
+
+  async listFileSegmentations(fileId: string, params: {limit?: number, offset?: number} = {}) {
+    return this.api.listFileSegmentations({
+      params: { file_id: fileId },
+      queries: params,
+    });
+  }
+
+  async createFileSegmentation(fileId: string, params: SegmentationConfig) {
+    return this.api.createFileSegmentation(params, {
+      params: { file_id: fileId },
+      body: params,
+    } as any);
   }
 
   /**
@@ -274,30 +289,32 @@ class EnhancedCollectionsApi {
   constructor(private readonly api: typeof CollectionsApi) {}
 
   async listCollections(params: ListCollectionParams = {}) {
-    return this.api.listCollections({ queries: params } as any);
+    return this.api.listCollections({ queries: params });
   }
 
   async createCollection(params: CreateCollectionParams) {
-    return this.api.createCollection(params as any);
+    return this.api.createCollection(params);
   }
 
   async getCollection(collectionId: string) {
     return this.api.getCollection({
       params: { collection_id: collectionId },
-    } as any);
+    });
   }
 
   async deleteCollection(collectionId: string) {
     return this.api.deleteCollection(
-      { params: { collection_id: collectionId } } as any,
+      undefined,
       { params: { collection_id: collectionId } }
     );
   }
 
-  async addVideo(collectionId: string, fileId: string) {
+  async addVideo(collectionId: string, fileId: string, params: {
+    segmentation_config?: SegmentationConfig;
+  } = {}) {
     return this.api.addVideo(
-      { file_id: fileId },
-      { params: { collection_id: collectionId } }
+      { file_id: fileId, ...params },
+      { params: { collection_id: collectionId, ...params } }
     );
   }
 
@@ -308,20 +325,18 @@ class EnhancedCollectionsApi {
     return this.api.listVideos({
       params: { collection_id: collectionId },
       queries: params,
-    } as any);
+    });
   }
 
   async getVideo(collectionId: string, fileId: string) {
     return this.api.getVideo({
       params: { collection_id: collectionId, file_id: fileId },
-    } as any);
+    });
   }
 
   async deleteVideo(collectionId: string, fileId: string) {
     return this.api.deleteVideo(
-      {
-        params: { collection_id: collectionId, file_id: fileId },
-      } as any,
+      undefined,
       { params: { collection_id: collectionId, file_id: fileId } }
     );
   }
@@ -332,7 +347,7 @@ class EnhancedCollectionsApi {
   ) {
     return this.api.getEntities({
       params: { collection_id: collectionId, file_id: fileId }
-    } as any);
+    });
   }
 
   async getTranscripts(
@@ -366,7 +381,7 @@ class EnhancedCollectionsApi {
     return this.api.listCollectionEntities({
       params: { collection_id: collectionId },
       queries: params,
-    } as any);
+    });
   }
 
   async listRichTranscripts(
@@ -376,7 +391,7 @@ class EnhancedCollectionsApi {
     return this.api.listCollectionRichTranscripts({
       params: { collection_id: collectionId },
       queries: params,
-    } as any);
+    } );
   }
 
   /**
@@ -442,12 +457,13 @@ class EnhancedTranscribeApi {
       enable_speech?: boolean;
       enable_scene_text?: boolean;
       enable_visual_scene_description?: boolean;
+      segmentation_config?: SegmentationConfig;
     } = {}
   ) {
     return this.api.createTranscribe({
       url,
       ...options,
-    } as any);
+    });
   }
 
   async getTranscribe(
@@ -459,7 +475,7 @@ class EnhancedTranscribeApi {
     return this.api.getTranscribe({
       params: { job_id: jobId },
       queries: { response_format: options.response_format },
-    } as any);
+    });
   }
 
   async listTranscribes(
@@ -478,7 +494,7 @@ class EnhancedTranscribeApi {
       response_format?: "json" | "markdown";
     } = {}
   ) {
-    return this.api.listTranscribes({ queries: params } as any);
+    return this.api.listTranscribes({ queries: params });
   }
 
   /**
@@ -535,16 +551,17 @@ class EnhancedExtractApi {
       schema?: Record<string, any>;
       enable_video_level_entities?: boolean;
       enable_segment_level_entities?: boolean;
+      segmentation_config?: SegmentationConfig;
     }
   ) {
     return this.api.createExtract({
       url,
       ...options,
-    } as any);
+    });
   }
 
   async getExtract(jobId: string) {
-    return this.api.getExtract({ params: { job_id: jobId } } as any);
+    return this.api.getExtract({ params: { job_id: jobId } });
   }
 
   async listExtracts(
@@ -562,7 +579,7 @@ class EnhancedExtractApi {
       url?: string;
     } = {}
   ) {
-    return this.api.listExtracts({ queries: params } as any);
+    return this.api.listExtracts({ queries: params });
   }
 
   /**
@@ -597,6 +614,25 @@ class EnhancedExtractApi {
     throw new CloudGlueError(
       `Timeout waiting for extraction job ${jobId} to process after ${maxAttempts} attempts`
     );
+  }
+}
+
+class EnhancedSegmentationsApi {
+  constructor(private readonly api: typeof SegmentationsApi) {}
+
+  async getSegmentation(segmentationId: string, params: {
+    limit?: number;
+    offset?: number;
+  } = {}) {
+    return this.api.getSegmentation({
+      params: { segmentation_id: segmentationId },
+      queries: params,
+    });
+  }
+  async deleteSegmentation(segmentationId: string) {
+    return this.api.deleteSegmentation(undefined,{
+      params: { segmentation_id: segmentationId },
+    });
   }
 }
 
@@ -638,6 +674,12 @@ export class CloudGlue {
    */
   public readonly extract: EnhancedExtractApi;
 
+  /**
+   * Segmentations API for segmenting videos into shots
+   * Provides methods for segmenting videos into shots
+   */
+  public readonly segmentations: EnhancedSegmentationsApi;
+
   constructor(config: CloudGlueConfig = {}) {
     this.apiKey = config.apiKey || process.env.CLOUDGLUE_API_KEY || "";
     this.baseUrl = config.baseUrl || "https://api.cloudglue.dev/v1";
@@ -658,15 +700,23 @@ export class CloudGlue {
       timeout: this.timeout,
     };
 
+    // Let all validation happen on the server side
+    const sharedConfig: ZodiosOptions = {
+      validate: false,
+      transform: false,
+      sendDefaults: true,
+    }
+
     // Initialize all API clients with the configured base URL and auth
-    const filesApi = createFilesApiClient(this.baseUrl);
-    const collectionsApi = createCollectionsApiClient(this.baseUrl);
-    const chatApi = createChatApiClient(this.baseUrl);
-    const transcribeApi = createTranscribeApiClient(this.baseUrl);
-    const extractApi = createExtractApiClient(this.baseUrl);
+    const filesApi = createFilesApiClient(this.baseUrl, sharedConfig);
+    const collectionsApi = createCollectionsApiClient(this.baseUrl, sharedConfig);
+    const chatApi = createChatApiClient(this.baseUrl, sharedConfig);
+    const transcribeApi = createTranscribeApiClient(this.baseUrl, sharedConfig);
+    const extractApi = createExtractApiClient(this.baseUrl, sharedConfig);
+    const segmentationsApi = createSegmentationsApiClient(this.baseUrl, sharedConfig);
 
     // Configure base URL and axios config for all clients
-    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi].forEach(
+    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi].forEach(
       (client) => {
         Object.assign(client.axios.defaults, axiosConfig);
 
@@ -710,5 +760,6 @@ export class CloudGlue {
     this.chat = new EnhancedChatApi(chatApi);
     this.transcribe = new EnhancedTranscribeApi(transcribeApi);
     this.extract = new EnhancedExtractApi(extractApi);
-  }
+    this.segmentations = new EnhancedSegmentationsApi(segmentationsApi);
+    }
 }

@@ -232,7 +232,7 @@ class EnhancedFilesApi {
 
   async updateFile(fileId: string, params: UpdateFileParams) {
     return this.api.updateFile(
-      params,
+      { ...params, filename: params.filename ?? undefined },
       { params: { file_id: fileId } }
     );
   }

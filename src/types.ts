@@ -27,7 +27,7 @@ export interface UpdateFileParams {
   filename?: string;
   metadata?: Record<string, any>;
   // Index signature allows additional properties to match the generated schema's .passthrough() behavior
-  [key: string]: any;
+  // [key: string]: any;
 }
 
 /**

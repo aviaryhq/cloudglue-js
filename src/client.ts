@@ -312,6 +312,7 @@ class EnhancedCollectionsApi {
 
   async addVideo(collectionId: string, fileId: string, params: {
     segmentation_config?: SegmentationConfig;
+    metadata?: Record<string, any>;
   } = {}) {
     return this.api.addVideo(
       { file_id: fileId, ...params },
@@ -367,11 +368,14 @@ class EnhancedCollectionsApi {
   async addYouTubeVideo(
     collectionId: string,
     url: string,
-    metadata?: Record<string, any>
+    params: {
+      metadata?: Record<string, any>,
+      segmentation_config?: SegmentationConfig
+    } = {}
   ) {
     return this.api.addYouTubeVideo(
-      { url, metadata },
-      { params: { collection_id: collectionId } }
+      { url, ...params },
+      { params: { collection_id: collectionId, ...params } }
     );
   }
 

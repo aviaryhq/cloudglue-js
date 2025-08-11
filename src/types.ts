@@ -5,12 +5,20 @@ import { schemas as collectionsSchemas } from '../generated/Collections';
 import { schemas as chatSchemas } from '../generated/Chat';
 import { schemas as transcribeSchemas } from '../generated/Transcribe';
 import { schemas as extractSchemas } from '../generated/Extract';
+import { SegmentationUniformConfig as SegmentationUniformConfigType, SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType, SegmentationConfig as SegmentationConfigType } from '../generated/common';
 
 /**
- * Represents a video file in the CloudGlue system
+ * Represents a video file in the Cloudglue system
  * Contains metadata about the file including its status, size, and video information
  */
 export type { File } from '../generated/common';
+
+
+/**
+ * Represents the status of a job
+ * TODO: would be better to use a common type for all jobs
+ */
+export type JobStatus = z.infer<typeof transcribeSchemas.Transcribe>['status'];
 
 /**
  * Parameters for updating an existing file
@@ -19,7 +27,7 @@ export interface UpdateFileParams {
   filename?: string;
   metadata?: Record<string, any>;
   // Index signature allows additional properties to match the generated schema's .passthrough() behavior
-  [key: string]: any;
+  // [key: string]: any;
 }
 
 /**
@@ -110,4 +118,13 @@ export type CollectionEntitiesList = z.infer<typeof collectionsSchemas.Collectio
  */
 export type CollectionRichTranscriptsList = z.infer<typeof collectionsSchemas.CollectionRichTranscriptsList>;
 
+/**
+ * Segmentation config for the Uniform strategy
+ */
+export type SegmentationUniformConfig = z.infer<typeof SegmentationUniformConfigType>;
 
+/**
+ * Segmentation config for the Shot Detector strategy
+ */
+export type SegmentationShotDetectorConfig = z.infer<typeof SegmentationShotDetectorConfigType>;
+export type SegmentationConfig = z.infer<typeof SegmentationConfigType>;

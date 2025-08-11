@@ -14,7 +14,7 @@ const path = require('path');
 
 // Run the openapi-zod-client command
 console.log('Generating API client...');
-execSync('openapi-zod-client spec/spec/openapi.json --group-strategy=tag-file -o generated --export-schemas=true --export-types=true --base-url=https://api.cloudglue.dev/v1 --strict-objects', { stdio: 'inherit' });
+execSync('npx -y openapi-zod-client spec/spec/openapi.json --group-strategy=tag-file -o generated --export-schemas=true --export-types=true --base-url=https://api.cloudglue.dev/v1 --strict-objects', { stdio: 'inherit' });
 
 // Transform the Files.ts content
 console.log('Transforming generated files...');
@@ -30,11 +30,71 @@ if (!match) {
 
 const [, importSection, restOfFile] = match;
 
-// Create new imports section
-const newImports = importSection
-    .split('\n')
-    .filter(line => !line.includes('./common') && line.trim()) // Remove any imports from ./common and empty lines
-    .join('\n');
+// Create new imports section while preserving other ./common imports
+// We will:
+// - Collect any named imports from ./common
+// - Remove the `File` specifier from them
+// - Reconstruct the imports, adding `import { File as CloudglueFile } from "./common";`
+// - Preserve separation of value vs type-only imports
+const importLines = importSection.split('\n');
+const preservedImportLines = [];
+const valueSpecifiersFromCommon = new Set();
+const typeSpecifiersFromCommon = new Set();
+
+for (const line of importLines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue; // drop empty lines
+
+    const isFromCommon = /from\s+["']\.\/common["']\s*;?$/.test(trimmed);
+    if (!isFromCommon) {
+        preservedImportLines.push(line);
+        continue;
+    }
+
+    // Parse specifiers inside braces
+    const isTypeOnly = /^\s*import\s+type\b/.test(line);
+    const matchBraces = line.match(/\{([^}]*)\}/);
+    if (!matchBraces) {
+        // No named specifiers; nothing to collect
+        continue;
+    }
+    const rawSpecifiers = matchBraces[1]
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+    for (const spec of rawSpecifiers) {
+        // Capture left side of `as` to identify the imported name
+        const [importedNameRaw] = spec.split(/\s+as\s+/);
+        const importedName = importedNameRaw.trim();
+
+        // Drop any specifier that imports `File` (we will re-add as alias)
+        if (importedName === 'File') {
+            continue;
+        }
+
+        if (isTypeOnly) {
+            typeSpecifiersFromCommon.add(spec);
+        } else {
+            valueSpecifiersFromCommon.add(spec);
+        }
+    }
+}
+
+// Reconstruct imports
+let newImports = preservedImportLines.join('\n');
+if (newImports && !newImports.endsWith('\n')) newImports += '\n';
+
+// Always add our CloudglueFile alias import
+newImports += 'import { File as CloudglueFile } from "./common";\n';
+
+// Add back remaining value and type-only specifiers from ./common
+if (valueSpecifiersFromCommon.size > 0) {
+    newImports += `import { ${Array.from(valueSpecifiersFromCommon).join(', ')} } from "./common";\n`;
+}
+if (typeSpecifiersFromCommon.size > 0) {
+    newImports += `import type { ${Array.from(typeSpecifiersFromCommon).join(', ')} } from "./common";\n`;
+}
 
 // Replace File with CloudglueFile in specific contexts in the rest of the file
 // We'll do this by splitting the content around z.instanceof(File)
@@ -51,8 +111,8 @@ const transformedRest = parts.map((part, index) => {
     return part.replace(/\bFile\b(?=\s*[,;}\]]|$|\s+extends|\s*\||(?:\s+as\s+)|(?=\s*>)|(?=\s*\)(?:\s*,|\s*\)|$)))/g, 'CloudglueFile');
 }).join('z.instanceof(File)');
 
-// Combine the sections with our import
-content = newImports + '\nimport { File as CloudglueFile } from "./common";\n\n' + transformedRest.trimStart();
+// Combine the sections
+content = newImports + '\n' + transformedRest.trimStart();
 
 // Write the transformed content back
 fs.writeFileSync(filesPath, content);

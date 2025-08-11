@@ -1,10 +1,18 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 import { File as CloudglueFile } from "./common";
+import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig } from "./common";
 
 type FileList = {
   object: "list";
   data: Array<CloudglueFile>;
+  total: number;
+  limit: number;
+  offset: number;
+};
+type SegmentationList = {
+  object: "list";
+  data: Array<Segmentation>;
   total: number;
   limit: number;
   offset: number;
@@ -14,6 +22,16 @@ const FileList: z.ZodType<FileList> = z
   .object({
     object: z.literal("list"),
     data: z.array(CloudglueFile),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
+const SegmentationList: z.ZodType<SegmentationList> = z
+  .object({
+    object: z.literal("list"),
+    data: z.array(Segmentation),
     total: z.number().int(),
     limit: z.number().int(),
     offset: z.number().int(),
@@ -42,6 +60,7 @@ const FileUpdate = z
 
 export const schemas = {
   FileList,
+  SegmentationList,
   FileUpload,
   FileDelete,
   FileUpdate,
@@ -227,6 +246,81 @@ const endpoints = makeApi([
       {
         status: 400,
         description: `Invalid request or malformed file update parameters`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "post",
+    path: "/files/:file_id/segmentations",
+    alias: "createFileSegmentation",
+    description: `Create a new segmentation for a file using the specified segmentation configuration`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "body",
+        description: `Segmentation configuration`,
+        type: "Body",
+        schema: SegmentationConfig,
+      },
+      {
+        name: "file_id",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: Segmentation,
+    errors: [
+      {
+        status: 400,
+        description: `Invalid request or file duration is less than window size`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 404,
+        description: `File not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "get",
+    path: "/files/:file_id/segmentations",
+    alias: "listFileSegmentations",
+    description: `List all segmentations for a specific file`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "file_id",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+      {
+        name: "limit",
+        type: "Query",
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: "offset",
+        type: "Query",
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+    ],
+    response: SegmentationList,
+    errors: [
+      {
+        status: 404,
+        description: `File not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],

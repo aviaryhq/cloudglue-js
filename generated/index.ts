@@ -4,3 +4,4 @@ export { CollectionsApi } from "./Collections";
 export { ChatApi } from "./Chat";
 export { TranscribeApi } from "./Transcribe";
 export { WebhooksApi } from "./Webhooks";
+export { SegmentationsApi } from "./Segmentations";

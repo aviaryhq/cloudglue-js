@@ -1,6 +1,11 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { FileSegmentationConfig } from "./common";
+import { SegmentationConfig } from "./common";
+import { SegmentationUniformConfig } from "./common";
+import { SegmentationShotDetectorConfig } from "./common";
+
 type Extract = {
   job_id: string;
   status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
@@ -28,6 +33,13 @@ type Extract = {
     | undefined;
   error?: string | undefined;
 };
+type NewExtract = {
+  url: string;
+  prompt?: string | undefined;
+  schema?: {} | undefined;
+  enable_video_level_entities?: boolean | undefined;
+  enable_segment_level_entities?: boolean | undefined;
+} & FileSegmentationConfig;
 type ExtractList = {
   object: "list";
   data: Array<Extract>;
@@ -92,7 +104,7 @@ const ExtractList: z.ZodType<ExtractList> = z
   })
   .strict()
   .passthrough();
-const NewExtract = z
+const NewExtract: z.ZodType<NewExtract> = z
   .object({
     url: z.string(),
     prompt: z.string().optional(),
@@ -101,7 +113,8 @@ const NewExtract = z
     enable_segment_level_entities: z.boolean().optional().default(true),
   })
   .strict()
-  .passthrough();
+  .passthrough()
+  .and(FileSegmentationConfig);
 
 export const schemas = {
   Extract,

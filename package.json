@@ -10,7 +10,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "generate": "node generate.js",
-    "build": "tsc",
+    "build": "tsc && node scripts/build.js",
     "watch": "tsc --watch",
     "prepare": "npm run build"
   },

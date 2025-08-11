@@ -651,6 +651,8 @@ export class CloudGlue {
     const axiosConfig: AxiosRequestConfig = {
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
+        'x-sdk-client': 'cloudglue-js',
+        'x-sdk-version': '__SDK_VERSION__',
       },
       baseURL: this.baseUrl,
       timeout: this.timeout,

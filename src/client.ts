@@ -375,6 +375,9 @@ class EnhancedCollectionsApi {
     } as any);
   }
 
+  /**
+   * @deprecated Use addVideoByUrl instead
+   */
   async addYouTubeVideo(
     collectionId: string,
     url: string,

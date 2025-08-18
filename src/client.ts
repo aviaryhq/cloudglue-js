@@ -360,6 +360,16 @@ class EnhancedCollectionsApi {
     );
   }
 
+  async addVideoByUrl({collectionId, url, params}: {collectionId: string, url: string, params: {
+    segmentation_config?: SegmentationConfig;
+    metadata?: Record<string, any>;
+  }}) {
+    return this.api.addVideo(
+      { url, ...params },
+      { params: { collection_id: collectionId, ...params } }
+    );
+  }
+
   async addVideo(collectionId: string, fileId: string, params: {
     segmentation_config?: SegmentationConfig;
     metadata?: Record<string, any>;
@@ -415,6 +425,9 @@ class EnhancedCollectionsApi {
     } as any);
   }
 
+  /**
+   * @deprecated Use addVideoByUrl instead
+   */
   async addYouTubeVideo(
     collectionId: string,
     url: string,

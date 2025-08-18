@@ -12,7 +12,7 @@ type Collection = {
   object: "collection";
   name: string;
   description?: (string | null) | undefined;
-  collection_type: "entities" | "rich-transcripts";
+  collection_type: "entities" | "rich-transcripts" | "media-descriptions";
   extract_config?:
     | Partial<{
         prompt: string;
@@ -110,7 +110,11 @@ const Collection: z.ZodType<Collection> = z
     object: z.literal("collection"),
     name: z.string(),
     description: z.union([z.string(), z.null()]).optional(),
-    collection_type: z.enum(["entities", "rich-transcripts"]),
+    collection_type: z.enum([
+      "entities",
+      "rich-transcripts",
+      "media-descriptions",
+    ]),
     extract_config: z
       .object({
         prompt: z.string(),
@@ -500,7 +504,9 @@ const endpoints = makeApi([
       {
         name: "collection_type",
         type: "Query",
-        schema: z.enum(["entities", "rich-transcripts"]).optional(),
+        schema: z
+          .enum(["entities", "rich-transcripts", "media-descriptions"])
+          .optional(),
       },
     ],
     response: CollectionList,

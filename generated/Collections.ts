@@ -12,7 +12,7 @@ type Collection = {
   object: "collection";
   name: string;
   description?: (string | null) | undefined;
-  collection_type: "entities" | "rich-transcripts";
+  collection_type: "entities" | "rich-transcripts" | "media-descriptions";
   extract_config?:
     | Partial<{
         prompt: string;
@@ -83,9 +83,15 @@ type CollectionFile = {
       }
     | undefined;
 };
-type AddCollectionFile = {
-  file_id: string;
-} & FileSegmentationConfig;
+type AddCollectionFile = (
+  | {
+      file_id: string;
+    }
+  | {
+      url: string;
+    }
+) &
+  FileSegmentationConfig;
 type CollectionFileList = {
   object: "list";
   data: Array<CollectionFile>;
@@ -104,7 +110,11 @@ const Collection: z.ZodType<Collection> = z
     object: z.literal("collection"),
     name: z.string(),
     description: z.union([z.string(), z.null()]).optional(),
-    collection_type: z.enum(["entities", "rich-transcripts"]),
+    collection_type: z.enum([
+      "entities",
+      "rich-transcripts",
+      "media-descriptions",
+    ]),
     extract_config: z
       .object({
         prompt: z.string(),
@@ -175,9 +185,10 @@ const CollectionList: z.ZodType<CollectionList> = z
   .strict()
   .passthrough();
 const AddCollectionFile: z.ZodType<AddCollectionFile> = z
-  .object({ file_id: z.string() })
-  .strict()
-  .passthrough()
+  .union([
+    z.object({ file_id: z.string() }).strict().passthrough(),
+    z.object({ url: z.string() }).strict().passthrough(),
+  ])
   .and(FileSegmentationConfig);
 const AddYouTubeCollectionFile: z.ZodType<AddYouTubeCollectionFile> = z
   .object({
@@ -493,7 +504,9 @@ const endpoints = makeApi([
       {
         name: "collection_type",
         type: "Query",
-        schema: z.enum(["entities", "rich-transcripts"]).optional(),
+        schema: z
+          .enum(["entities", "rich-transcripts", "media-descriptions"])
+          .optional(),
       },
     ],
     response: CollectionList,

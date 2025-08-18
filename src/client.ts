@@ -5,6 +5,7 @@ import {
   ChatApi,
   TranscribeApi,
   ExtractApi,
+  SearchApi,
 } from "../generated";
 import type { File, SegmentationConfig, UpdateFileParams } from "./types";
 import { createApiClient as createFilesApiClient } from "../generated/Files";
@@ -13,6 +14,7 @@ import { createApiClient as createChatApiClient } from "../generated/Chat";
 import { createApiClient as createTranscribeApiClient } from "../generated/Transcribe";
 import { createApiClient as createExtractApiClient } from "../generated/Extract";
 import { createApiClient as createSegmentationsApiClient, SegmentationsApi } from "../generated/Segmentations";
+import { createApiClient as createSearchApiClient } from "../generated/Search";
 import { ZodiosOptions } from "@zodios/core";
 
 export class CloudGlueError extends Error {
@@ -176,6 +178,54 @@ interface ChatCompletionParams {
   temperature?: number;
   top_p?: number;
   max_tokens?: number;
+}
+
+interface SearchParams {
+  scope: "file" | "segment";
+  collections: string[];
+  query: string;
+  limit?: number;
+  filter?: {
+    metadata?: Array<{
+      path: string;
+      operator:
+        | "NotEqual"
+        | "Equal"
+        | "LessThan"
+        | "GreaterThan"
+        | "ContainsAny"
+        | "ContainsAll"
+        | "In";
+      valueText?: string;
+      valueTextArray?: string[];
+    }>;
+    video_info?: Array<{
+      path: "duration_seconds" | "has_audio";
+      operator:
+        | "NotEqual"
+        | "Equal"
+        | "LessThan"
+        | "GreaterThan"
+        | "ContainsAny"
+        | "ContainsAll"
+        | "In";
+      valueText?: string;
+      valueTextArray?: string[];
+    }>;
+    file?: Array<{
+      path: "bytes" | "filename" | "uri" | "created_at" | "id";
+      operator:
+        | "NotEqual"
+        | "Equal"
+        | "LessThan"
+        | "GreaterThan"
+        | "ContainsAny"
+        | "ContainsAll"
+        | "In";
+      valueText?: string;
+      valueTextArray?: string[];
+    }>;
+  };
 }
 
 interface WaitForReadyOptions {
@@ -641,6 +691,14 @@ class EnhancedSegmentationsApi {
   }
 }
 
+class EnhancedSearchApi {
+  constructor(private readonly api: typeof SearchApi) {}
+
+  async searchContent(params: SearchParams) {
+    return this.api.searchContent(params);
+  }
+}
+
 /**
  * Main CloudGlue client class that provides access to all API functionality
  * through enhanced, user-friendly interfaces
@@ -685,6 +743,12 @@ export class CloudGlue {
    */
   public readonly segmentations: EnhancedSegmentationsApi;
 
+  /**
+   * Search API for searching video content
+   * Provides methods for searching videos and video segments in collections
+   */
+  public readonly search: EnhancedSearchApi;
+
   constructor(config: CloudGlueConfig = {}) {
     this.apiKey = config.apiKey || process.env.CLOUDGLUE_API_KEY || "";
     this.baseUrl = config.baseUrl || "https://api.cloudglue.dev/v1";
@@ -719,9 +783,10 @@ export class CloudGlue {
     const transcribeApi = createTranscribeApiClient(this.baseUrl, sharedConfig);
     const extractApi = createExtractApiClient(this.baseUrl, sharedConfig);
     const segmentationsApi = createSegmentationsApiClient(this.baseUrl, sharedConfig);
+    const searchApi = createSearchApiClient(this.baseUrl, sharedConfig);
 
     // Configure base URL and axios config for all clients
-    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi].forEach(
+    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi, searchApi].forEach(
       (client) => {
         Object.assign(client.axios.defaults, axiosConfig);
 
@@ -768,5 +833,6 @@ export class CloudGlue {
     this.transcribe = new EnhancedTranscribeApi(transcribeApi);
     this.extract = new EnhancedExtractApi(extractApi);
     this.segmentations = new EnhancedSegmentationsApi(segmentationsApi);
+    this.search = new EnhancedSearchApi(searchApi);
     }
 }

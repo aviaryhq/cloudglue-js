@@ -5,6 +5,7 @@ import { schemas as collectionsSchemas } from '../generated/Collections';
 import { schemas as chatSchemas } from '../generated/Chat';
 import { schemas as transcribeSchemas } from '../generated/Transcribe';
 import { schemas as extractSchemas } from '../generated/Extract';
+import { schemas as searchSchemas } from '../generated/Search';
 import { SegmentationUniformConfig as SegmentationUniformConfigType, SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType, SegmentationConfig as SegmentationConfigType } from '../generated/common';
 
 /**
@@ -128,3 +129,34 @@ export type SegmentationUniformConfig = z.infer<typeof SegmentationUniformConfig
  */
 export type SegmentationShotDetectorConfig = z.infer<typeof SegmentationShotDetectorConfigType>;
 export type SegmentationConfig = z.infer<typeof SegmentationConfigType>;
+
+/**
+ * Represents a search request for finding videos or video segments
+ */
+export type SearchRequest = z.infer<typeof searchSchemas.SearchRequest>;
+
+/**
+ * Represents the response from a search request
+ * Contains search results with file or segment matches
+ */
+export type SearchResponse = z.infer<typeof searchSchemas.SearchResponse>;
+
+/**
+ * Represents a file-level search result
+ */
+export type FileSearchResult = z.infer<typeof searchSchemas.FileSearchResult>;
+
+/**
+ * Represents a segment-level search result
+ */
+export type SegmentSearchResult = z.infer<typeof searchSchemas.SegmentSearchResult>;
+
+/**
+ * Represents search filter criteria for filtering results
+ */
+export type SearchFilterCriteria = z.infer<typeof searchSchemas.SearchFilterCriteria>;
+
+/**
+ * Represents search filter options for metadata, video info, and file properties
+ */
+export type SearchFilter = z.infer<typeof searchSchemas.SearchFilter>;

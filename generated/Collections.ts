@@ -83,9 +83,15 @@ type CollectionFile = {
       }
     | undefined;
 };
-type AddCollectionFile = {
-  file_id: string;
-} & FileSegmentationConfig;
+type AddCollectionFile = (
+  | {
+      file_id: string;
+    }
+  | {
+      url: string;
+    }
+) &
+  FileSegmentationConfig;
 type CollectionFileList = {
   object: "list";
   data: Array<CollectionFile>;
@@ -175,9 +181,10 @@ const CollectionList: z.ZodType<CollectionList> = z
   .strict()
   .passthrough();
 const AddCollectionFile: z.ZodType<AddCollectionFile> = z
-  .object({ file_id: z.string() })
-  .strict()
-  .passthrough()
+  .union([
+    z.object({ file_id: z.string() }).strict().passthrough(),
+    z.object({ url: z.string() }).strict().passthrough(),
+  ])
   .and(FileSegmentationConfig);
 const AddYouTubeCollectionFile: z.ZodType<AddYouTubeCollectionFile> = z
   .object({

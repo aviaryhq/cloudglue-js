@@ -45,6 +45,14 @@ type Transcribe = {
             end_time: number;
           }>
         >;
+        segment_summary: Array<
+          Partial<{
+            title: string;
+            summary: string;
+            start_time: number;
+            end_time: number;
+          }>
+        >;
       }>
     | undefined;
   error?: string | undefined;
@@ -128,6 +136,18 @@ const Transcribe: z.ZodType<Transcribe> = z
           z
             .object({
               text: z.string(),
+              start_time: z.number(),
+              end_time: z.number(),
+            })
+            .partial()
+            .strict()
+            .passthrough()
+        ),
+        segment_summary: z.array(
+          z
+            .object({
+              title: z.string(),
+              summary: z.string(),
               start_time: z.number(),
               end_time: z.number(),
             })

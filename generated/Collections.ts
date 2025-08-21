@@ -320,6 +320,20 @@ const RichTranscript = z
           .passthrough()
       )
       .optional(),
+    segment_summary: z
+      .array(
+        z
+          .object({
+            title: z.string(),
+            summary: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
   })
   .strict()
   .passthrough();
@@ -397,6 +411,18 @@ const CollectionRichTranscriptsList = z
                 z
                   .object({
                     text: z.string(),
+                    start_time: z.number(),
+                    end_time: z.number(),
+                  })
+                  .partial()
+                  .strict()
+                  .passthrough()
+              ),
+              segment_summary: z.array(
+                z
+                  .object({
+                    title: z.string(),
+                    summary: z.string(),
                     start_time: z.number(),
                     end_time: z.number(),
                   })

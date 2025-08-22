@@ -362,6 +362,7 @@ class EnhancedCollectionsApi {
 
   async addVideoByUrl({collectionId, url, params}: {collectionId: string, url: string, params: {
     segmentation_config?: SegmentationConfig;
+    segmentation_id?: string;
     metadata?: Record<string, any>;
   }}) {
     return this.api.addVideo(
@@ -372,6 +373,7 @@ class EnhancedCollectionsApi {
 
   async addVideo(collectionId: string, fileId: string, params: {
     segmentation_config?: SegmentationConfig;
+    segmentation_id?: string;
     metadata?: Record<string, any>;
   } = {}) {
     return this.api.addVideo(
@@ -433,7 +435,8 @@ class EnhancedCollectionsApi {
     url: string,
     params: {
       metadata?: Record<string, any>,
-      segmentation_config?: SegmentationConfig
+      segmentation_config?: SegmentationConfig,
+      segmentation_id?: string,
     } = {}
   ) {
     return this.api.addYouTubeVideo(
@@ -526,6 +529,7 @@ class EnhancedTranscribeApi {
       enable_scene_text?: boolean;
       enable_visual_scene_description?: boolean;
       segmentation_config?: SegmentationConfig;
+      segmentation_id?: string;
     } = {}
   ) {
     return this.api.createTranscribe({
@@ -620,6 +624,7 @@ class EnhancedExtractApi {
       enable_video_level_entities?: boolean;
       enable_segment_level_entities?: boolean;
       segmentation_config?: SegmentationConfig;
+      segmentation_id?: string;
     }
   ) {
     return this.api.createExtract({

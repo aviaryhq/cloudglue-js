@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 import { File as CloudglueFile } from "./common";
-import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig } from "./common";
+import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, ThumbnailsConfig, ThumbnailList, Thumbnail } from "./common";
 
 type FileList = {
   object: "list";
@@ -57,6 +57,7 @@ const FileUpdate = z
   .partial()
   .strict()
   .passthrough();
+const createFileSegmentation_Body = SegmentationConfig;
 
 export const schemas = {
   FileList,
@@ -64,6 +65,7 @@ export const schemas = {
   FileUpload,
   FileDelete,
   FileUpdate,
+  createFileSegmentation_Body,
 };
 
 const endpoints = makeApi([
@@ -261,7 +263,7 @@ const endpoints = makeApi([
         name: "body",
         description: `Segmentation configuration`,
         type: "Body",
-        schema: SegmentationConfig,
+        schema: createFileSegmentation_Body,
       },
       {
         name: "file_id",
@@ -312,6 +314,53 @@ const endpoints = makeApi([
       },
     ],
     response: SegmentationList,
+    errors: [
+      {
+        status: 404,
+        description: `File not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "get",
+    path: "/files/:file_id/thumbnails",
+    alias: "getThumbnails",
+    description: `Get all thumbnails for a file`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "file_id",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+      {
+        name: "is_default",
+        type: "Query",
+        schema: z.boolean().optional().default(false),
+      },
+      {
+        name: "segmentation_id",
+        type: "Query",
+        schema: z.string().uuid().optional(),
+      },
+      {
+        name: "limit",
+        type: "Query",
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: "offset",
+        type: "Query",
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+    ],
+    response: ThumbnailList,
     errors: [
       {
         status: 404,

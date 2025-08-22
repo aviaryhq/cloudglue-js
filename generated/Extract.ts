@@ -1,6 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ThumbnailsConfig } from "./common";
 import { FileSegmentationConfig } from "./common";
 import { SegmentationConfig } from "./common";
 import { SegmentationUniformConfig } from "./common";
@@ -39,6 +40,7 @@ type NewExtract = {
   schema?: {} | undefined;
   enable_video_level_entities?: boolean | undefined;
   enable_segment_level_entities?: boolean | undefined;
+  thumbnails_config?: ThumbnailsConfig | undefined;
 } & FileSegmentationConfig;
 type ExtractList = {
   object: "list";
@@ -111,6 +113,7 @@ const NewExtract: z.ZodType<NewExtract> = z
     schema: z.object({}).partial().strict().passthrough().optional(),
     enable_video_level_entities: z.boolean().optional().default(false),
     enable_segment_level_entities: z.boolean().optional().default(true),
+    thumbnails_config: ThumbnailsConfig.optional(),
   })
   .strict()
   .passthrough()

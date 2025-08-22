@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export type ThumbnailsConfig = {
+  enable_segment_thumbnails: boolean;
+};
 export type FileSegmentationConfig = Partial<{
   segmentation_id: string;
   segmentation_config: SegmentationConfig;
@@ -45,22 +48,44 @@ export type Segmentation = {
   created_at: number;
   file_id: string;
   segmentation_config: SegmentationConfig;
+  thumbnails_config: ThumbnailsConfig;
   total_segments?: number | undefined;
   data?:
     | {
         object: "list";
-        segments: Array<{
-          id: string;
-          start_time: number;
-          end_time: number;
-        }>;
+        segments?:
+          | Array<{
+              id: string;
+              start_time: number;
+              end_time: number;
+              thumbnail_url?: string | undefined;
+            }>
+          | undefined;
         total: number;
         limit: number;
         offset: number;
       }
     | undefined;
 };
+export type ThumbnailList = {
+  object: "list";
+  total: number;
+  limit: number;
+  offset: number;
+  data: Array<Thumbnail>;
+};
+export type Thumbnail = {
+  id: string;
+  url: string;
+  time: number;
+  segmentation_id?: string | undefined;
+  segment_id?: string | undefined;
+};
 
+export const ThumbnailsConfig = z
+  .object({ enable_segment_thumbnails: z.boolean() })
+  .strict()
+  .passthrough();
 export const SegmentationUniformConfig = z
   .object({
     window_seconds: z.number().gte(2).lte(60),
@@ -140,20 +165,24 @@ export const Segmentation = z
     created_at: z.number().gte(0),
     file_id: z.string().uuid(),
     segmentation_config: SegmentationConfig,
+    thumbnails_config: ThumbnailsConfig,
     total_segments: z.number().gte(0).optional(),
     data: z
       .object({
         object: z.literal("list"),
-        segments: z.array(
-          z
-            .object({
-              id: z.string().uuid(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .strict()
-            .passthrough()
-        ),
+        segments: z
+          .array(
+            z
+              .object({
+                id: z.string().uuid(),
+                start_time: z.number(),
+                end_time: z.number(),
+                thumbnail_url: z.string().optional(),
+              })
+              .strict()
+              .passthrough()
+          )
+          .optional(),
         total: z.number().int(),
         limit: z.number().int(),
         offset: z.number().int(),
@@ -161,6 +190,26 @@ export const Segmentation = z
       .strict()
       .passthrough()
       .optional(),
+  })
+  .strict()
+  .passthrough();
+export const Thumbnail = z
+  .object({
+    id: z.string().uuid(),
+    url: z.string(),
+    time: z.number(),
+    segmentation_id: z.string().uuid().optional(),
+    segment_id: z.string().uuid().optional(),
+  })
+  .strict()
+  .passthrough();
+export const ThumbnailList = z
+  .object({
+    object: z.literal("list"),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+    data: z.array(Thumbnail),
   })
   .strict()
   .passthrough();

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { SegmentationConfig } from "./common";
 import { SegmentationUniformConfig } from "./common";
 import { SegmentationShotDetectorConfig } from "./common";
+import { ThumbnailsConfig } from "./common";
 import { File } from "./common";
 import { FileSegmentationConfig } from "./common";
 
@@ -30,6 +31,7 @@ type Collection = {
       }>
     | undefined;
   default_segmentation_config?: SegmentationConfig | undefined;
+  default_thumbnails_config?: ThumbnailsConfig | undefined;
   created_at: number;
   file_count: number;
 };
@@ -91,7 +93,10 @@ type AddCollectionFile = (
       url: string;
     }
 ) &
-  FileSegmentationConfig;
+  FileSegmentationConfig &
+  Partial<{
+    thumbnails_config: ThumbnailsConfig;
+  }>;
 type CollectionFileList = {
   object: "list";
   data: Array<CollectionFile>;
@@ -138,6 +143,7 @@ const Collection: z.ZodType<Collection> = z
       .passthrough()
       .optional(),
     default_segmentation_config: SegmentationConfig.optional(),
+    default_thumbnails_config: ThumbnailsConfig.optional(),
     created_at: z.number().int(),
     file_count: z.number().int(),
   })
@@ -189,7 +195,14 @@ const AddCollectionFile: z.ZodType<AddCollectionFile> = z
     z.object({ file_id: z.string() }).strict().passthrough(),
     z.object({ url: z.string() }).strict().passthrough(),
   ])
-  .and(FileSegmentationConfig);
+  .and(FileSegmentationConfig)
+  .and(
+    z
+      .object({ thumbnails_config: ThumbnailsConfig })
+      .partial()
+      .strict()
+      .passthrough()
+  );
 const AddYouTubeCollectionFile: z.ZodType<AddYouTubeCollectionFile> = z
   .object({
     url: z.string(),

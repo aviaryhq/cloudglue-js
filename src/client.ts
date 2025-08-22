@@ -16,6 +16,7 @@ import { createApiClient as createExtractApiClient } from "../generated/Extract"
 import { createApiClient as createSegmentationsApiClient, SegmentationsApi } from "../generated/Segmentations";
 import { createApiClient as createSearchApiClient } from "../generated/Search";
 import { ZodiosOptions } from "@zodios/core";
+import { ThumbnailsConfig } from "../generated/common";
 
 export class CloudGlueError extends Error {
   constructor(
@@ -61,6 +62,10 @@ interface ListFilesParams {
 interface UploadFileParams {
   file: globalThis.File;
   metadata?: Record<string, any>;
+  /**
+   * If enabled, the file will be segmented and thumbnails will be generated for each segment for the default segmentation config.
+   */
+  enable_segment_thumbnails?: boolean;
 }
 
 interface ListCollectionParams {
@@ -87,7 +92,8 @@ interface CreateCollectionParams {
     enable_scene_text?: boolean;
     enable_visual_scene_description?: boolean;
   };
-  default_segmentation_config?: SegmentationConfig; 
+  default_segmentation_config?: SegmentationConfig;   
+  default_thumbnails_config?: ThumbnailsConfig;
 }
 
 interface ListCollectionVideosParams {
@@ -258,6 +264,9 @@ class EnhancedFilesApi {
     if (params.metadata) {
       formData.append("metadata", JSON.stringify(params.metadata));
     }
+    if (params.enable_segment_thumbnails !== undefined) {
+      formData.append("enable_segment_thumbnails", params.enable_segment_thumbnails.toString());
+    }
 
     // Use axios directly to bypass Zodios validation
     return this.api.axios({
@@ -291,6 +300,23 @@ class EnhancedFilesApi {
     return this.api.listFileSegmentations({
       params: { file_id: fileId },
       queries: params,
+    });
+  }
+
+  /**
+   * Get thumbnails for a file. If a segmentationId is provided, the thumbnails will be for a specific segmentation.
+   * @param fileId - The ID of the file
+   * @param params - Optional parameters
+   * @returns The thumbnails for the file
+   */
+  async getFileThumbnails(fileId: string, params: {limit?: number, offset?: number, isDefault?: boolean, segmentationId?: string} = {}) {
+    return this.api.getThumbnails({
+      params: { file_id: fileId },
+      queries: {
+        ...params,
+        is_default: params.isDefault ?? false,
+        segmentation_id: params.segmentationId ?? undefined,
+      },
     });
   }
 
@@ -364,6 +390,7 @@ class EnhancedCollectionsApi {
     segmentation_config?: SegmentationConfig;
     segmentation_id?: string;
     metadata?: Record<string, any>;
+    thumbnail_config?: ThumbnailsConfig;
   }}) {
     return this.api.addVideo(
       { url, ...params },
@@ -375,6 +402,7 @@ class EnhancedCollectionsApi {
     segmentation_config?: SegmentationConfig;
     segmentation_id?: string;
     metadata?: Record<string, any>;
+    thumbnail_config?: ThumbnailsConfig;
   } = {}) {
     return this.api.addVideo(
       { file_id: fileId, ...params },
@@ -530,6 +558,7 @@ class EnhancedTranscribeApi {
       enable_visual_scene_description?: boolean;
       segmentation_config?: SegmentationConfig;
       segmentation_id?: string;
+      thumbnail_config?: ThumbnailsConfig
     } = {}
   ) {
     return this.api.createTranscribe({
@@ -625,6 +654,7 @@ class EnhancedExtractApi {
       enable_segment_level_entities?: boolean;
       segmentation_config?: SegmentationConfig;
       segmentation_id?: string;
+      thumbnail_config?: ThumbnailsConfig
     }
   ) {
     return this.api.createExtract({
@@ -707,6 +737,31 @@ class EnhancedSegmentationsApi {
       params: { segmentation_id: segmentationId },
     });
   }
+
+  /**
+   * Get thumbnails for a specific segmentation
+   * @param segmentationId - The ID of the segmentation
+   * @param params - Optional parameters
+   * @returns The thumbnails for the segmentation
+   */
+  async getSegmentationThumbnails(segmentationId: string, params: {
+    limit?: number;
+    offset?: number;
+    /**
+     * The IDs of the segments to get thumbnails for. If not provided, all segments will be used.
+     */
+    segment_ids?: string[]
+  } = {}) {
+    return this.api.getSegmentationThumbnails({
+      params: { segmentation_id: segmentationId },
+      queries: {
+        ...params,
+        segment_ids: params.segment_ids?.join(","),
+      },
+    });
+  }
+
+
 }
 
 class EnhancedSearchApi {

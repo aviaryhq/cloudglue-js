@@ -1,6 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ThumbnailsConfig } from "./common";
 import { FileSegmentationConfig } from "./common";
 import { SegmentationConfig } from "./common";
 import { SegmentationUniformConfig } from "./common";
@@ -63,6 +64,7 @@ type NewTranscribe = {
   enable_speech?: boolean | undefined;
   enable_visual_scene_description?: boolean | undefined;
   enable_scene_text?: boolean | undefined;
+  thumbnails_config?: ThumbnailsConfig | undefined;
 } & FileSegmentationConfig;
 type TranscribeList = {
   object: "list";
@@ -78,6 +80,7 @@ const NewTranscribe: z.ZodType<NewTranscribe> = z
     enable_speech: z.boolean().optional().default(true),
     enable_visual_scene_description: z.boolean().optional().default(false),
     enable_scene_text: z.boolean().optional().default(false),
+    thumbnails_config: ThumbnailsConfig.optional(),
   })
   .strict()
   .passthrough()

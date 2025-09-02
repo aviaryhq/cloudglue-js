@@ -42,6 +42,7 @@ const FileUpload = z
   .object({
     file: z.instanceof(File),
     metadata: z.object({}).partial().strict().passthrough().optional(),
+    enable_segment_thumbnails: z.boolean().optional().default(false),
   })
   .strict()
   .passthrough();

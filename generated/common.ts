@@ -41,6 +41,7 @@ export type File = {
         has_audio: boolean | null;
       }>
     | undefined;
+  thumbnail_url?: string | undefined;
 };
 export type Segmentation = {
   segmentation_id: string;
@@ -149,6 +150,7 @@ export const File = z
       .strict()
       .passthrough()
       .optional(),
+    thumbnail_url: z.string().optional(),
   })
   .strict()
   .passthrough();

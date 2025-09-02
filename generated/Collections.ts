@@ -56,6 +56,7 @@ type NewCollection = {
       }>
     | undefined;
   default_segmentation_config?: SegmentationConfig | undefined;
+  default_thumbnails_config?: ThumbnailsConfig | undefined;
 };
 type CollectionList = {
   object: "list";
@@ -177,6 +178,7 @@ const NewCollection: z.ZodType<NewCollection> = z
       .passthrough()
       .optional(),
     default_segmentation_config: SegmentationConfig.optional(),
+    default_thumbnails_config: ThumbnailsConfig.optional(),
   })
   .strict()
   .passthrough();

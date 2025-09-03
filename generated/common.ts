@@ -42,6 +42,9 @@ export type File = {
       }>
     | undefined;
   thumbnail_url?: string | undefined;
+  source?:
+    | ("video" | "youtube" | "s3" | "dropbox" | "http" | "upload")
+    | undefined;
 };
 export type Segmentation = {
   segmentation_id: string;
@@ -151,6 +154,9 @@ export const File = z
       .passthrough()
       .optional(),
     thumbnail_url: z.string().optional(),
+    source: z
+      .enum(["video", "youtube", "s3", "dropbox", "http", "upload"])
+      .optional(),
   })
   .strict()
   .passthrough();

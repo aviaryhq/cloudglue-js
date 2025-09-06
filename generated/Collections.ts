@@ -576,63 +576,63 @@ const CollectionMediaDescriptionsList = z
   .passthrough();
 const MediaDescription = z
   .object({
-    object: z.literal("collection_file").optional(),
-    file_id: z.string().uuid(),
-    added_at: z.number().int().optional(),
-    data: z
-      .object({
-        content: z.string(),
-        title: z.string(),
-        summary: z.string(),
-        speech: z.array(
-          z
-            .object({
-              text: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
-        visual_scene_description: z.array(
-          z
-            .object({
-              text: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
-        scene_text: z.array(
-          z
-            .object({
-              text: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
-        segment_summary: z.array(
-          z
-            .object({
-              title: z.string(),
-              summary: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
-      })
-      .partial()
-      .strict()
-      .passthrough()
+    collection_id: z.string(),
+    file_id: z.string(),
+    content: z.string().optional(),
+    title: z.string().optional(),
+    summary: z.string().optional(),
+    speech: z
+      .array(
+        z
+          .object({
+            text: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
+    visual_scene_description: z
+      .array(
+        z
+          .object({
+            text: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
+    scene_text: z
+      .array(
+        z
+          .object({
+            text: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
+    segment_summary: z
+      .array(
+        z
+          .object({
+            title: z.string(),
+            summary: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
       .optional(),
   })
   .strict()

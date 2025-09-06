@@ -30,13 +30,21 @@ type Collection = {
         enable_visual_scene_description: boolean;
       }>
     | undefined;
+  describe_config?:
+    | Partial<{
+        enable_summary: boolean;
+        enable_speech: boolean;
+        enable_scene_text: boolean;
+        enable_visual_scene_description: boolean;
+      }>
+    | undefined;
   default_segmentation_config?: SegmentationConfig | undefined;
   default_thumbnails_config?: ThumbnailsConfig | undefined;
   created_at: number;
   file_count: number;
 };
 type NewCollection = {
-  collection_type: "entities" | "rich-transcripts";
+  collection_type: "entities" | "rich-transcripts" | "media-descriptions";
   name: string;
   description?: (string | null) | undefined;
   extract_config?:
@@ -48,6 +56,14 @@ type NewCollection = {
       }>
     | undefined;
   transcribe_config?:
+    | Partial<{
+        enable_summary: boolean;
+        enable_speech: boolean;
+        enable_scene_text: boolean;
+        enable_visual_scene_description: boolean;
+      }>
+    | undefined;
+  describe_config?:
     | Partial<{
         enable_summary: boolean;
         enable_speech: boolean;
@@ -143,6 +159,17 @@ const Collection: z.ZodType<Collection> = z
       .strict()
       .passthrough()
       .optional(),
+    describe_config: z
+      .object({
+        enable_summary: z.boolean().default(true),
+        enable_speech: z.boolean().default(true),
+        enable_scene_text: z.boolean().default(true),
+        enable_visual_scene_description: z.boolean().default(true),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .optional(),
     default_segmentation_config: SegmentationConfig.optional(),
     default_thumbnails_config: ThumbnailsConfig.optional(),
     created_at: z.number().int(),
@@ -152,7 +179,11 @@ const Collection: z.ZodType<Collection> = z
   .passthrough();
 const NewCollection: z.ZodType<NewCollection> = z
   .object({
-    collection_type: z.enum(["entities", "rich-transcripts"]),
+    collection_type: z.enum([
+      "entities",
+      "rich-transcripts",
+      "media-descriptions",
+    ]),
     name: z.string(),
     description: z.union([z.string(), z.null()]).optional(),
     extract_config: z
@@ -172,6 +203,17 @@ const NewCollection: z.ZodType<NewCollection> = z
         enable_speech: z.boolean().default(true),
         enable_scene_text: z.boolean().default(false),
         enable_visual_scene_description: z.boolean().default(false),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .optional(),
+    describe_config: z
+      .object({
+        enable_summary: z.boolean().default(true),
+        enable_speech: z.boolean().default(true),
+        enable_scene_text: z.boolean().default(true),
+        enable_visual_scene_description: z.boolean().default(true),
       })
       .partial()
       .strict()
@@ -459,6 +501,142 @@ const CollectionRichTranscriptsList = z
   })
   .strict()
   .passthrough();
+const CollectionMediaDescriptionsList = z
+  .object({
+    object: z.literal("list"),
+    data: z.array(
+      z
+        .object({
+          file_id: z.string(),
+          added_at: z.number().int(),
+          object: z.literal("collection_file"),
+          data: z
+            .object({
+              content: z.string(),
+              title: z.string(),
+              summary: z.string(),
+              speech: z.array(
+                z
+                  .object({
+                    text: z.string(),
+                    start_time: z.number(),
+                    end_time: z.number(),
+                  })
+                  .partial()
+                  .strict()
+                  .passthrough()
+              ),
+              visual_scene_description: z.array(
+                z
+                  .object({
+                    text: z.string(),
+                    start_time: z.number(),
+                    end_time: z.number(),
+                  })
+                  .partial()
+                  .strict()
+                  .passthrough()
+              ),
+              scene_text: z.array(
+                z
+                  .object({
+                    text: z.string(),
+                    start_time: z.number(),
+                    end_time: z.number(),
+                  })
+                  .partial()
+                  .strict()
+                  .passthrough()
+              ),
+              segment_summary: z.array(
+                z
+                  .object({
+                    title: z.string(),
+                    summary: z.string(),
+                    start_time: z.number(),
+                    end_time: z.number(),
+                  })
+                  .partial()
+                  .strict()
+                  .passthrough()
+              ),
+            })
+            .partial()
+            .strict()
+            .passthrough(),
+        })
+        .strict()
+        .passthrough()
+    ),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
+const MediaDescription = z
+  .object({
+    object: z.literal("collection_file").optional(),
+    file_id: z.string().uuid(),
+    added_at: z.number().int().optional(),
+    data: z
+      .object({
+        content: z.string(),
+        title: z.string(),
+        summary: z.string(),
+        speech: z.array(
+          z
+            .object({
+              text: z.string(),
+              start_time: z.number(),
+              end_time: z.number(),
+            })
+            .partial()
+            .strict()
+            .passthrough()
+        ),
+        visual_scene_description: z.array(
+          z
+            .object({
+              text: z.string(),
+              start_time: z.number(),
+              end_time: z.number(),
+            })
+            .partial()
+            .strict()
+            .passthrough()
+        ),
+        scene_text: z.array(
+          z
+            .object({
+              text: z.string(),
+              start_time: z.number(),
+              end_time: z.number(),
+            })
+            .partial()
+            .strict()
+            .passthrough()
+        ),
+        segment_summary: z.array(
+          z
+            .object({
+              title: z.string(),
+              summary: z.string(),
+              start_time: z.number(),
+              end_time: z.number(),
+            })
+            .partial()
+            .strict()
+            .passthrough()
+        ),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .optional(),
+  })
+  .strict()
+  .passthrough();
 
 export const schemas = {
   Collection,
@@ -474,6 +652,8 @@ export const schemas = {
   RichTranscript,
   CollectionEntitiesList,
   CollectionRichTranscriptsList,
+  CollectionMediaDescriptionsList,
+  MediaDescription,
 };
 
 const endpoints = makeApi([
@@ -1022,6 +1202,115 @@ const endpoints = makeApi([
       {
         status: 404,
         description: `Collection not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "get",
+    path: "/collections/:collection_id/media-descriptions",
+    alias: "listCollectionMediaDescriptions",
+    description: `List all media description data for files in a collection. This API is only available when a collection is created with collection_type &#x27;media-descriptions&#x27;`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "collection_id",
+        type: "Path",
+        schema: z.string(),
+      },
+      {
+        name: "limit",
+        type: "Query",
+        schema: z.number().int().lte(100).optional().default(20),
+      },
+      {
+        name: "offset",
+        type: "Query",
+        schema: z.number().int().optional().default(0),
+      },
+      {
+        name: "order",
+        type: "Query",
+        schema: z.enum(["added_at", "filename"]).optional().default("added_at"),
+      },
+      {
+        name: "sort",
+        type: "Query",
+        schema: z.enum(["asc", "desc"]).optional().default("desc"),
+      },
+      {
+        name: "added_before",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "added_after",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "response_format",
+        type: "Query",
+        schema: z.enum(["json", "markdown"]).optional().default("json"),
+      },
+    ],
+    response: CollectionMediaDescriptionsList,
+    errors: [
+      {
+        status: 400,
+        description: `Collection type is not &#x27;media-descriptions&#x27;`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 404,
+        description: `Collection not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "get",
+    path: "/collections/:collection_id/videos/:file_id/media-descriptions",
+    alias: "getMediaDescriptions",
+    description: `Retrieve media description data for a specific file in a collection. This API is only available when the collection is created with collection_type &#x27;media-descriptions&#x27;`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "collection_id",
+        type: "Path",
+        schema: z.string(),
+      },
+      {
+        name: "file_id",
+        type: "Path",
+        schema: z.string(),
+      },
+      {
+        name: "response_format",
+        type: "Query",
+        schema: z.enum(["json", "markdown"]).optional().default("json"),
+      },
+    ],
+    response: MediaDescription,
+    errors: [
+      {
+        status: 400,
+        description: `Collection type is not &#x27;media-descriptions&#x27;`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 404,
+        description: `Collection or file not found`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {

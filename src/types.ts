@@ -6,6 +6,7 @@ import { schemas as chatSchemas } from '../generated/Chat';
 import { schemas as transcribeSchemas } from '../generated/Transcribe';
 import { schemas as extractSchemas } from '../generated/Extract';
 import { schemas as searchSchemas } from '../generated/Search';
+import { schemas as describeSchemas } from '../generated/Describe';
 import { SegmentationUniformConfig as SegmentationUniformConfigType, SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType, SegmentationConfig as SegmentationConfigType } from '../generated/common';
 
 /**
@@ -160,3 +161,24 @@ export type SearchFilterCriteria = z.infer<typeof searchSchemas.SearchFilterCrit
  * Represents search filter options for metadata, video info, and file properties
  */
 export type SearchFilter = z.infer<typeof searchSchemas.SearchFilter>;
+
+/**
+ * Represents the result of a video description request
+ * Contains detailed information about the video content including speech, text, and visual descriptions
+ */
+export type Describe = z.infer<typeof describeSchemas.Describe>;
+
+/**
+ * Represents a list of description jobs
+ */
+export type DescribeList = z.infer<typeof describeSchemas.DescribeList>;
+
+/**
+ * Represents media description data for a video in a collection
+ */
+export type CollectionMediaDescription = z.infer<typeof collectionsSchemas.MediaDescription>;
+
+/**
+ * Represents a list of media descriptions for files in a collection
+ */
+export type CollectionMediaDescriptionsList = z.infer<typeof collectionsSchemas.CollectionMediaDescriptionsList>;

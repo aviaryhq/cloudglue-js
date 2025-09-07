@@ -6,6 +6,7 @@ import {
   TranscribeApi,
   ExtractApi,
   SearchApi,
+  DescribeApi,
 } from "../generated";
 import type { File, SegmentationConfig, UpdateFileParams } from "./types";
 import { createApiClient as createFilesApiClient } from "../generated/Files";
@@ -15,6 +16,7 @@ import { createApiClient as createTranscribeApiClient } from "../generated/Trans
 import { createApiClient as createExtractApiClient } from "../generated/Extract";
 import { createApiClient as createSegmentationsApiClient, SegmentationsApi } from "../generated/Segmentations";
 import { createApiClient as createSearchApiClient } from "../generated/Search";
+import { createApiClient as createDescribeApiClient } from "../generated/Describe";
 import { ZodiosOptions } from "@zodios/core";
 import { ThumbnailsConfig } from "../generated/common";
 
@@ -73,11 +75,11 @@ interface ListCollectionParams {
   offset?: number;
   order?: "name" | "created_at";
   sort?: "asc" | "desc";
-  collection_type?: "entities" | "rich-transcripts";
+  collection_type?: "entities" | "rich-transcripts" | "media-descriptions";
 }
 
 interface CreateCollectionParams {
-  collection_type: "entities" | "rich-transcripts";
+  collection_type: "entities" | "rich-transcripts" | "media-descriptions";
   name: string;
   description?: string;
   extract_config?: {
@@ -87,6 +89,12 @@ interface CreateCollectionParams {
     enable_segment_level_entities?: boolean;
   };
   transcribe_config?: {
+    enable_summary?: boolean;
+    enable_speech?: boolean;
+    enable_scene_text?: boolean;
+    enable_visual_scene_description?: boolean;
+  };
+  describe_config?: {
     enable_summary?: boolean;
     enable_speech?: boolean;
     enable_scene_text?: boolean;
@@ -121,6 +129,16 @@ interface ListCollectionEntitiesParams {
 }
 
 interface ListCollectionRichTranscriptsParams {
+  limit?: number;
+  offset?: number;
+  order?: "added_at" | "filename";
+  sort?: "asc" | "desc";
+  added_before?: string;
+  added_after?: string;
+  response_format?: "json" | "markdown";
+}
+
+interface ListCollectionMediaDescriptionsParams {
   limit?: number;
   offset?: number;
   order?: "added_at" | "filename";
@@ -493,6 +511,27 @@ class EnhancedCollectionsApi {
     } );
   }
 
+  async getMediaDescriptions(
+    collectionId: string,
+    fileId: string,
+    response_format?: "markdown" | "json"
+  ) {
+    return this.api.getMediaDescriptions({
+      params: { collection_id: collectionId, file_id: fileId },
+      queries: { response_format },
+    } as any);
+  }
+
+  async listMediaDescriptions(
+    collectionId: string,
+    params: ListCollectionMediaDescriptionsParams = {}
+  ) {
+    return this.api.listCollectionMediaDescriptions({
+      params: { collection_id: collectionId },
+      queries: params,
+    } );
+  }
+
   /**
    * Waits for a video in a collection to be ready by polling the getVideo endpoint until
    * the video reaches a terminal state (completed, failed, or not_applicable) or until maxAttempts is reached.
@@ -772,6 +811,102 @@ class EnhancedSearchApi {
   }
 }
 
+class EnhancedDescribeApi {
+  constructor(private readonly api: typeof DescribeApi) {}
+
+  async createDescribe(
+    url: string,
+    options: {
+      enable_summary?: boolean;
+      enable_speech?: boolean;
+      enable_scene_text?: boolean;
+      enable_visual_scene_description?: boolean;
+      segmentation_config?: SegmentationConfig;
+      segmentation_id?: string;
+      thumbnail_config?: ThumbnailsConfig
+    } = {}
+  ) {
+    return this.api.createDescribe({
+      url,
+      ...options,
+    });
+  }
+
+  async getDescribe(
+    jobId: string,
+    options: {
+      response_format?: "json" | "markdown";
+    } = {}
+  ) {
+    return this.api.getDescribe({
+      params: { job_id: jobId },
+      queries: { response_format: options.response_format },
+    });
+  }
+
+  async listDescribes(
+    params: {
+      limit?: number;
+      offset?: number;
+      status?:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "not_applicable";
+      created_before?: string;
+      created_after?: string;
+      url?: string;
+      response_format?: "json" | "markdown";
+    } = {}
+  ) {
+    return this.api.listDescribes({ queries: params });
+  }
+
+  /**
+   * Waits for a description job to be ready by polling the getDescribe endpoint until
+   * the job reaches a terminal state (completed, failed, or not_applicable) or until maxAttempts is reached.
+   *
+   * @param jobId - The ID of the description job to wait for
+   * @param options - Optional configuration for polling behavior and response format
+   * @returns The final description job object
+   * @throws {CloudGlueError} If the job fails to process or maxAttempts is reached
+   */
+  async waitForReady(
+    jobId: string,
+    options: WaitForReadyOptions & {
+      response_format?: "json" | "markdown";
+    } = {}
+  ) {
+    const {
+      pollingInterval = 5000,
+      maxAttempts = 36,
+      response_format,
+    } = options;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const job = await this.getDescribe(jobId, { response_format });
+
+      // If we've reached a terminal state, return the job
+      if (["completed", "failed", "not_applicable"].includes(job.status)) {
+        if (job.status === "failed") {
+          throw new CloudGlueError(`Description job failed: ${jobId}`);
+        }
+        return job;
+      }
+
+      // Wait for the polling interval before trying again
+      await new Promise((resolve) => setTimeout(resolve, pollingInterval));
+      attempts++;
+    }
+
+    throw new CloudGlueError(
+      `Timeout waiting for description job ${jobId} to process after ${maxAttempts} attempts`
+    );
+  }
+}
+
 /**
  * Main CloudGlue client class that provides access to all API functionality
  * through enhanced, user-friendly interfaces
@@ -822,6 +957,12 @@ export class CloudGlue {
    */
   public readonly search: EnhancedSearchApi;
 
+  /**
+   * Describe API for generating rich descriptions of videos
+   * Provides methods for getting detailed descriptions of video content
+   */
+  public readonly describe: EnhancedDescribeApi;
+
   constructor(config: CloudGlueConfig = {}) {
     this.apiKey = config.apiKey || process.env.CLOUDGLUE_API_KEY || "";
     this.baseUrl = config.baseUrl || "https://api.cloudglue.dev/v1";
@@ -857,9 +998,10 @@ export class CloudGlue {
     const extractApi = createExtractApiClient(this.baseUrl, sharedConfig);
     const segmentationsApi = createSegmentationsApiClient(this.baseUrl, sharedConfig);
     const searchApi = createSearchApiClient(this.baseUrl, sharedConfig);
+    const describeApi = createDescribeApiClient(this.baseUrl, sharedConfig);
 
     // Configure base URL and axios config for all clients
-    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi, searchApi].forEach(
+    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi, searchApi, describeApi].forEach(
       (client) => {
         Object.assign(client.axios.defaults, axiosConfig);
 
@@ -907,5 +1049,6 @@ export class CloudGlue {
     this.extract = new EnhancedExtractApi(extractApi);
     this.segmentations = new EnhancedSegmentationsApi(segmentationsApi);
     this.search = new EnhancedSearchApi(searchApi);
+    this.describe = new EnhancedDescribeApi(describeApi);
     }
 }

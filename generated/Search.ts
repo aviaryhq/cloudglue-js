@@ -25,6 +25,7 @@ type FileSearchResult = {
   filename?: (string | null) | undefined;
   summary?: (string | null) | undefined;
   generated_title?: (string | null) | undefined;
+  thumbnail_url?: string | undefined;
 };
 type SegmentSearchResult = {
   type: "segment";
@@ -64,6 +65,7 @@ type SegmentSearchResult = {
         }>
       >
     | undefined;
+  thumbnail_url?: string | undefined;
 };
 type SearchFilter = Partial<{
   metadata: Array<SearchFilterCriteria>;
@@ -158,6 +160,7 @@ const FileSearchResult: z.ZodType<FileSearchResult> = z
     filename: z.string().nullish(),
     summary: z.string().nullish(),
     generated_title: z.string().nullish(),
+    thumbnail_url: z.string().url().optional(),
   })
   .strict()
   .passthrough();
@@ -212,6 +215,7 @@ const SegmentSearchResult: z.ZodType<SegmentSearchResult> = z
           .passthrough()
       )
       .optional(),
+    thumbnail_url: z.string().url().optional(),
   })
   .strict()
   .passthrough();
@@ -241,9 +245,7 @@ const endpoints = makeApi([
     method: "post",
     path: "/search",
     alias: "searchContent",
-    description: `Search for videos or video segments in collections to find relevant videos or moments/clips in a video. Supports filtering by metadata, video info, and file properties.
-
-**Important:** Currently only rich-transcript collections support search. For file-level search (scope&#x3D;&#x27;file&#x27;), the collection must be configured with &#x27;enable_summary: true&#x27; in the transcribe_config.`,
+    description: `Search for videos or video segments in collections to find relevant videos or moments/clips in a video`,
     requestFormat: "json",
     parameters: [
       {

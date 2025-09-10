@@ -197,11 +197,7 @@ interface ChatCompletionParams {
       valueTextArray?: string[];
     }>;
   };
-  force_search?: boolean;
-  include_citations?: boolean;
   temperature?: number;
-  top_p?: number;
-  max_tokens?: number;
 }
 
 interface SearchParams {
@@ -471,24 +467,6 @@ class EnhancedCollectionsApi {
       params: { collection_id: collectionId, file_id: fileId },
       queries: { limit, offset, response_format },
     } as any);
-  }
-
-  /**
-   * @deprecated Use addVideoByUrl instead
-   */
-  async addYouTubeVideo(
-    collectionId: string,
-    url: string,
-    params: {
-      metadata?: Record<string, any>,
-      segmentation_config?: SegmentationConfig,
-      segmentation_id?: string,
-    } = {}
-  ) {
-    return this.api.addYouTubeVideo(
-      { url, ...params },
-      { params: { collection_id: collectionId, ...params } }
-    );
   }
 
   async listEntities(

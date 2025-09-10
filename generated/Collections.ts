@@ -13,7 +13,7 @@ type Collection = {
   object: "collection";
   name: string;
   description?: (string | null) | undefined;
-  collection_type: "entities" | "rich-transcripts" | "media-descriptions";
+  collection_type: "media-descriptions" | "entities" | "rich-transcripts";
   extract_config?:
     | Partial<{
         prompt: string;
@@ -44,9 +44,17 @@ type Collection = {
   file_count: number;
 };
 type NewCollection = {
-  collection_type: "entities" | "rich-transcripts" | "media-descriptions";
+  collection_type: "media-descriptions" | "entities" | "rich-transcripts";
   name: string;
   description?: (string | null) | undefined;
+  describe_config?:
+    | Partial<{
+        enable_summary: boolean;
+        enable_speech: boolean;
+        enable_scene_text: boolean;
+        enable_visual_scene_description: boolean;
+      }>
+    | undefined;
   extract_config?:
     | Partial<{
         prompt: string;
@@ -56,14 +64,6 @@ type NewCollection = {
       }>
     | undefined;
   transcribe_config?:
-    | Partial<{
-        enable_summary: boolean;
-        enable_speech: boolean;
-        enable_scene_text: boolean;
-        enable_visual_scene_description: boolean;
-      }>
-    | undefined;
-  describe_config?:
     | Partial<{
         enable_summary: boolean;
         enable_speech: boolean;
@@ -121,10 +121,6 @@ type CollectionFileList = {
   limit: number;
   offset: number;
 };
-type AddYouTubeCollectionFile = {
-  url: string;
-  metadata?: {} | undefined;
-} & FileSegmentationConfig;
 
 const Collection: z.ZodType<Collection> = z
   .object({
@@ -133,9 +129,9 @@ const Collection: z.ZodType<Collection> = z
     name: z.string(),
     description: z.union([z.string(), z.null()]).optional(),
     collection_type: z.enum([
+      "media-descriptions",
       "entities",
       "rich-transcripts",
-      "media-descriptions",
     ]),
     extract_config: z
       .object({
@@ -180,12 +176,23 @@ const Collection: z.ZodType<Collection> = z
 const NewCollection: z.ZodType<NewCollection> = z
   .object({
     collection_type: z.enum([
+      "media-descriptions",
       "entities",
       "rich-transcripts",
-      "media-descriptions",
     ]),
     name: z.string(),
     description: z.union([z.string(), z.null()]).optional(),
+    describe_config: z
+      .object({
+        enable_summary: z.boolean().default(true),
+        enable_speech: z.boolean().default(true),
+        enable_scene_text: z.boolean().default(true),
+        enable_visual_scene_description: z.boolean().default(true),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .optional(),
     extract_config: z
       .object({
         prompt: z.string(),
@@ -203,17 +210,6 @@ const NewCollection: z.ZodType<NewCollection> = z
         enable_speech: z.boolean().default(true),
         enable_scene_text: z.boolean().default(false),
         enable_visual_scene_description: z.boolean().default(false),
-      })
-      .partial()
-      .strict()
-      .passthrough()
-      .optional(),
-    describe_config: z
-      .object({
-        enable_summary: z.boolean().default(true),
-        enable_speech: z.boolean().default(true),
-        enable_scene_text: z.boolean().default(true),
-        enable_visual_scene_description: z.boolean().default(true),
       })
       .partial()
       .strict()
@@ -247,14 +243,6 @@ const AddCollectionFile: z.ZodType<AddCollectionFile> = z
       .strict()
       .passthrough()
   );
-const AddYouTubeCollectionFile: z.ZodType<AddYouTubeCollectionFile> = z
-  .object({
-    url: z.string(),
-    metadata: z.object({}).partial().strict().passthrough().optional(),
-  })
-  .strict()
-  .passthrough()
-  .and(FileSegmentationConfig);
 const CollectionFile: z.ZodType<CollectionFile> = z
   .object({
     collection_id: z.string(),
@@ -643,7 +631,6 @@ export const schemas = {
   NewCollection,
   CollectionList,
   AddCollectionFile,
-  AddYouTubeCollectionFile,
   CollectionFile,
   CollectionFileList,
   CollectionDelete,
@@ -726,7 +713,7 @@ const endpoints = makeApi([
         name: "collection_type",
         type: "Query",
         schema: z
-          .enum(["entities", "rich-transcripts", "media-descriptions"])
+          .enum(["media-descriptions", "entities", "rich-transcripts"])
           .optional(),
       },
     ],
@@ -1035,44 +1022,6 @@ const endpoints = makeApi([
       {
         status: 404,
         description: `Collection or file not found`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-      {
-        status: 500,
-        description: `An unexpected error occurred on the server`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-    ],
-  },
-  {
-    method: "post",
-    path: "/collections/:collection_id/youtube",
-    alias: "addYouTubeVideo",
-    description: `Add a YouTube video to a collection by URL`,
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "body",
-        description: `YouTube video URL parameters`,
-        type: "Body",
-        schema: AddYouTubeCollectionFile,
-      },
-      {
-        name: "collection_id",
-        type: "Path",
-        schema: z.string(),
-      },
-    ],
-    response: CollectionFile,
-    errors: [
-      {
-        status: 400,
-        description: `Invalid request or YouTube URL`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-      {
-        status: 404,
-        description: `Collection not found`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {

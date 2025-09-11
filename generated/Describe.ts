@@ -188,7 +188,7 @@ const endpoints = makeApi([
     method: "post",
     path: "/describe",
     alias: "createDescribe",
-    description: `Creates a new media description job for video content`,
+    description: `Get a comprehensive multimodal description of a video`,
     requestFormat: "json",
     parameters: [
       {

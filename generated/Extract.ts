@@ -130,12 +130,12 @@ const endpoints = makeApi([
     method: "post",
     path: "/extract",
     alias: "createExtract",
-    description: `Creates a new extract`,
+    description: `Extract structured data from a video`,
     requestFormat: "json",
     parameters: [
       {
         name: "body",
-        description: `Extract structured data from a video`,
+        description: `Extract job parameters`,
         type: "Body",
         schema: NewExtract,
       },

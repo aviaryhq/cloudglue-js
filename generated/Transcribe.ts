@@ -188,7 +188,9 @@ const endpoints = makeApi([
     method: "post",
     path: "/transcribe",
     alias: "createTranscribe",
-    description: `Creates a new transcription job for video content`,
+    description: `Creates a new transcription job for video content.
+
+Note: For most use cases, you should use the &#x60;/describe&#x60; endpoint instead. This API will be deprecated in the future and only supports speech level understanding.`,
     requestFormat: "json",
     parameters: [
       {

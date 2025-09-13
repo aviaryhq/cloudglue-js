@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@zodios/core':
         specifier: ^10.0.0
-        version: 10.9.6(axios@1.11.0)(zod@3.25.76)
+        version: 10.9.6(axios@1.12.1)(zod@3.25.76)
       axios:
         specifier: ^1.6.7
-        version: 1.11.0
+        version: 1.12.1
       zod:
         specifier: ^3.22.4
         version: 3.25.76
@@ -195,8 +195,8 @@ packages:
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
-  axios@1.11.0:
-    resolution: {integrity: sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==}
+  axios@1.12.1:
+    resolution: {integrity: sha512-Kn4kbSXpkFHCGE6rBFNwIv0GQs4AvDT80jlveJDKFxjbTYMUeB4QtsdPCv6H8Cm19Je7IU6VFtRl2zWZI0rudQ==}
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -768,9 +768,9 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@zodios/core@10.9.6(axios@1.11.0)(zod@3.25.76)':
+  '@zodios/core@10.9.6(axios@1.12.1)(zod@3.25.76)':
     dependencies:
-      axios: 1.11.0
+      axios: 1.12.1
       zod: 3.25.76
 
   ajv-draft-04@1.0.0(ajv@8.17.1):
@@ -798,7 +798,7 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  axios@1.11.0:
+  axios@1.12.1:
     dependencies:
       follow-redirects: 1.15.11
       form-data: 4.0.4
@@ -1028,8 +1028,8 @@ snapshots:
     dependencies:
       '@apidevtools/swagger-parser': 10.1.1(openapi-types@12.1.3)
       '@liuli-util/fs-extra': 0.1.0
-      '@zodios/core': 10.9.6(axios@1.11.0)(zod@3.25.76)
-      axios: 1.11.0
+      '@zodios/core': 10.9.6(axios@1.12.1)(zod@3.25.76)
+      axios: 1.12.1
       cac: 6.7.14
       handlebars: 4.7.8
       openapi-types: 12.1.3

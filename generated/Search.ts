@@ -2,6 +2,7 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 type SearchResponse = {
+  id: string;
   object: "search";
   query: string;
   scope: "file" | "segment";
@@ -91,7 +92,8 @@ type SearchFilterCriteria = {
     | "GreaterThan"
     | "ContainsAny"
     | "ContainsAll"
-    | "In";
+    | "In"
+    | "Like";
   valueText?: string | undefined;
   valueTextArray?: Array<string> | undefined;
 };
@@ -107,6 +109,7 @@ const SearchFilterCriteria: z.ZodType<SearchFilterCriteria> = z
       "ContainsAny",
       "ContainsAll",
       "In",
+      "Like",
     ]),
     valueText: z.string().optional(),
     valueTextArray: z.array(z.string()).optional(),
@@ -221,6 +224,7 @@ const SegmentSearchResult: z.ZodType<SegmentSearchResult> = z
   .passthrough();
 const SearchResponse: z.ZodType<SearchResponse> = z
   .object({
+    id: z.string().uuid(),
     object: z.literal("search"),
     query: z.string(),
     scope: z.enum(["file", "segment"]),

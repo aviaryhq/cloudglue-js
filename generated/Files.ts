@@ -161,6 +161,11 @@ const endpoints = makeApi([
         type: "Query",
         schema: z.enum(["asc", "desc"]).optional().default("desc"),
       },
+      {
+        name: "filter",
+        type: "Query",
+        schema: z.string().optional(),
+      },
     ],
     response: FileList,
     errors: [

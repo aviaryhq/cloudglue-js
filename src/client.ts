@@ -8,6 +8,7 @@ import {
   SearchApi,
   DescribeApi,
 } from "../generated";
+import { FilterOperator } from "./types";
 import type { File, SegmentationConfig, UpdateFileParams } from "./types";
 import { createApiClient as createFilesApiClient } from "../generated/Files";
 import { createApiClient as createCollectionsApiClient } from "../generated/Collections";
@@ -45,8 +46,30 @@ export interface CloudGlueConfig {
   timeout?: number;
 }
 
+// Filter type for reusable filtering across different APIs
+export interface Filter {
+  metadata?: Array<{
+    path: string;
+    operator: FilterOperator;
+    valueText?: string;
+    valueTextArray?: string[];
+  }>;
+  video_info?: Array<{
+    path: "duration_seconds" | "has_audio";
+    operator: FilterOperator;
+    valueText?: string;
+    valueTextArray?: string[];
+  }>;
+  file?: Array<{
+    path: "bytes" | "filename" | "uri" | "created_at" | "id";
+    operator: FilterOperator;
+    valueText?: string;
+    valueTextArray?: string[];
+  }>;
+}
+
 // Enhanced API interfaces with flattened parameters
-interface ListFilesParams {
+export interface ListFilesParams {
   status?:
     | "pending"
     | "processing"
@@ -59,6 +82,7 @@ interface ListFilesParams {
   sort?: "asc" | "desc";
   created_before?: string;
   created_after?: string;
+  filter?: Filter;
 }
 
 interface UploadFileParams {
@@ -205,47 +229,7 @@ interface SearchParams {
   collections: string[];
   query: string;
   limit?: number;
-  filter?: {
-    metadata?: Array<{
-      path: string;
-      operator:
-        | "NotEqual"
-        | "Equal"
-        | "LessThan"
-        | "GreaterThan"
-        | "ContainsAny"
-        | "ContainsAll"
-        | "In";
-      valueText?: string;
-      valueTextArray?: string[];
-    }>;
-    video_info?: Array<{
-      path: "duration_seconds" | "has_audio";
-      operator:
-        | "NotEqual"
-        | "Equal"
-        | "LessThan"
-        | "GreaterThan"
-        | "ContainsAny"
-        | "ContainsAll"
-        | "In";
-      valueText?: string;
-      valueTextArray?: string[];
-    }>;
-    file?: Array<{
-      path: "bytes" | "filename" | "uri" | "created_at" | "id";
-      operator:
-        | "NotEqual"
-        | "Equal"
-        | "LessThan"
-        | "GreaterThan"
-        | "ContainsAny"
-        | "ContainsAll"
-        | "In";
-      valueText?: string;
-      valueTextArray?: string[];
-    }>;
-  };
+  filter?: Filter;
 }
 
 interface WaitForReadyOptions {
@@ -260,7 +244,21 @@ class EnhancedFilesApi {
   constructor(private readonly api: typeof FilesApi) {}
 
   async listFiles(params: ListFilesParams = {}) {
-    return this.api.listFiles({ queries: params });
+    const { filter, ...otherParams } = params;
+    
+    // Convert filter object to JSON string if provided
+    const queries: any = { ...otherParams };
+    if (filter) {
+      try {
+        queries.filter = JSON.stringify(filter);
+      } catch (error) {
+        throw new CloudGlueError(
+          `Failed to serialize filter object: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    }
+    
+    return this.api.listFiles({ queries });
   }
 
   async uploadFile(params: UploadFileParams) {
@@ -276,7 +274,13 @@ class EnhancedFilesApi {
 
     // Add metadata if provided
     if (params.metadata) {
-      formData.append("metadata", JSON.stringify(params.metadata));
+      try {
+        formData.append("metadata", JSON.stringify(params.metadata));
+      } catch (error) {
+        throw new CloudGlueError(
+          `Failed to serialize metadata object: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
     }
     if (params.enable_segment_thumbnails !== undefined) {
       formData.append("enable_segment_thumbnails", params.enable_segment_thumbnails.toString());

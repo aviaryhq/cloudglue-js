@@ -203,7 +203,47 @@ interface ChatCompletionParams {
     name?: string;
   }>;
   collections: string[];
-  filter?: Filter;
+  filter?: {
+    metadata?: Array<{
+      path: string;
+      operator:
+        | "NotEqual"
+        | "Equal"
+        | "LessThan"
+        | "GreaterThan"
+        | "In"
+        | "ContainsAny"
+        | "ContainsAll";
+      valueText?: string;
+      valueTextArray?: string[];
+    }>;
+    video_info?: Array<{
+      path: string;
+      operator:
+        | "NotEqual"
+        | "Equal"
+        | "LessThan"
+        | "GreaterThan"
+        | "In"
+        | "ContainsAny"
+        | "ContainsAll";
+      valueText?: string;
+      valueTextArray?: string[];
+    }>;
+    file?: Array<{
+      path: string;
+      operator:
+        | "NotEqual"
+        | "Equal"
+        | "LessThan"
+        | "GreaterThan"
+        | "In"
+        | "ContainsAny"
+        | "ContainsAll";
+      valueText?: string;
+      valueTextArray?: string[];
+    }>;
+  };
   temperature?: number;
 }
 

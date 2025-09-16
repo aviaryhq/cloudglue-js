@@ -1,7 +1,7 @@
 /**
  * Main CloudGlue client class and configuration types
  */
-export { CloudGlue, type CloudGlueConfig, type CloudGlueError, type Filter, type ListFilesParams } from './client';
+export * from './client';
 
 /**
  * Generated API clients for advanced usage

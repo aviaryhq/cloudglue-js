@@ -7,9 +7,10 @@ import {
   ExtractApi,
   SearchApi,
   DescribeApi,
+  SegmentsApi,
 } from "../generated";
 import { FilterOperator } from "./types";
-import type { File, SegmentationConfig, UpdateFileParams } from "./types";
+import type { File, NarrativeConfig, SegmentationConfig, ShotConfig, UpdateFileParams } from "./types";
 import { createApiClient as createFilesApiClient } from "../generated/Files";
 import { createApiClient as createCollectionsApiClient } from "../generated/Collections";
 import { createApiClient as createChatApiClient } from "../generated/Chat";
@@ -18,6 +19,7 @@ import { createApiClient as createExtractApiClient } from "../generated/Extract"
 import { createApiClient as createSegmentationsApiClient, SegmentationsApi } from "../generated/Segmentations";
 import { createApiClient as createSearchApiClient } from "../generated/Search";
 import { createApiClient as createDescribeApiClient } from "../generated/Describe";
+import { createApiClient as createSegmentsApiClient } from "../generated/Segments";
 import { ZodiosOptions } from "@zodios/core";
 import { ThumbnailsConfig } from "../generated/common";
 
@@ -889,6 +891,65 @@ class EnhancedDescribeApi {
   }
 }
 
+class EnhancedSegmentsApi {
+  constructor(private readonly api: typeof SegmentsApi) {}
+  async listSegmentJobs(data: {
+    criteria: "shot" | "narrative";
+    url?: string;
+    status?: "pending" | "processing" | "completed" | "failed";
+    limit?: number;
+    offset?: number;
+    created_before?: string;
+    created_after?: string;
+    order?: "created_at";
+    sort?: "asc" | "desc";
+    
+  }) {
+    return this.api.listSegments({ queries: data });
+  }
+
+  async getSegmentJob(jobId: string) {
+    return this.api.getSegments({ params: { job_id: jobId } });
+  }
+
+  async createSegmentJob(params: {  
+    url: string;
+    criteria: "shot" | "narrative";
+    shot_config?: ShotConfig;
+    narrative_config?: NarrativeConfig;
+  }) {
+    return this.api.createSegments(params);
+  }
+
+  async waitForReady(jobId: string, options: WaitForReadyOptions = {}) {
+    const {
+      pollingInterval = 5000,
+      maxAttempts = 36,
+    } = options;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const job = await this.getSegmentJob(jobId);
+
+      // If we've reached a terminal state, return the job
+      if (["completed", "failed", "not_applicable"].includes(job.status)) {
+        if (job.status === "failed") {
+          throw new CloudGlueError(`Segment job failed: ${jobId}`);
+        }
+        return job;
+      }
+
+      // Wait for the polling interval before trying again
+      await new Promise((resolve) => setTimeout(resolve, pollingInterval));
+      attempts++;
+    }
+
+    throw new CloudGlueError(
+      `Timeout waiting for segment job ${jobId} to process after ${maxAttempts} attempts`
+    );
+  }
+}
+
 /**
  * Main CloudGlue client class that provides access to all API functionality
  * through enhanced, user-friendly interfaces
@@ -945,6 +1006,8 @@ export class CloudGlue {
    */
   public readonly describe: EnhancedDescribeApi;
 
+  public readonly segments: EnhancedSegmentsApi;
+
   constructor(config: CloudGlueConfig = {}) {
     this.apiKey = config.apiKey || process.env.CLOUDGLUE_API_KEY || "";
     this.baseUrl = config.baseUrl || "https://api.cloudglue.dev/v1";
@@ -981,9 +1044,10 @@ export class CloudGlue {
     const segmentationsApi = createSegmentationsApiClient(this.baseUrl, sharedConfig);
     const searchApi = createSearchApiClient(this.baseUrl, sharedConfig);
     const describeApi = createDescribeApiClient(this.baseUrl, sharedConfig);
+    const segmentsApi = createSegmentsApiClient(this.baseUrl, sharedConfig);
 
     // Configure base URL and axios config for all clients
-    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi, searchApi, describeApi].forEach(
+    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi, searchApi, describeApi, segmentsApi].forEach(
       (client) => {
         Object.assign(client.axios.defaults, axiosConfig);
 
@@ -1032,5 +1096,6 @@ export class CloudGlue {
     this.segmentations = new EnhancedSegmentationsApi(segmentationsApi);
     this.search = new EnhancedSearchApi(searchApi);
     this.describe = new EnhancedDescribeApi(describeApi);
+    this.segments = new EnhancedSegmentsApi(segmentsApi);
     }
 }

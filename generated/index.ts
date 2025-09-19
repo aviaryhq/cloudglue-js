@@ -7,3 +7,4 @@ export { DescribeApi } from "./Describe";
 export { WebhooksApi } from "./Webhooks";
 export { SearchApi } from "./Search";
 export { SegmentationsApi } from "./Segmentations";
+export { SegmentsApi } from "./Segments";

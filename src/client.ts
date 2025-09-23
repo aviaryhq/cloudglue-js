@@ -9,7 +9,7 @@ import {
   DescribeApi,
   SegmentsApi,
 } from "../generated";
-import { FilterOperator } from "./types";
+import { FilterOperator } from "./enums";
 import type { File, NarrativeConfig, SegmentationConfig, ShotConfig, UpdateFileParams } from "./types";
 import { createApiClient as createFilesApiClient } from "../generated/Files";
 import { createApiClient as createCollectionsApiClient } from "../generated/Collections";

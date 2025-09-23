@@ -32,7 +32,10 @@ type WebhookEvents =
   | "collection.file.job.processing"
   | "collection.file.job.completed"
   | "collection.file.job.failed"
-  | "collection.file.job.deleted";
+  | "collection.file.job.deleted"
+  | "segment.job.processing"
+  | "segment.job.completed"
+  | "segment.job.failed";
 type WebhookCreateRequest = Partial<{
   description: string;
   endpoint: string;
@@ -60,6 +63,9 @@ const WebhookEvents = z.enum([
   "collection.file.job.completed",
   "collection.file.job.failed",
   "collection.file.job.deleted",
+  "segment.job.processing",
+  "segment.job.completed",
+  "segment.job.failed",
 ]);
 const Webhook: z.ZodType<Webhook> = z
   .object({

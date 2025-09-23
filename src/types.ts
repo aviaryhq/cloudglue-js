@@ -7,6 +7,7 @@ import { schemas as transcribeSchemas } from '../generated/Transcribe';
 import { schemas as extractSchemas } from '../generated/Extract';
 import { schemas as searchSchemas } from '../generated/Search';
 import { schemas as describeSchemas } from '../generated/Describe';
+import { schemas as segmentsSchemas } from '../generated/Segments';
 import { SegmentationUniformConfig as SegmentationUniformConfigType, SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType, SegmentationConfig as SegmentationConfigType } from '../generated/common';
 
 /**
@@ -196,3 +197,7 @@ export type CollectionMediaDescription = z.infer<typeof collectionsSchemas.Media
  * Represents a list of media descriptions for files in a collection
  */
 export type CollectionMediaDescriptionsList = z.infer<typeof collectionsSchemas.CollectionMediaDescriptionsList>;
+
+export type NarrativeConfig = z.infer<typeof segmentsSchemas.NarrativeConfig>;
+
+export type ShotConfig = z.infer<typeof segmentsSchemas.ShotConfig>;

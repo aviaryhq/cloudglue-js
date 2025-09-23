@@ -19,7 +19,6 @@ export type SegmentationUniformConfig = {
   hop_seconds?: number | undefined;
 };
 export type SegmentationShotDetectorConfig = {
-  threshold?: (number | null) | undefined;
   min_seconds?: (number | null) | undefined;
   max_seconds?: (number | null) | undefined;
   detector: "adaptive" | "content";
@@ -99,7 +98,6 @@ export const SegmentationUniformConfig = z
   .passthrough();
 export const SegmentationShotDetectorConfig = z
   .object({
-    threshold: z.number().gte(0).nullish(),
     min_seconds: z.number().gte(2).lte(60).nullish(),
     max_seconds: z.number().gte(2).lte(60).nullish(),
     detector: z.enum(["adaptive", "content"]),

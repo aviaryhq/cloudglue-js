@@ -27,6 +27,7 @@ type Transcribe = {
         summary: string;
         speech: Array<
           Partial<{
+            speaker: string;
             text: string;
             start_time: number;
             end_time: number;
@@ -116,6 +117,7 @@ const Transcribe: z.ZodType<Transcribe> = z
         speech: z.array(
           z
             .object({
+              speaker: z.string(),
               text: z.string(),
               start_time: z.number(),
               end_time: z.number(),

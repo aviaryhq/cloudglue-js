@@ -60,6 +60,7 @@ type SegmentSearchResult = {
   speech?:
     | Array<
         Partial<{
+          speaker: string;
           text: string;
           start_time: number;
           end_time: number;
@@ -159,7 +160,7 @@ const FileSearchResult: z.ZodType<FileSearchResult> = z
     file_id: z.string().uuid(),
     collection_id: z.string().uuid(),
     id: z.string().uuid(),
-    score: z.number().gte(0).lte(1),
+    score: z.number(),
     filename: z.string().nullish(),
     summary: z.string().nullish(),
     generated_title: z.string().nullish(),
@@ -174,7 +175,7 @@ const SegmentSearchResult: z.ZodType<SegmentSearchResult> = z
     collection_id: z.string().uuid(),
     segment_id: z.string().uuid(),
     id: z.string().uuid(),
-    score: z.number().gte(0).lte(1),
+    score: z.number(),
     start_time: z.number(),
     end_time: z.number(),
     title: z.string().nullish(),
@@ -209,6 +210,7 @@ const SegmentSearchResult: z.ZodType<SegmentSearchResult> = z
       .array(
         z
           .object({
+            speaker: z.string(),
             text: z.string(),
             start_time: z.number(),
             end_time: z.number(),

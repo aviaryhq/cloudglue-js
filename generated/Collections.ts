@@ -330,6 +330,7 @@ const RichTranscript = z
       .array(
         z
           .object({
+            speaker: z.string(),
             text: z.string(),
             start_time: z.number(),
             end_time: z.number(),
@@ -433,6 +434,7 @@ const CollectionRichTranscriptsList = z
               speech: z.array(
                 z
                   .object({
+                    speaker: z.string(),
                     text: z.string(),
                     start_time: z.number(),
                     end_time: z.number(),
@@ -506,6 +508,7 @@ const CollectionMediaDescriptionsList = z
               speech: z.array(
                 z
                   .object({
+                    speaker: z.string(),
                     text: z.string(),
                     start_time: z.number(),
                     end_time: z.number(),
@@ -573,6 +576,7 @@ const MediaDescription = z
       .array(
         z
           .object({
+            speaker: z.string(),
             text: z.string(),
             start_time: z.number(),
             end_time: z.number(),

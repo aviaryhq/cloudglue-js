@@ -51,6 +51,7 @@ export type File = {
         | "http"
         | "upload"
         | "google-drive"
+        | "zoom"
       )
     | undefined;
 };
@@ -70,6 +71,43 @@ export type Segmentation = {
               id: string;
               start_time: number;
               end_time: number;
+              thumbnail_url?: string | undefined;
+            }>
+          | undefined;
+        total: number;
+        limit: number;
+        offset: number;
+      }
+    | undefined;
+};
+export type FrameExtractionConfig = {
+  strategy: "uniform";
+  uniform_config?: FrameExtractionUniformConfig | undefined;
+  thumbnails_config?: FrameExtractionThumbnailsConfig | undefined;
+  start_time_seconds?: number | undefined;
+  end_time_seconds?: number | undefined;
+};
+export type FrameExtractionUniformConfig = Partial<{
+  frames_per_second: number;
+  max_width: number;
+}>;
+export type FrameExtractionThumbnailsConfig = Partial<{
+  enable_frame_thumbnails: boolean;
+}>;
+export type FrameExtraction = {
+  frame_extraction_id: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  created_at: number;
+  file_id: string;
+  frame_extraction_config: FrameExtractionConfig;
+  frame_count?: number | undefined;
+  data?:
+    | {
+        object: "list";
+        frames?:
+          | Array<{
+              id: string;
+              timestamp: number;
               thumbnail_url?: string | undefined;
             }>
           | undefined;
@@ -171,6 +209,7 @@ export const File = z
         "http",
         "upload",
         "google-drive",
+        "zoom",
       ])
       .optional(),
   })
@@ -234,6 +273,62 @@ export const ThumbnailList = z
     limit: z.number().int(),
     offset: z.number().int(),
     data: z.array(Thumbnail),
+  })
+  .strict()
+  .passthrough();
+export const FrameExtractionUniformConfig = z
+  .object({
+    frames_per_second: z.number().gte(0.1).lte(30).default(1),
+    max_width: z.number().gte(64).lte(4096).default(1024),
+  })
+  .partial()
+  .strict()
+  .passthrough();
+export const FrameExtractionThumbnailsConfig = z
+  .object({ enable_frame_thumbnails: z.boolean().default(true) })
+  .partial()
+  .strict()
+  .passthrough();
+export const FrameExtractionConfig = z
+  .object({
+    strategy: z.literal("uniform"),
+    uniform_config: FrameExtractionUniformConfig.optional(),
+    thumbnails_config: FrameExtractionThumbnailsConfig.optional(),
+    start_time_seconds: z.number().gte(0).optional(),
+    end_time_seconds: z.number().gte(0).optional(),
+  })
+  .strict()
+  .passthrough();
+export const FrameExtraction = z
+  .object({
+    frame_extraction_id: z.string().uuid(),
+    status: z.enum(["pending", "processing", "completed", "failed"]),
+    created_at: z.number().gte(0),
+    file_id: z.string().uuid(),
+    frame_extraction_config: FrameExtractionConfig,
+    frame_count: z.number().gte(0).optional(),
+    data: z
+      .object({
+        object: z.literal("list"),
+        frames: z
+          .array(
+            z
+              .object({
+                id: z.string().uuid(),
+                timestamp: z.number(),
+                thumbnail_url: z.string().optional(),
+              })
+              .strict()
+              .passthrough()
+          )
+          .optional(),
+        total: z.number().int(),
+        limit: z.number().int(),
+        offset: z.number().int(),
+      })
+      .strict()
+      .passthrough()
+      .optional(),
   })
   .strict()
   .passthrough();

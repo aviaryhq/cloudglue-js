@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 import { File as CloudglueFile } from "./common";
-import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, ThumbnailsConfig, ThumbnailList, Thumbnail } from "./common";
+import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, ThumbnailsConfig, ThumbnailList, Thumbnail, FrameExtraction, FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from "./common";
 
 type FileList = {
   object: "list";
@@ -13,6 +13,20 @@ type FileList = {
 type SegmentationList = {
   object: "list";
   data: Array<Segmentation>;
+  total: number;
+  limit: number;
+  offset: number;
+};
+type FrameExtractionList = {
+  object: "list";
+  data: Array<{
+    frame_extraction_id: string;
+    status: "pending" | "processing" | "completed" | "failed";
+    created_at: number;
+    file_id: string;
+    frame_extraction_config: FrameExtractionConfig;
+    frame_count?: number | undefined;
+  }>;
   total: number;
   limit: number;
   offset: number;
@@ -32,6 +46,28 @@ const SegmentationList: z.ZodType<SegmentationList> = z
   .object({
     object: z.literal("list"),
     data: z.array(Segmentation),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
+const FrameExtractionList: z.ZodType<FrameExtractionList> = z
+  .object({
+    object: z.literal("list"),
+    data: z.array(
+      z
+        .object({
+          frame_extraction_id: z.string().uuid(),
+          status: z.enum(["pending", "processing", "completed", "failed"]),
+          created_at: z.number().gte(0),
+          file_id: z.string().uuid(),
+          frame_extraction_config: FrameExtractionConfig,
+          frame_count: z.number().gte(0).optional(),
+        })
+        .strict()
+        .passthrough()
+    ),
     total: z.number().int(),
     limit: z.number().int(),
     offset: z.number().int(),
@@ -59,14 +95,17 @@ const FileUpdate = z
   .strict()
   .passthrough();
 const createFileSegmentation_Body = SegmentationConfig;
+const createFileFrameExtraction_Body = FrameExtractionConfig;
 
 export const schemas = {
   FileList,
   SegmentationList,
+  FrameExtractionList,
   FileUpload,
   FileDelete,
   FileUpdate,
   createFileSegmentation_Body,
+  createFileFrameExtraction_Body,
 };
 
 const endpoints = makeApi([
@@ -367,6 +406,81 @@ const endpoints = makeApi([
       },
     ],
     response: ThumbnailList,
+    errors: [
+      {
+        status: 404,
+        description: `File not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "post",
+    path: "/files/:file_id/frames",
+    alias: "createFileFrameExtraction",
+    description: `Create a new frame extraction for a file using the specified frame extraction configuration. This is an async operation that returns immediately with a &#x27;pending&#x27; status. Results are cached, so identical requests will return the same frame extraction.`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "body",
+        description: `Frame extraction configuration`,
+        type: "Body",
+        schema: createFileFrameExtraction_Body,
+      },
+      {
+        name: "file_id",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: FrameExtraction,
+    errors: [
+      {
+        status: 400,
+        description: `Invalid request or file duration is less than specified time range`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 404,
+        description: `File not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "get",
+    path: "/files/:file_id/frames",
+    alias: "listFileFrameExtractions",
+    description: `List all frame extractions for a specific file`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "file_id",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+      {
+        name: "limit",
+        type: "Query",
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: "offset",
+        type: "Query",
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+    ],
+    response: FrameExtractionList,
     errors: [
       {
         status: 404,

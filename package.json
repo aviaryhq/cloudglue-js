@@ -1,6 +1,6 @@
 {
   "name": "@aviaryhq/cloudglue-js",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Cloudglue API client for Node.js",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -13,7 +13,8 @@
     "build": "tsc && node scripts/build.js",
     "watch": "tsc --watch",
     "prepare": "npm run build",
-    "publish": "npm run build && npm publish"
+    "prepublishOnly": "npm run build",
+    "release": "npm run build && npm publish"
   },
   "repository": {
     "type": "git",

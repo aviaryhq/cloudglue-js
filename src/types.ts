@@ -9,6 +9,7 @@ import { schemas as searchSchemas } from '../generated/Search';
 import { schemas as describeSchemas } from '../generated/Describe';
 import { schemas as segmentsSchemas } from '../generated/Segments';
 import { SegmentationUniformConfig as SegmentationUniformConfigType, SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType, SegmentationConfig as SegmentationConfigType } from '../generated/common';
+import { schemas as webhooksSchemas } from '../generated/Webhooks';
 
 /**
  * Represents a video file in the Cloudglue system
@@ -187,3 +188,5 @@ export type CollectionMediaDescriptionsList = z.infer<typeof collectionsSchemas.
 export type NarrativeConfig = z.infer<typeof segmentsSchemas.NarrativeConfig>;
 
 export type ShotConfig = z.infer<typeof segmentsSchemas.ShotConfig>;
+
+export type WebhookEvents = z.infer<typeof webhooksSchemas['WebhookEvents']>;

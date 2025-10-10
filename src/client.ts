@@ -8,6 +8,7 @@ import {
   SearchApi,
   DescribeApi,
   SegmentsApi,
+  WebhooksApi,
 } from "../generated";
 import { FilterOperator } from "./enums";
 import type { File, NarrativeConfig, SegmentationConfig, ShotConfig, UpdateFileParams } from "./types";
@@ -20,8 +21,10 @@ import { createApiClient as createSegmentationsApiClient, SegmentationsApi } fro
 import { createApiClient as createSearchApiClient } from "../generated/Search";
 import { createApiClient as createDescribeApiClient } from "../generated/Describe";
 import { createApiClient as createSegmentsApiClient } from "../generated/Segments";
+import { createApiClient as createWebhooksApiClient, schemas as webhooksSchemas } from "../generated/Webhooks";
 import { ZodiosOptions } from "@zodios/core";
 import { ThumbnailsConfig } from "../generated/common";
+import { WebhookEvents } from './types';
 
 export class CloudGlueError extends Error {
   constructor(
@@ -950,6 +953,42 @@ class EnhancedSegmentsApi {
   }
 }
 
+class EnhancedWebhooksApi { 
+  constructor(private readonly api: typeof WebhooksApi) {}
+  async listWebhooks(params: {
+    limit?: number;
+    offset?: number;
+    sort?: "asc" | "desc";
+  } = {}) {
+    return this.api.listWebhooks({ queries: params });
+  }
+
+  async getWebhook(webhookId: string) {
+    return this.api.getWebhookById({ params: { webhook_id: webhookId } });
+  }
+
+  async createWebhook(params: {
+    endpoint: string;
+    description?: string;
+    subscribed_events?: WebhookEvents[];
+  }) {
+    return this.api.createWebhook(params);
+  }
+
+  async updateWebhook(webhookId: string, params: {
+    endpoint: string;
+    description?: string;
+    subscribed_events?: WebhookEvents[];
+    active?: boolean;
+  }) {
+    return this.api.updateWebhook(params, { params: { webhook_id: webhookId, } });
+  }
+
+  async deleteWebhook(webhookId: string) {
+    return this.api.deleteWebhook(undefined, { params: { webhook_id: webhookId } });
+  }
+}
+
 /**
  * Main CloudGlue client class that provides access to all API functionality
  * through enhanced, user-friendly interfaces
@@ -1008,6 +1047,12 @@ export class CloudGlue {
 
   public readonly segments: EnhancedSegmentsApi;
 
+  /**
+   * Webhooks API for managing webhooks
+   * Provides methods for creating and managing webhooks
+   */
+  public readonly webhooks: EnhancedWebhooksApi;
+
   constructor(config: CloudGlueConfig = {}) {
     this.apiKey = config.apiKey || process.env.CLOUDGLUE_API_KEY || "";
     this.baseUrl = config.baseUrl || "https://api.cloudglue.dev/v1";
@@ -1045,9 +1090,9 @@ export class CloudGlue {
     const searchApi = createSearchApiClient(this.baseUrl, sharedConfig);
     const describeApi = createDescribeApiClient(this.baseUrl, sharedConfig);
     const segmentsApi = createSegmentsApiClient(this.baseUrl, sharedConfig);
-
+    const webhooksApi = createWebhooksApiClient(this.baseUrl, sharedConfig);
     // Configure base URL and axios config for all clients
-    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi, searchApi, describeApi, segmentsApi].forEach(
+    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi, searchApi, describeApi, segmentsApi, webhooksApi].forEach(
       (client) => {
         Object.assign(client.axios.defaults, axiosConfig);
 
@@ -1097,5 +1142,6 @@ export class CloudGlue {
     this.search = new EnhancedSearchApi(searchApi);
     this.describe = new EnhancedDescribeApi(describeApi);
     this.segments = new EnhancedSegmentsApi(segmentsApi);
+    this.webhooks = new EnhancedWebhooksApi(webhooksApi);
     }
 }

@@ -233,3 +233,12 @@ export type FaceMatchResult = z.infer<typeof faceMatchSchemas.FaceMatchResult>;
  * Represents a source image for face matching
  */
 export type SourceImage = z.infer<typeof faceMatchSchemas.SourceImage>;
+
+/**
+ * Enhanced source image type that supports local file paths
+ */
+export type EnhancedSourceImage = {
+  url?: string;
+  base64_image?: string;
+  file_path?: string;
+};

@@ -31,6 +31,7 @@ import { createApiClient as createFaceMatchApiClient } from "../generated/Face_M
 import { ZodiosOptions } from "@zodios/core";
 import { ThumbnailsConfig, FrameExtractionConfig } from "../generated/common";
 import { WebhookEvents } from './types';
+import * as fs from 'fs';
 
 export class CloudGlueError extends Error {
   constructor(
@@ -41,6 +42,47 @@ export class CloudGlueError extends Error {
     public readonly responseData?: any
   ) {
     super(message);
+    this.name = "CloudGlueError";
+  }
+}
+
+/**
+ * Helper function to convert a local file path to base64 encoded string
+ * Only supports JPG and PNG image formats
+ * @param filePath - Path to the local image file (must be .jpg, .jpeg, or .png)
+ * @returns Promise<string> - Base64 encoded string with data URL prefix
+ */
+export async function convertFileToBase64(filePath: string): Promise<string> {
+  try {
+    const fileBuffer = await fs.promises.readFile(filePath);
+    const base64String = fileBuffer.toString('base64');
+    
+    // Determine MIME type based on file extension (only JPG and PNG supported)
+    const extension = filePath.toLowerCase().split('.').pop();
+    let mimeType: string;
+    
+    switch (extension) {
+      case 'png':
+        mimeType = 'image/png';
+        break;
+      case 'jpg':
+      case 'jpeg':
+        mimeType = 'image/jpeg';
+        break;
+      default:
+        throw new CloudGlueError(
+          `Unsupported file format: ${extension}. Only JPG and PNG files are supported.`
+        );
+    }
+    
+    return `data:${mimeType};base64,${base64String}`;
+  } catch (error) {
+    if (error instanceof CloudGlueError) {
+      throw error;
+    }
+    throw new CloudGlueError(
+      `Failed to read file at path "${filePath}": ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -1089,13 +1131,26 @@ class EnhancedFaceMatchApi {
   constructor(private readonly api: typeof Face_MatchApi) {}
 
   async createFaceMatch(params: {
-    source_image: {url?: string, base64_image?: string};
+    source_image: {url?: string, base64_image?: string, file_path?: string};
     target_video_url: string;
     max_faces?: number;
     face_detection_id?: string;
     frame_extraction_id?: string;
     frame_extraction_config?: FrameExtractionConfig;
   }) {
+    // Handle local file path by converting to base64
+    if (params.source_image.file_path) {
+      const base64Image = await convertFileToBase64(params.source_image.file_path);
+      const { file_path, ...restSourceImage } = params.source_image;
+      return this.api.createFaceMatch({
+        ...params,
+        source_image: {
+          ...restSourceImage,
+          base64_image: base64Image
+        }
+      });
+    }
+    
     return this.api.createFaceMatch(params);
   }
 

@@ -10,6 +10,9 @@ import { schemas as describeSchemas } from '../generated/Describe';
 import { schemas as segmentsSchemas } from '../generated/Segments';
 import { SegmentationUniformConfig as SegmentationUniformConfigType, SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType, SegmentationConfig as SegmentationConfigType } from '../generated/common';
 import { schemas as webhooksSchemas } from '../generated/Webhooks';
+import { FrameExtraction } from '../generated/common';
+import { schemas as faceDetectionSchemas } from '../generated/Face_Detection';
+import { schemas as faceMatchSchemas } from '../generated/Face_Match';
 
 /**
  * Represents a video file in the Cloudglue system
@@ -190,3 +193,43 @@ export type NarrativeConfig = z.infer<typeof segmentsSchemas.NarrativeConfig>;
 export type ShotConfig = z.infer<typeof segmentsSchemas.ShotConfig>;
 
 export type WebhookEvents = z.infer<typeof webhooksSchemas['WebhookEvents']>;
+
+/**
+ * Represents a frame extraction job
+ */
+export type { FrameExtraction };
+
+/**
+ * Represents a face detection job
+ */
+export type FaceDetection = z.infer<typeof faceDetectionSchemas.FaceDetection>;
+
+/**
+ * Represents a face detection request
+ */
+export type FaceDetectionRequest = z.infer<typeof faceDetectionSchemas.FaceDetectionRequest>;
+
+/**
+ * Represents a detected face
+ */
+export type DetectedFace = z.infer<typeof faceDetectionSchemas.DetectedFace>;
+
+/**
+ * Represents a face match job
+ */
+export type FaceMatch = z.infer<typeof faceMatchSchemas.FaceMatch>;
+
+/**
+ * Represents a face match request
+ */
+export type FaceMatchRequest = z.infer<typeof faceMatchSchemas.FaceMatchRequest>;
+
+/**
+ * Represents a face match result
+ */
+export type FaceMatchResult = z.infer<typeof faceMatchSchemas.FaceMatchResult>;
+
+/**
+ * Represents a source image for face matching
+ */
+export type SourceImage = z.infer<typeof faceMatchSchemas.SourceImage>;

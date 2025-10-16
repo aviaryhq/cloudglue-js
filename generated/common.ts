@@ -131,6 +131,12 @@ export type Thumbnail = {
   segmentation_id?: string | undefined;
   segment_id?: string | undefined;
 };
+export type FaceBoundingBox = {
+  height: number;
+  width: number;
+  top: number;
+  left: number;
+};
 
 export const ThumbnailsConfig = z
   .object({ enable_segment_thumbnails: z.boolean() })
@@ -329,6 +335,15 @@ export const FrameExtraction = z
       .strict()
       .passthrough()
       .optional(),
+  })
+  .strict()
+  .passthrough();
+export const FaceBoundingBox = z
+  .object({
+    height: z.number().gte(0).lte(1),
+    width: z.number().gte(0).lte(1),
+    top: z.number().gte(0).lte(1),
+    left: z.number().gte(0).lte(1),
   })
   .strict()
   .passthrough();

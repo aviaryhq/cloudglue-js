@@ -290,6 +290,11 @@ const CollectionDelete = z
   .object({ id: z.string(), object: z.literal("collection") })
   .strict()
   .passthrough();
+const CollectionUpdate = z
+  .object({ name: z.string(), description: z.string() })
+  .partial()
+  .strict()
+  .passthrough();
 const CollectionFileDelete = z
   .object({
     collection_id: z.string(),
@@ -303,19 +308,20 @@ const FileEntities = z
     collection_id: z.string(),
     file_id: z.string(),
     entities: z.object({}).partial().strict().passthrough(),
-    segment_entities: z
-      .array(
-        z
-          .object({
-            start_time: z.number(),
-            end_time: z.number(),
-            entities: z.object({}).partial().strict().passthrough(),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-      .optional(),
+    segment_entities: z.array(
+      z
+        .object({
+          start_time: z.number(),
+          end_time: z.number(),
+          entities: z.object({}).partial().strict().passthrough(),
+        })
+        .partial()
+        .strict()
+        .passthrough()
+    ),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
   })
   .strict()
   .passthrough();
@@ -638,6 +644,7 @@ export const schemas = {
   CollectionFile,
   CollectionFileList,
   CollectionDelete,
+  CollectionUpdate,
   CollectionFileDelete,
   FileEntities,
   RichTranscript,
@@ -772,6 +779,44 @@ const endpoints = makeApi([
     ],
     response: CollectionDelete,
     errors: [
+      {
+        status: 404,
+        description: `Collection not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "put",
+    path: "/collections/:collection_id",
+    alias: "updateCollection",
+    description: `Update a collection`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "body",
+        description: `Collection update parameters`,
+        type: "Body",
+        schema: CollectionUpdate,
+      },
+      {
+        name: "collection_id",
+        type: "Path",
+        schema: z.string(),
+      },
+    ],
+    response: Collection,
+    errors: [
+      {
+        status: 400,
+        description: `Invalid request`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
       {
         status: 404,
         description: `Collection not found`,
@@ -960,7 +1005,7 @@ const endpoints = makeApi([
     method: "get",
     path: "/collections/:collection_id/videos/:file_id/entities",
     alias: "getEntities",
-    description: `Retrieve all extracted entities for a specific file in a collection. This API is only available when the a collection is created with collection_type &#x27;entities&#x27;`,
+    description: `Retrieve extracted entities for a specific file in a collection. Results are paginated with a default limit of 50 segment entities per request (maximum 100). Use limit and offset parameters to paginate through all results. This API is only available when the collection is created with collection_type &#x27;entities&#x27;`,
     requestFormat: "json",
     parameters: [
       {
@@ -972,6 +1017,16 @@ const endpoints = makeApi([
         name: "file_id",
         type: "Path",
         schema: z.string(),
+      },
+      {
+        name: "limit",
+        type: "Query",
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: "offset",
+        type: "Query",
+        schema: z.number().int().gte(0).optional().default(0),
       },
     ],
     response: FileEntities,

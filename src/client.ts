@@ -1119,9 +1119,10 @@ class EnhancedFaceDetectionApi {
     limit?: number;
     offset?: number;
   } = {}) {
+    const { limit, offset } = params;
     return this.api.getFaceDetection({ 
       params: { face_detection_id: faceDetectionId },
-      queries: params 
+      queries: { limit, offset }
     });
   }
 
@@ -1185,9 +1186,10 @@ class EnhancedFaceMatchApi {
     limit?: number;
     offset?: number;
   } = {}) {
+    const { limit, offset } = params;
     return this.api.getFaceMatch({ 
       params: { face_match_id: faceMatchId },
-      queries: params 
+      queries: { limit, offset }
     });
   }
 

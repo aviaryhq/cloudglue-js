@@ -398,6 +398,12 @@ class EnhancedFilesApi {
     } as any);
   }
 
+  async createFileFrameExtraction(fileId: string, params: FrameExtractionConfig) {
+    return this.api.createFileFrameExtraction(params, {
+      params: { file_id: fileId }
+    });
+  }
+
   /**
    * Waits for a file to finish processing by polling the getFile endpoint until the file
    * reaches a terminal state (completed, failed, or not_applicable) or until maxAttempts is reached.
@@ -1074,6 +1080,27 @@ class EnhancedFramesApi {
       undefined,
       { params: { frame_extraction_id: frameExtractionId } }
     );
+  }
+
+  async waitForReady(frameExtractionId: string, options: WaitForReadyOptions = {}) {
+    const { pollingInterval = 5000, maxAttempts = 36 } = options;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const job = await this.getFrameExtraction(frameExtractionId);
+
+      if (["completed", "failed"].includes(job.status)) {
+        if (job.status === "failed") {
+          throw new CloudGlueError(`Frame extraction job failed: ${frameExtractionId}`);
+        }
+        return job;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, pollingInterval));
+      attempts++;
+    }
+
+    throw new CloudGlueError(`Frame extraction job did not complete within ${maxAttempts * pollingInterval / 1000} seconds: ${frameExtractionId}`);
   }
 }
 

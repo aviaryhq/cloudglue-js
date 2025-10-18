@@ -144,16 +144,16 @@ export const ThumbnailsConfig = z
   .passthrough();
 export const SegmentationUniformConfig = z
   .object({
-    window_seconds: z.number().gte(2).lte(60),
-    hop_seconds: z.number().gte(1).lte(60).optional(),
+    window_seconds: z.number().gte(1).lte(120),
+    hop_seconds: z.number().gte(1).lte(120).optional(),
   })
   .strict()
   .passthrough();
 export const SegmentationShotDetectorConfig = z
   .object({
     threshold: z.number().nullish(),
-    min_seconds: z.number().gte(2).lte(60).nullish(),
-    max_seconds: z.number().gte(2).lte(60).nullish(),
+    min_seconds: z.number().gte(1).lte(120).nullish(),
+    max_seconds: z.number().gte(1).lte(120).nullish(),
     detector: z.enum(["adaptive", "content"]),
   })
   .strict()

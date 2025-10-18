@@ -200,6 +200,11 @@ export type WebhookEvents = z.infer<typeof webhooksSchemas['WebhookEvents']>;
 export type { FrameExtraction };
 
 /**
+ * Configuration for frame extraction
+ */
+export type { FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from '../generated/common';
+
+/**
  * Represents a face detection job
  */
 export type FaceDetection = z.infer<typeof faceDetectionSchemas.FaceDetection>;

@@ -115,7 +115,7 @@ const endpoints = makeApi([
     alias: "createSegments",
     description: `Create intelligent video segments based on shot detection or narrative analysis.
 
-**⚠️ Note: YouTube URLs are not supported for this API.** Use Cloudglue Files, HTTP URLs, or S3/Dropbox URIs instead.`,
+**⚠️ Note: YouTube URLs are supported for narrative-based segmentation only.** Shot-based segmentation requires direct video file access. Use Cloudglue Files, HTTP URLs, or files from data connectors for shot-based segmentation.`,
     requestFormat: "json",
     parameters: [
       {
@@ -129,7 +129,7 @@ const endpoints = makeApi([
     errors: [
       {
         status: 400,
-        description: `Invalid request, missing required parameters, or unsupported URL type (e.g., YouTube URLs are not supported)`,
+        description: `Invalid request, missing required parameters, or unsupported URL type (e.g., YouTube URLs with shot-based segmentation are not supported)`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {
@@ -226,6 +226,33 @@ const endpoints = makeApi([
       {
         status: 404,
         description: `Job not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "delete",
+    path: "/segments/:job_id",
+    alias: "deleteSegments",
+    description: `Delete a specific segments job`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "job_id",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: z.object({ id: z.string().uuid() }).strict().passthrough(),
+    errors: [
+      {
+        status: 404,
+        description: `Segments job not found`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {

@@ -9,3 +9,5 @@ export { SearchApi } from "./Search";
 export { SegmentationsApi } from "./Segmentations";
 export { FramesApi } from "./Frames";
 export { SegmentsApi } from "./Segments";
+export { Face_MatchApi } from "./Face_Match";
+export { Face_DetectionApi } from "./Face_Detection";

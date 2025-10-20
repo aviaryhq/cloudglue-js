@@ -9,6 +9,9 @@ import {
   DescribeApi,
   SegmentsApi,
   WebhooksApi,
+  FramesApi,
+  Face_DetectionApi,
+  Face_MatchApi,
 } from "../generated";
 import { FilterOperator } from "./enums";
 import type { File, NarrativeConfig, SegmentationConfig, ShotConfig, UpdateFileParams } from "./types";
@@ -22,9 +25,13 @@ import { createApiClient as createSearchApiClient } from "../generated/Search";
 import { createApiClient as createDescribeApiClient } from "../generated/Describe";
 import { createApiClient as createSegmentsApiClient } from "../generated/Segments";
 import { createApiClient as createWebhooksApiClient, schemas as webhooksSchemas } from "../generated/Webhooks";
+import { createApiClient as createFramesApiClient } from "../generated/Frames";
+import { createApiClient as createFaceDetectionApiClient } from "../generated/Face_Detection";
+import { createApiClient as createFaceMatchApiClient } from "../generated/Face_Match";
 import { ZodiosOptions } from "@zodios/core";
-import { ThumbnailsConfig } from "../generated/common";
+import { ThumbnailsConfig, FrameExtractionConfig } from "../generated/common";
 import { WebhookEvents } from './types';
+import * as fs from 'fs';
 
 export class CloudGlueError extends Error {
   constructor(
@@ -35,6 +42,47 @@ export class CloudGlueError extends Error {
     public readonly responseData?: any
   ) {
     super(message);
+    this.name = "CloudGlueError";
+  }
+}
+
+/**
+ * Helper function to convert a local file path to base64 encoded string
+ * Only supports JPG and PNG image formats
+ * @param filePath - Path to the local image file (must be .jpg, .jpeg, or .png)
+ * @returns Promise<string> - Base64 encoded string with data URL prefix
+ */
+export async function convertFileToBase64(filePath: string): Promise<string> {
+  try {
+    const fileBuffer = await fs.promises.readFile(filePath);
+    const base64String = fileBuffer.toString('base64');
+    
+    // Determine MIME type based on file extension (only JPG and PNG supported)
+    const extension = filePath.toLowerCase().split('.').pop();
+    let mimeType: string;
+    
+    switch (extension) {
+      case 'png':
+        mimeType = 'image/png';
+        break;
+      case 'jpg':
+      case 'jpeg':
+        mimeType = 'image/jpeg';
+        break;
+      default:
+        throw new CloudGlueError(
+          `Unsupported file format: ${extension}. Only JPG and PNG files are supported.`
+        );
+    }
+    
+    return `data:${mimeType};base64,${base64String}`;
+  } catch (error) {
+    if (error instanceof CloudGlueError) {
+      throw error;
+    }
+    throw new CloudGlueError(
+      `Failed to read file at path "${filePath}": ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -292,7 +340,7 @@ class EnhancedFilesApi {
     }
 
     // Use axios directly to bypass Zodios validation
-    return this.api.axios({
+    const response = await this.api.axios({
       method: "post",
       url: "/files",
       data: formData,
@@ -300,6 +348,7 @@ class EnhancedFilesApi {
         "Content-Type": "multipart/form-data",
       },
     });
+    return response.data;
   }
 
   async getFile(fileId: string) {
@@ -348,6 +397,12 @@ class EnhancedFilesApi {
       params: { file_id: fileId },
       body: params,
     } as any);
+  }
+
+  async createFileFrameExtraction(fileId: string, params: FrameExtractionConfig) {
+    return this.api.createFileFrameExtraction(params, {
+      params: { file_id: fileId }
+    });
   }
 
   /**
@@ -409,6 +464,16 @@ class EnhancedCollectionsApi {
     );
   }
 
+  async updateCollection(collectionId: string, params: {
+    name?: string;
+    description?: string;
+  }) {
+    return this.api.updateCollection(
+      params,
+      { params: { collection_id: collectionId } }
+    );
+  }
+
   async addVideoByUrl({collectionId, url, params}: {collectionId: string, url: string, params: {
     segmentation_config?: SegmentationConfig;
     segmentation_id?: string;
@@ -458,10 +523,12 @@ class EnhancedCollectionsApi {
 
   async getEntities(
     collectionId: string,
-    fileId: string
+    fileId: string,
+    params: {limit?: number, offset?: number} = {}
   ) {
     return this.api.getEntities({
-      params: { collection_id: collectionId, file_id: fileId }
+      params: { collection_id: collectionId, file_id: fileId },
+      queries: params
     });
   }
 
@@ -924,6 +991,13 @@ class EnhancedSegmentsApi {
     return this.api.createSegments(params);
   }
 
+  async deleteSegmentJob(jobId: string) {
+    return this.api.deleteSegments(
+      undefined,
+      { params: { job_id: jobId } }
+    );
+  }
+
   async waitForReady(jobId: string, options: WaitForReadyOptions = {}) {
     const {
       pollingInterval = 5000,
@@ -989,6 +1063,166 @@ class EnhancedWebhooksApi {
   }
 }
 
+class EnhancedFramesApi {
+  constructor(private readonly api: typeof FramesApi) {}
+
+  async getFrameExtraction(frameExtractionId: string, params: {
+    limit?: number;
+    offset?: number;
+  } = {}) {
+    return this.api.getFrameExtraction({ 
+      params: { frame_extraction_id: frameExtractionId },
+      queries: params 
+    });
+  }
+
+  async deleteFrameExtraction(frameExtractionId: string) {
+    return this.api.deleteFrameExtraction(
+      undefined,
+      { params: { frame_extraction_id: frameExtractionId } }
+    );
+  }
+
+  async waitForReady(frameExtractionId: string, options: WaitForReadyOptions = {}) {
+    const { pollingInterval = 5000, maxAttempts = 36 } = options;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const job = await this.getFrameExtraction(frameExtractionId);
+
+      if (["completed", "failed"].includes(job.status)) {
+        if (job.status === "failed") {
+          throw new CloudGlueError(`Frame extraction job failed: ${frameExtractionId}`);
+        }
+        return job;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, pollingInterval));
+      attempts++;
+    }
+
+    throw new CloudGlueError(`Frame extraction job did not complete within ${maxAttempts * pollingInterval / 1000} seconds: ${frameExtractionId}`);
+  }
+}
+
+class EnhancedFaceDetectionApi {
+  constructor(private readonly api: typeof Face_DetectionApi) {}
+
+  async createFaceDetection(params: {
+    url: string;
+    frame_extraction_id?: string;
+    frame_extraction_config?: FrameExtractionConfig;
+  }) {
+    return this.api.createFaceDetection(params);
+  }
+
+  async getFaceDetection(faceDetectionId: string, params: {
+    limit?: number;
+    offset?: number;
+  } = {}) {
+    const { limit, offset } = params;
+    return this.api.getFaceDetection({ 
+      params: { face_detection_id: faceDetectionId },
+      queries: { limit, offset }
+    });
+  }
+
+  async deleteFaceDetection(faceDetectionId: string) {
+    return this.api.deleteFaceDetection(
+      undefined,
+      { params: { face_detection_id: faceDetectionId } }
+    );
+  }
+
+  async waitForReady(faceDetectionId: string, options: WaitForReadyOptions = {}) {
+    const { pollingInterval = 5000, maxAttempts = 36 } = options;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const job = await this.getFaceDetection(faceDetectionId);
+
+      if (["completed", "failed"].includes(job.status)) {
+        if (job.status === "failed") {
+          throw new CloudGlueError(`Face detection job failed: ${faceDetectionId}`);
+        }
+        return job;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, pollingInterval));
+      attempts++;
+    }
+
+    throw new CloudGlueError(`Face detection job did not complete within ${maxAttempts * pollingInterval / 1000} seconds: ${faceDetectionId}`);
+  }
+}
+
+class EnhancedFaceMatchApi {
+  constructor(private readonly api: typeof Face_MatchApi) {}
+
+  async createFaceMatch(params: {
+    source_image: {url?: string, base64_image?: string, file_path?: string};
+    target_video_url: string;
+    max_faces?: number;
+    face_detection_id?: string;
+    frame_extraction_id?: string;
+    frame_extraction_config?: FrameExtractionConfig;
+  }) {
+    // Handle local file path by converting to base64
+    if (params.source_image.file_path) {
+      const base64Image = await convertFileToBase64(params.source_image.file_path);
+      const { file_path, ...restSourceImage } = params.source_image;
+      return this.api.createFaceMatch({
+        ...params,
+        source_image: {
+          ...restSourceImage,
+          base64_image: base64Image
+        }
+      });
+    }
+    
+    return this.api.createFaceMatch(params);
+  }
+
+  async getFaceMatch(faceMatchId: string, params: {
+    limit?: number;
+    offset?: number;
+  } = {}) {
+    const { limit, offset } = params;
+    return this.api.getFaceMatch({ 
+      params: { face_match_id: faceMatchId },
+      queries: { limit, offset }
+    });
+  }
+
+  async deleteFaceMatch(faceMatchId: string) {
+    return this.api.deleteFaceMatch(
+      undefined,
+      { params: { face_match_id: faceMatchId } }
+    );
+  }
+
+  async waitForReady(faceMatchId: string, options: WaitForReadyOptions = {}) {
+    const { pollingInterval = 5000, maxAttempts = 36 } = options;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const job = await this.getFaceMatch(faceMatchId);
+
+      if (["completed", "failed"].includes(job.status)) {
+        if (job.status === "failed") {
+          throw new CloudGlueError(`Face match job failed: ${faceMatchId}`);
+        }
+        return job;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, pollingInterval));
+      attempts++;
+    }
+
+    throw new CloudGlueError(`Face match job did not complete within ${maxAttempts * pollingInterval / 1000} seconds: ${faceMatchId}`);
+  }
+}
+
 /**
  * Main CloudGlue client class that provides access to all API functionality
  * through enhanced, user-friendly interfaces
@@ -1048,6 +1282,24 @@ export class CloudGlue {
   public readonly segments: EnhancedSegmentsApi;
 
   /**
+   * Frames API for managing frame extractions
+   * Provides methods for extracting and managing video frames
+   */
+  public readonly frames: EnhancedFramesApi;
+
+  /**
+   * Face Detection API for detecting faces in videos
+   * Provides methods for analyzing videos to detect faces
+   */
+  public readonly faceDetection: EnhancedFaceDetectionApi;
+
+  /**
+   * Face Match API for matching faces across videos
+   * Provides methods for finding specific faces in videos
+   */
+  public readonly faceMatch: EnhancedFaceMatchApi;
+
+  /**
    * Webhooks API for managing webhooks
    * Provides methods for creating and managing webhooks
    */
@@ -1090,9 +1342,12 @@ export class CloudGlue {
     const searchApi = createSearchApiClient(this.baseUrl, sharedConfig);
     const describeApi = createDescribeApiClient(this.baseUrl, sharedConfig);
     const segmentsApi = createSegmentsApiClient(this.baseUrl, sharedConfig);
+    const framesApi = createFramesApiClient(this.baseUrl, sharedConfig);
+    const faceDetectionApi = createFaceDetectionApiClient(this.baseUrl, sharedConfig);
+    const faceMatchApi = createFaceMatchApiClient(this.baseUrl, sharedConfig);
     const webhooksApi = createWebhooksApiClient(this.baseUrl, sharedConfig);
     // Configure base URL and axios config for all clients
-    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi, searchApi, describeApi, segmentsApi, webhooksApi].forEach(
+    [filesApi, collectionsApi, chatApi, transcribeApi, extractApi, segmentationsApi, searchApi, describeApi, segmentsApi, framesApi, faceDetectionApi, faceMatchApi, webhooksApi].forEach(
       (client) => {
         Object.assign(client.axios.defaults, axiosConfig);
 
@@ -1142,6 +1397,9 @@ export class CloudGlue {
     this.search = new EnhancedSearchApi(searchApi);
     this.describe = new EnhancedDescribeApi(describeApi);
     this.segments = new EnhancedSegmentsApi(segmentsApi);
+    this.frames = new EnhancedFramesApi(framesApi);
+    this.faceDetection = new EnhancedFaceDetectionApi(faceDetectionApi);
+    this.faceMatch = new EnhancedFaceMatchApi(faceMatchApi);
     this.webhooks = new EnhancedWebhooksApi(webhooksApi);
     }
 }

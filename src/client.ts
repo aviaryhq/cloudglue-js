@@ -299,7 +299,7 @@ class EnhancedFilesApi {
     }
 
     // Use axios directly to bypass Zodios validation
-    const response = await this.api.axios({
+    return this.api.axios({
       method: "post",
       url: "/files",
       data: formData,
@@ -307,7 +307,6 @@ class EnhancedFilesApi {
         "Content-Type": "multipart/form-data",
       },
     });
-    return response.data;
   }
 
   async getFile(fileId: string) {

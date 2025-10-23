@@ -490,8 +490,8 @@ class EnhancedCollectionsApi {
     });
   }
 
-  
-  async getTranscriptsForFile(
+
+  async getTranscripts(
     collectionId: string,
     fileId: string,
     options: {
@@ -505,24 +505,6 @@ class EnhancedCollectionsApi {
     return this.api.getTranscripts({
       params: { collection_id: collectionId, file_id: fileId },
       queries: { ...options },
-    } as any);
-  }
-
-  /**
-   * @deprecated use getTranscriptsForFile
-   */
-  async getTranscripts(
-    collectionId: string,
-    fileId: string,
-    limit?: number,
-    offset?: number,
-    response_format?: "markdown" | "json",
-    start_time_seconds?: number,
-    end_time_seconds?: number,
-  ) {
-    return this.api.getTranscripts({
-      params: { collection_id: collectionId, file_id: fileId },
-      queries: { limit, offset, response_format, start_time_seconds, end_time_seconds },
     } as any);
   }
 
@@ -546,12 +528,11 @@ class EnhancedCollectionsApi {
     } );
   }
 
-  async getMediaDescriptionsForFile(
+
+  async getMediaDescriptions(
     collectionId: string,
     fileId: string,
     options: {
-      limit?: number;
-      offset?: number;
       response_format?: "markdown" | "json";
       start_time_seconds?: number;
       end_time_seconds?: number;
@@ -560,22 +541,6 @@ class EnhancedCollectionsApi {
     return this.api.getMediaDescriptions({
       params: { collection_id: collectionId, file_id: fileId },
       queries: { ...options },
-    } as any);
-  }
-
-  /**
-   * @deprecated use getMediaDescriptionsForFile
-   */
-  async getMediaDescriptions(
-    collectionId: string,
-    fileId: string,
-    response_format?: "markdown" | "json",
-    start_time_seconds?: number,
-    end_time_seconds?: number,
-  ) {
-    return this.api.getMediaDescriptions({
-      params: { collection_id: collectionId, file_id: fileId },
-      queries: { response_format, start_time_seconds, end_time_seconds },
     } as any);
   }
 

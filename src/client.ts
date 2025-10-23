@@ -490,16 +490,21 @@ class EnhancedCollectionsApi {
     });
   }
 
+
   async getTranscripts(
     collectionId: string,
     fileId: string,
-    limit?: number,
-    offset?: number,
-    response_format?: "markdown" | "json"
+    options: {
+      limit?: number;
+      offset?: number;
+      response_format?: "markdown" | "json";
+      start_time_seconds?: number;
+      end_time_seconds?: number;
+    } = {}
   ) {
     return this.api.getTranscripts({
       params: { collection_id: collectionId, file_id: fileId },
-      queries: { limit, offset, response_format },
+      queries: { ...options },
     } as any);
   }
 
@@ -523,14 +528,19 @@ class EnhancedCollectionsApi {
     } );
   }
 
+
   async getMediaDescriptions(
     collectionId: string,
     fileId: string,
-    response_format?: "markdown" | "json"
+    options: {
+      response_format?: "markdown" | "json";
+      start_time_seconds?: number;
+      end_time_seconds?: number;
+    } = {}
   ) {
     return this.api.getMediaDescriptions({
       params: { collection_id: collectionId, file_id: fileId },
-      queries: { response_format },
+      queries: { ...options },
     } as any);
   }
 
@@ -597,9 +607,15 @@ class EnhancedChatApi {
   }
 }
 
+/**
+ * @deprecated
+ */
 class EnhancedTranscribeApi {
   constructor(private readonly api: typeof TranscribeApi) {}
 
+  /**
+   * @deprecated use createDescribe instead
+   */
   async createTranscribe(
     url: string,
     options: {
@@ -618,6 +634,9 @@ class EnhancedTranscribeApi {
     });
   }
 
+  /**
+   * @deprecated use getDescribe instead
+   */
   async getTranscribe(
     jobId: string,
     options: {
@@ -630,6 +649,9 @@ class EnhancedTranscribeApi {
     });
   }
 
+  /**
+   * @deprecated use listDescribes instead
+   */
   async listTranscribes(
     params: {
       limit?: number;
@@ -657,6 +679,7 @@ class EnhancedTranscribeApi {
    * @param options - Optional configuration for polling behavior and response format
    * @returns The final transcription job object
    * @throws {CloudGlueError} If the job fails to process or maxAttempts is reached
+   * @deprecated
    */
   async waitForReady(
     jobId: string,
@@ -848,11 +871,15 @@ class EnhancedDescribeApi {
     jobId: string,
     options: {
       response_format?: "json" | "markdown";
-    } = {}
+      start_time_seconds?: number;
+      end_time_seconds?: number;
+    } = {
+      response_format: "json",
+    }
   ) {
     return this.api.getDescribe({
       params: { job_id: jobId },
-      queries: { response_format: options.response_format },
+      queries: { ...options },
     });
   }
 

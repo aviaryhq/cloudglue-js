@@ -332,6 +332,7 @@ const RichTranscript = z
     content: z.string().optional(),
     title: z.string().optional(),
     summary: z.string().optional(),
+    duration_seconds: z.number().optional(),
     speech: z
       .array(
         z
@@ -432,6 +433,7 @@ const CollectionRichTranscriptsList = z
       z
         .object({
           file_id: z.string(),
+          duration_seconds: z.number().optional(),
           data: z
             .object({
               content: z.string(),
@@ -506,6 +508,7 @@ const CollectionMediaDescriptionsList = z
           file_id: z.string(),
           added_at: z.number().int(),
           object: z.literal("collection_file"),
+          duration_seconds: z.number().optional(),
           data: z
             .object({
               content: z.string(),
@@ -578,6 +581,7 @@ const MediaDescription = z
     content: z.string().optional(),
     title: z.string().optional(),
     summary: z.string().optional(),
+    duration_seconds: z.number().optional(),
     speech: z
       .array(
         z
@@ -1070,6 +1074,16 @@ const endpoints = makeApi([
         type: "Query",
         schema: z.enum(["json", "markdown"]).optional().default("json"),
       },
+      {
+        name: "start_time_seconds",
+        type: "Query",
+        schema: z.number().optional(),
+      },
+      {
+        name: "end_time_seconds",
+        type: "Query",
+        schema: z.number().optional(),
+      },
     ],
     response: RichTranscript,
     errors: [
@@ -1307,6 +1321,16 @@ const endpoints = makeApi([
         name: "response_format",
         type: "Query",
         schema: z.enum(["json", "markdown"]).optional().default("json"),
+      },
+      {
+        name: "start_time_seconds",
+        type: "Query",
+        schema: z.number().optional(),
+      },
+      {
+        name: "end_time_seconds",
+        type: "Query",
+        schema: z.number().optional(),
       },
     ],
     response: MediaDescription,

@@ -11,6 +11,7 @@ type Describe = {
   job_id: string;
   status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
   url?: string | undefined;
+  duration_seconds?: number | undefined;
   created_at?: number | undefined;
   describe_config?:
     | Partial<{
@@ -97,6 +98,7 @@ const Describe: z.ZodType<Describe> = z
       "not_applicable",
     ]),
     url: z.string().optional(),
+    duration_seconds: z.number().optional(),
     created_at: z.number().int().optional(),
     describe_config: z
       .object({
@@ -305,6 +307,16 @@ const endpoints = makeApi([
         name: "response_format",
         type: "Query",
         schema: z.enum(["json", "markdown"]).optional().default("json"),
+      },
+      {
+        name: "start_time_seconds",
+        type: "Query",
+        schema: z.number().optional(),
+      },
+      {
+        name: "end_time_seconds",
+        type: "Query",
+        schema: z.number().optional(),
       },
     ],
     response: Describe,

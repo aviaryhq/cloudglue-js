@@ -127,7 +127,7 @@ const Collection: z.ZodType<Collection> = z
     id: z.string(),
     object: z.literal("collection"),
     name: z.string(),
-    description: z.union([z.string(), z.null()]).optional(),
+    description: z.string().nullish(),
     collection_type: z.enum([
       "media-descriptions",
       "entities",
@@ -181,7 +181,7 @@ const NewCollection: z.ZodType<NewCollection> = z
       "rich-transcripts",
     ]),
     name: z.string(),
-    description: z.union([z.string(), z.null()]).optional(),
+    description: z.string().nullish(),
     describe_config: z
       .object({
         enable_summary: z.boolean().default(true),
@@ -925,6 +925,11 @@ const endpoints = makeApi([
         name: "sort",
         type: "Query",
         schema: z.enum(["asc", "desc"]).optional().default("desc"),
+      },
+      {
+        name: "filter",
+        type: "Query",
+        schema: z.string().optional(),
       },
     ],
     response: CollectionFileList,

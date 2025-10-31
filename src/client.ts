@@ -737,8 +737,11 @@ class EnhancedExtractApi {
     });
   }
 
-  async getExtract(jobId: string) {
-    return this.api.getExtract({ params: { job_id: jobId } });
+  async getExtract(jobId: string, params: {limit?: number, offset?: number} = {}) {
+    return this.api.getExtract({ 
+      params: { job_id: jobId },
+      queries: params
+    });
   }
 
   async listExtracts(

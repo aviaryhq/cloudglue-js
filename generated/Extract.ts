@@ -20,6 +20,7 @@ type Extract = {
         enable_segment_level_entities: boolean;
       }>
     | undefined;
+  segmentation_id?: string | undefined;
   data?:
     | Partial<{
         entities: {};
@@ -32,6 +33,9 @@ type Extract = {
         >;
       }>
     | undefined;
+  total?: number | undefined;
+  limit?: number | undefined;
+  offset?: number | undefined;
   error?: string | undefined;
 };
 type NewExtract = {
@@ -73,6 +77,7 @@ const Extract: z.ZodType<Extract> = z
       .strict()
       .passthrough()
       .optional(),
+    segmentation_id: z.string().optional(),
     data: z
       .object({
         entities: z.object({}).partial().strict().passthrough(),
@@ -92,6 +97,9 @@ const Extract: z.ZodType<Extract> = z
       .strict()
       .passthrough()
       .optional(),
+    total: z.number().int().optional(),
+    limit: z.number().int().optional(),
+    offset: z.number().int().optional(),
     error: z.string().optional(),
   })
   .strict()
@@ -238,13 +246,23 @@ const endpoints = makeApi([
     method: "get",
     path: "/extract/:job_id",
     alias: "getExtract",
-    description: `Retrieve the current state of an extraction job`,
+    description: `Retrieve the current state of an extraction job. Results are paginated with a default limit of 50 segment entities per request (maximum 100). Use limit and offset parameters to paginate through all segment entities.`,
     requestFormat: "json",
     parameters: [
       {
         name: "job_id",
         type: "Path",
         schema: z.string(),
+      },
+      {
+        name: "limit",
+        type: "Query",
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: "offset",
+        type: "Query",
+        schema: z.number().int().gte(0).optional().default(0),
       },
     ],
     response: Extract,

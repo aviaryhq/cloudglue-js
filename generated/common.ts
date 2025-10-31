@@ -186,20 +186,18 @@ export const File = z
       "failed",
       "not_applicable",
     ]),
-    bytes: z.union([z.number(), z.null()]).optional(),
+    bytes: z.number().int().nullish(),
     created_at: z.number().int().optional(),
     filename: z.string().optional(),
     uri: z.string(),
-    metadata: z
-      .union([z.object({}).partial().strict().passthrough(), z.null()])
-      .optional(),
+    metadata: z.object({}).partial().strict().passthrough().nullish(),
     video_info: z
       .object({
-        duration_seconds: z.union([z.number(), z.null()]),
-        height: z.union([z.number(), z.null()]),
-        width: z.union([z.number(), z.null()]),
-        format: z.union([z.string(), z.null()]),
-        has_audio: z.union([z.boolean(), z.null()]),
+        duration_seconds: z.number().nullable(),
+        height: z.number().int().nullable(),
+        width: z.number().int().nullable(),
+        format: z.string().nullable(),
+        has_audio: z.boolean().nullable(),
       })
       .partial()
       .strict()

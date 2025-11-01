@@ -80,7 +80,7 @@ const FaceMatch: z.ZodType<FaceMatch> = z
     file_id: z.string().uuid().optional(),
     status: z.enum(["pending", "processing", "completed", "failed"]),
     created_at: z.number(),
-    source_face_bounding_box: z.union([FaceBoundingBox, z.null()]).optional(),
+    source_face_bounding_box: FaceBoundingBox.nullish(),
     data: z
       .object({
         object: z.literal("list"),

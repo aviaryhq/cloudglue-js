@@ -153,6 +153,7 @@ interface ListCollectionVideosParams {
   sort?: "asc" | "desc";
   added_before?: string;
   added_after?: string;
+  filter?: Filter;
 }
 
 interface ListCollectionEntitiesParams {
@@ -460,9 +461,23 @@ class EnhancedCollectionsApi {
     collectionId: string,
     params: ListCollectionVideosParams = {}
   ) {
+    const { filter, ...otherParams } = params;
+    
+    // Convert filter object to JSON string if provided
+    const queries: any = { ...otherParams };
+    if (filter) {
+      try {
+        queries.filter = JSON.stringify(filter);
+      } catch (error) {
+        throw new CloudGlueError(
+          `Failed to serialize filter object: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    }
+    
     return this.api.listVideos({
       params: { collection_id: collectionId },
-      queries: params,
+      queries,
     });
   }
 

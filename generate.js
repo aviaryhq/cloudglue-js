@@ -117,4 +117,61 @@ content = newImports + '\n' + transformedRest.trimStart();
 // Write the transformed content back
 fs.writeFileSync(filesPath, content);
 
+// Fix nullish type mismatches across all generated files
+console.log('Fixing nullish type mismatches...');
+const generatedDir = path.join(__dirname, 'generated');
+const generatedFiles = fs.readdirSync(generatedDir).filter(f => f.endsWith('.ts'));
+
+for (const file of generatedFiles) {
+    const filePath = path.join(generatedDir, file);
+    let fileContent = fs.readFileSync(filePath, 'utf8');
+    
+    // Find all Zod schemas that use .nullish()
+    // Pattern: field_name: SomeType.nullish()
+    const nullishPattern = /(\w+):\s*([A-Z]\w+)\.nullish\(\)/g;
+    const nullishFields = new Set();
+    let match;
+    
+    while ((match = nullishPattern.exec(fileContent)) !== null) {
+        nullishFields.add(match[1]); // field name
+    }
+    
+    // Also find standalone .nullish() calls like z.string().nullish()
+    const inlineNullishPattern = /(\w+):\s*z\.[^,\n]+\.nullish\(\)/g;
+    while ((match = inlineNullishPattern.exec(fileContent)) !== null) {
+        nullishFields.add(match[1]); // field name
+    }
+    
+    if (nullishFields.size === 0) continue;
+    
+    // Now fix the TypeScript type definitions for these fields
+    // We need to change: field_name?: Type | undefined
+    // to: field_name?: (Type | null) | undefined
+    for (const fieldName of nullishFields) {
+        // Match patterns like:
+        // fieldName?: Type | undefined
+        // but NOT: fieldName?: (Type | null) | undefined (already fixed)
+        const typePattern = new RegExp(
+            `(\\s+${fieldName}\\?:\\s*)([^|\\n]+?)(\\s*\\|\\s*undefined)`,
+            'g'
+        );
+        
+        fileContent = fileContent.replace(typePattern, (fullMatch, before, type, after) => {
+            // Skip if already has null
+            if (type.includes('| null') || type.includes('|null')) {
+                return fullMatch;
+            }
+            // Skip if it's already wrapped in parentheses with null
+            if (type.trim().startsWith('(') && type.includes('null')) {
+                return fullMatch;
+            }
+            // Wrap the type and add null
+            const trimmedType = type.trim();
+            return `${before}(${trimmedType} | null)${after}`;
+        });
+    }
+    
+    fs.writeFileSync(filePath, fileContent);
+}
+
 console.log('Generation complete!'); 

@@ -1,6 +1,9 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { DescribeOutput } from "./common";
+import { DescribeOutputPart } from "./common";
+import { SpeechOutputPart } from "./common";
 import { ThumbnailsConfig } from "./common";
 import { FileSegmentationConfig } from "./common";
 import { SegmentationConfig } from "./common";
@@ -21,32 +24,10 @@ type Transcribe = {
       }>
     | undefined;
   data?:
-    | Partial<{
+    | (Partial<{
         content: string;
         title: string;
         summary: string;
-        speech: Array<
-          Partial<{
-            speaker: string;
-            text: string;
-            start_time: number;
-            end_time: number;
-          }>
-        >;
-        visual_scene_description: Array<
-          Partial<{
-            text: string;
-            start_time: number;
-            end_time: number;
-          }>
-        >;
-        scene_text: Array<
-          Partial<{
-            text: string;
-            start_time: number;
-            end_time: number;
-          }>
-        >;
         segment_summary: Array<
           Partial<{
             title: string;
@@ -55,7 +36,8 @@ type Transcribe = {
             end_time: number;
           }>
         >;
-      }>
+      }> &
+        DescribeOutput)
     | undefined;
   error?: string | undefined;
 };
@@ -65,6 +47,7 @@ type NewTranscribe = {
   enable_speech?: boolean | undefined;
   enable_visual_scene_description?: boolean | undefined;
   enable_scene_text?: boolean | undefined;
+  enable_audio_description?: boolean | undefined;
   thumbnails_config?: ThumbnailsConfig | undefined;
 } & FileSegmentationConfig;
 type TranscribeList = {
@@ -74,18 +57,6 @@ type TranscribeList = {
   limit: number;
 };
 
-const NewTranscribe: z.ZodType<NewTranscribe> = z
-  .object({
-    url: z.string(),
-    enable_summary: z.boolean().optional().default(true),
-    enable_speech: z.boolean().optional().default(true),
-    enable_visual_scene_description: z.boolean().optional().default(false),
-    enable_scene_text: z.boolean().optional().default(false),
-    thumbnails_config: ThumbnailsConfig.optional(),
-  })
-  .strict()
-  .passthrough()
-  .and(FileSegmentationConfig);
 const Transcribe: z.ZodType<Transcribe> = z
   .object({
     job_id: z.string(),
@@ -114,40 +85,6 @@ const Transcribe: z.ZodType<Transcribe> = z
         content: z.string(),
         title: z.string(),
         summary: z.string(),
-        speech: z.array(
-          z
-            .object({
-              speaker: z.string(),
-              text: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
-        visual_scene_description: z.array(
-          z
-            .object({
-              text: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
-        scene_text: z.array(
-          z
-            .object({
-              text: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
         segment_summary: z.array(
           z
             .object({
@@ -164,11 +101,25 @@ const Transcribe: z.ZodType<Transcribe> = z
       .partial()
       .strict()
       .passthrough()
+      .and(DescribeOutput)
       .optional(),
     error: z.string().optional(),
   })
   .strict()
   .passthrough();
+const NewTranscribe: z.ZodType<NewTranscribe> = z
+  .object({
+    url: z.string(),
+    enable_summary: z.boolean().optional().default(true),
+    enable_speech: z.boolean().optional().default(true),
+    enable_visual_scene_description: z.boolean().optional().default(false),
+    enable_scene_text: z.boolean().optional().default(false),
+    enable_audio_description: z.boolean().optional().default(false),
+    thumbnails_config: ThumbnailsConfig.optional(),
+  })
+  .strict()
+  .passthrough()
+  .and(FileSegmentationConfig);
 const TranscribeList: z.ZodType<TranscribeList> = z
   .object({
     object: z.literal("list"),
@@ -180,8 +131,8 @@ const TranscribeList: z.ZodType<TranscribeList> = z
   .passthrough();
 
 export const schemas = {
-  NewTranscribe,
   Transcribe,
+  NewTranscribe,
   TranscribeList,
 };
 

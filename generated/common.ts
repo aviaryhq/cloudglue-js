@@ -1,5 +1,22 @@
 import { z } from "zod";
 
+export type DescribeOutput = Partial<{
+  visual_scene_description: Array<DescribeOutputPart>;
+  scene_text: Array<DescribeOutputPart>;
+  speech: Array<SpeechOutputPart>;
+  audio_description: Array<DescribeOutputPart>;
+}>;
+export type DescribeOutputPart = Partial<{
+  text: string;
+  start_time: number;
+  end_time: number;
+}>;
+export type SpeechOutputPart = Partial<{
+  speaker: string;
+  text: string;
+  start_time: number;
+  end_time: number;
+}>;
 export type ThumbnailsConfig = {
   enable_segment_thumbnails: boolean;
 };
@@ -278,6 +295,31 @@ export const ThumbnailList = z
     offset: z.number().int(),
     data: z.array(Thumbnail),
   })
+  .strict()
+  .passthrough();
+export const DescribeOutputPart = z
+  .object({ text: z.string(), start_time: z.number(), end_time: z.number() })
+  .partial()
+  .strict()
+  .passthrough();
+export const SpeechOutputPart = z
+  .object({
+    speaker: z.string(),
+    text: z.string(),
+    start_time: z.number(),
+    end_time: z.number(),
+  })
+  .partial()
+  .strict()
+  .passthrough();
+export const DescribeOutput = z
+  .object({
+    visual_scene_description: z.array(DescribeOutputPart),
+    scene_text: z.array(DescribeOutputPart),
+    speech: z.array(SpeechOutputPart),
+    audio_description: z.array(DescribeOutputPart),
+  })
+  .partial()
   .strict()
   .passthrough();
 export const FrameExtractionUniformConfig = z

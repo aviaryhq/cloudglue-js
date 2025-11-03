@@ -7,6 +7,9 @@ import { SegmentationShotDetectorConfig } from "./common";
 import { ThumbnailsConfig } from "./common";
 import { File } from "./common";
 import { FileSegmentationConfig } from "./common";
+import { DescribeOutput } from "./common";
+import { DescribeOutputPart } from "./common";
+import { SpeechOutputPart } from "./common";
 
 type Collection = {
   id: string;
@@ -28,6 +31,7 @@ type Collection = {
         enable_speech: boolean;
         enable_scene_text: boolean;
         enable_visual_scene_description: boolean;
+        enable_audio_description: boolean;
       }>
     | undefined;
   describe_config?:
@@ -36,6 +40,7 @@ type Collection = {
         enable_speech: boolean;
         enable_scene_text: boolean;
         enable_visual_scene_description: boolean;
+        enable_audio_description: boolean;
       }>
     | undefined;
   default_segmentation_config?: SegmentationConfig | undefined;
@@ -53,6 +58,7 @@ type NewCollection = {
         enable_speech: boolean;
         enable_scene_text: boolean;
         enable_visual_scene_description: boolean;
+        enable_audio_description: boolean;
       }>
     | undefined;
   extract_config?:
@@ -69,6 +75,7 @@ type NewCollection = {
         enable_speech: boolean;
         enable_scene_text: boolean;
         enable_visual_scene_description: boolean;
+        enable_audio_description: boolean;
       }>
     | undefined;
   default_segmentation_config?: SegmentationConfig | undefined;
@@ -121,6 +128,92 @@ type CollectionFileList = {
   limit: number;
   offset: number;
 };
+type RichTranscript = {
+  collection_id: string;
+  file_id: string;
+  content?: string | undefined;
+  title?: string | undefined;
+  summary?: string | undefined;
+  duration_seconds?: number | undefined;
+  segment_summary?:
+    | Array<
+        Partial<{
+          title: string;
+          summary: string;
+          start_time: number;
+          end_time: number;
+        }>
+      >
+    | undefined;
+} & DescribeOutput;
+type CollectionRichTranscriptsList = {
+  object: "list";
+  data: Array<{
+    file_id: string;
+    duration_seconds?: number | undefined;
+    data: Partial<{
+      content: string;
+      title: string;
+      summary: string;
+      segment_summary: Array<
+        Partial<{
+          title: string;
+          summary: string;
+          start_time: number;
+          end_time: number;
+        }>
+      >;
+    }> &
+      DescribeOutput;
+  }>;
+  total: number;
+  limit: number;
+  offset: number;
+};
+type CollectionMediaDescriptionsList = {
+  object: "list";
+  data: Array<{
+    file_id: string;
+    added_at: number;
+    object: "collection_file";
+    duration_seconds?: number | undefined;
+    data: Partial<{
+      content: string;
+      title: string;
+      summary: string;
+      segment_summary: Array<
+        Partial<{
+          title: string;
+          summary: string;
+          start_time: number;
+          end_time: number;
+        }>
+      >;
+    }> &
+      DescribeOutput;
+  }>;
+  total: number;
+  limit: number;
+  offset: number;
+};
+type MediaDescription = {
+  collection_id: string;
+  file_id: string;
+  content?: string | undefined;
+  title?: string | undefined;
+  summary?: string | undefined;
+  duration_seconds?: number | undefined;
+  segment_summary?:
+    | Array<
+        Partial<{
+          title: string;
+          summary: string;
+          start_time: number;
+          end_time: number;
+        }>
+      >
+    | undefined;
+} & DescribeOutput;
 
 const Collection: z.ZodType<Collection> = z
   .object({
@@ -150,6 +243,7 @@ const Collection: z.ZodType<Collection> = z
         enable_speech: z.boolean().default(true),
         enable_scene_text: z.boolean().default(false),
         enable_visual_scene_description: z.boolean().default(false),
+        enable_audio_description: z.boolean().default(false),
       })
       .partial()
       .strict()
@@ -161,6 +255,7 @@ const Collection: z.ZodType<Collection> = z
         enable_speech: z.boolean().default(true),
         enable_scene_text: z.boolean().default(true),
         enable_visual_scene_description: z.boolean().default(true),
+        enable_audio_description: z.boolean().default(false),
       })
       .partial()
       .strict()
@@ -188,6 +283,7 @@ const NewCollection: z.ZodType<NewCollection> = z
         enable_speech: z.boolean().default(true),
         enable_scene_text: z.boolean().default(true),
         enable_visual_scene_description: z.boolean().default(true),
+        enable_audio_description: z.boolean().default(false),
       })
       .partial()
       .strict()
@@ -210,6 +306,7 @@ const NewCollection: z.ZodType<NewCollection> = z
         enable_speech: z.boolean().default(true),
         enable_scene_text: z.boolean().default(false),
         enable_visual_scene_description: z.boolean().default(false),
+        enable_audio_description: z.boolean().default(false),
       })
       .partial()
       .strict()
@@ -286,6 +383,142 @@ const CollectionFileList: z.ZodType<CollectionFileList> = z
   })
   .strict()
   .passthrough();
+const MediaDescription: z.ZodType<MediaDescription> = z
+  .object({
+    collection_id: z.string(),
+    file_id: z.string(),
+    content: z.string().optional(),
+    title: z.string().optional(),
+    summary: z.string().optional(),
+    duration_seconds: z.number().optional(),
+    segment_summary: z
+      .array(
+        z
+          .object({
+            title: z.string(),
+            summary: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
+  })
+  .strict()
+  .passthrough()
+  .and(DescribeOutput);
+const RichTranscript: z.ZodType<RichTranscript> = z
+  .object({
+    collection_id: z.string(),
+    file_id: z.string(),
+    content: z.string().optional(),
+    title: z.string().optional(),
+    summary: z.string().optional(),
+    duration_seconds: z.number().optional(),
+    segment_summary: z
+      .array(
+        z
+          .object({
+            title: z.string(),
+            summary: z.string(),
+            start_time: z.number(),
+            end_time: z.number(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
+  })
+  .strict()
+  .passthrough()
+  .and(DescribeOutput);
+const CollectionRichTranscriptsList: z.ZodType<CollectionRichTranscriptsList> =
+  z
+    .object({
+      object: z.literal("list"),
+      data: z.array(
+        z
+          .object({
+            file_id: z.string(),
+            duration_seconds: z.number().optional(),
+            data: z
+              .object({
+                content: z.string(),
+                title: z.string(),
+                summary: z.string(),
+                segment_summary: z.array(
+                  z
+                    .object({
+                      title: z.string(),
+                      summary: z.string(),
+                      start_time: z.number(),
+                      end_time: z.number(),
+                    })
+                    .partial()
+                    .strict()
+                    .passthrough()
+                ),
+              })
+              .partial()
+              .strict()
+              .passthrough()
+              .and(DescribeOutput),
+          })
+          .strict()
+          .passthrough()
+      ),
+      total: z.number().int(),
+      limit: z.number().int(),
+      offset: z.number().int(),
+    })
+    .strict()
+    .passthrough();
+const CollectionMediaDescriptionsList: z.ZodType<CollectionMediaDescriptionsList> =
+  z
+    .object({
+      object: z.literal("list"),
+      data: z.array(
+        z
+          .object({
+            file_id: z.string(),
+            added_at: z.number().int(),
+            object: z.literal("collection_file"),
+            duration_seconds: z.number().optional(),
+            data: z
+              .object({
+                content: z.string(),
+                title: z.string(),
+                summary: z.string(),
+                segment_summary: z.array(
+                  z
+                    .object({
+                      title: z.string(),
+                      summary: z.string(),
+                      start_time: z.number(),
+                      end_time: z.number(),
+                    })
+                    .partial()
+                    .strict()
+                    .passthrough()
+                ),
+              })
+              .partial()
+              .strict()
+              .passthrough()
+              .and(DescribeOutput),
+          })
+          .strict()
+          .passthrough()
+      ),
+      total: z.number().int(),
+      limit: z.number().int(),
+      offset: z.number().int(),
+    })
+    .strict()
+    .passthrough();
 const CollectionDelete = z
   .object({ id: z.string(), object: z.literal("collection") })
   .strict()
@@ -325,71 +558,6 @@ const FileEntities = z
   })
   .strict()
   .passthrough();
-const RichTranscript = z
-  .object({
-    collection_id: z.string(),
-    file_id: z.string(),
-    content: z.string().optional(),
-    title: z.string().optional(),
-    summary: z.string().optional(),
-    duration_seconds: z.number().optional(),
-    speech: z
-      .array(
-        z
-          .object({
-            speaker: z.string(),
-            text: z.string(),
-            start_time: z.number(),
-            end_time: z.number(),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-      .optional(),
-    visual_scene_description: z
-      .array(
-        z
-          .object({
-            text: z.string(),
-            start_time: z.number(),
-            end_time: z.number(),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-      .optional(),
-    scene_text: z
-      .array(
-        z
-          .object({
-            text: z.string(),
-            start_time: z.number(),
-            end_time: z.number(),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-      .optional(),
-    segment_summary: z
-      .array(
-        z
-          .object({
-            title: z.string(),
-            summary: z.string(),
-            start_time: z.number(),
-            end_time: z.number(),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-      .optional(),
-  })
-  .strict()
-  .passthrough();
 const CollectionEntitiesList = z
   .object({
     object: z.literal("list"),
@@ -426,219 +594,6 @@ const CollectionEntitiesList = z
   })
   .strict()
   .passthrough();
-const CollectionRichTranscriptsList = z
-  .object({
-    object: z.literal("list"),
-    data: z.array(
-      z
-        .object({
-          file_id: z.string(),
-          duration_seconds: z.number().optional(),
-          data: z
-            .object({
-              content: z.string(),
-              title: z.string(),
-              summary: z.string(),
-              speech: z.array(
-                z
-                  .object({
-                    speaker: z.string(),
-                    text: z.string(),
-                    start_time: z.number(),
-                    end_time: z.number(),
-                  })
-                  .partial()
-                  .strict()
-                  .passthrough()
-              ),
-              visual_scene_description: z.array(
-                z
-                  .object({
-                    text: z.string(),
-                    start_time: z.number(),
-                    end_time: z.number(),
-                  })
-                  .partial()
-                  .strict()
-                  .passthrough()
-              ),
-              scene_text: z.array(
-                z
-                  .object({
-                    text: z.string(),
-                    start_time: z.number(),
-                    end_time: z.number(),
-                  })
-                  .partial()
-                  .strict()
-                  .passthrough()
-              ),
-              segment_summary: z.array(
-                z
-                  .object({
-                    title: z.string(),
-                    summary: z.string(),
-                    start_time: z.number(),
-                    end_time: z.number(),
-                  })
-                  .partial()
-                  .strict()
-                  .passthrough()
-              ),
-            })
-            .partial()
-            .strict()
-            .passthrough(),
-        })
-        .strict()
-        .passthrough()
-    ),
-    total: z.number().int(),
-    limit: z.number().int(),
-    offset: z.number().int(),
-  })
-  .strict()
-  .passthrough();
-const CollectionMediaDescriptionsList = z
-  .object({
-    object: z.literal("list"),
-    data: z.array(
-      z
-        .object({
-          file_id: z.string(),
-          added_at: z.number().int(),
-          object: z.literal("collection_file"),
-          duration_seconds: z.number().optional(),
-          data: z
-            .object({
-              content: z.string(),
-              title: z.string(),
-              summary: z.string(),
-              speech: z.array(
-                z
-                  .object({
-                    speaker: z.string(),
-                    text: z.string(),
-                    start_time: z.number(),
-                    end_time: z.number(),
-                  })
-                  .partial()
-                  .strict()
-                  .passthrough()
-              ),
-              visual_scene_description: z.array(
-                z
-                  .object({
-                    text: z.string(),
-                    start_time: z.number(),
-                    end_time: z.number(),
-                  })
-                  .partial()
-                  .strict()
-                  .passthrough()
-              ),
-              scene_text: z.array(
-                z
-                  .object({
-                    text: z.string(),
-                    start_time: z.number(),
-                    end_time: z.number(),
-                  })
-                  .partial()
-                  .strict()
-                  .passthrough()
-              ),
-              segment_summary: z.array(
-                z
-                  .object({
-                    title: z.string(),
-                    summary: z.string(),
-                    start_time: z.number(),
-                    end_time: z.number(),
-                  })
-                  .partial()
-                  .strict()
-                  .passthrough()
-              ),
-            })
-            .partial()
-            .strict()
-            .passthrough(),
-        })
-        .strict()
-        .passthrough()
-    ),
-    total: z.number().int(),
-    limit: z.number().int(),
-    offset: z.number().int(),
-  })
-  .strict()
-  .passthrough();
-const MediaDescription = z
-  .object({
-    collection_id: z.string(),
-    file_id: z.string(),
-    content: z.string().optional(),
-    title: z.string().optional(),
-    summary: z.string().optional(),
-    duration_seconds: z.number().optional(),
-    speech: z
-      .array(
-        z
-          .object({
-            speaker: z.string(),
-            text: z.string(),
-            start_time: z.number(),
-            end_time: z.number(),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-      .optional(),
-    visual_scene_description: z
-      .array(
-        z
-          .object({
-            text: z.string(),
-            start_time: z.number(),
-            end_time: z.number(),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-      .optional(),
-    scene_text: z
-      .array(
-        z
-          .object({
-            text: z.string(),
-            start_time: z.number(),
-            end_time: z.number(),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-      .optional(),
-    segment_summary: z
-      .array(
-        z
-          .object({
-            title: z.string(),
-            summary: z.string(),
-            start_time: z.number(),
-            end_time: z.number(),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-      .optional(),
-  })
-  .strict()
-  .passthrough();
 
 export const schemas = {
   Collection,
@@ -647,15 +602,15 @@ export const schemas = {
   AddCollectionFile,
   CollectionFile,
   CollectionFileList,
+  MediaDescription,
+  RichTranscript,
+  CollectionRichTranscriptsList,
+  CollectionMediaDescriptionsList,
   CollectionDelete,
   CollectionUpdate,
   CollectionFileDelete,
   FileEntities,
-  RichTranscript,
   CollectionEntitiesList,
-  CollectionRichTranscriptsList,
-  CollectionMediaDescriptionsList,
-  MediaDescription,
 };
 
 const endpoints = makeApi([

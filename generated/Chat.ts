@@ -1,6 +1,10 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { DescribeOutput } from "./common";
+import { DescribeOutputPart } from "./common";
+import { SpeechOutputPart } from "./common";
+
 type ChatCompletionResponse = Partial<{
   id: string;
   object: string;
@@ -24,29 +28,8 @@ type ChatCompletionResponse = Partial<{
               text: string;
             }>
           >;
-          visual_scene_description: Array<
-            Partial<{
-              text: string;
-              start_time: number;
-              end_time: number;
-            }>
-          >;
-          scene_text: Array<
-            Partial<{
-              text: string;
-              start_time: number;
-              end_time: number;
-            }>
-          >;
-          speech: Array<
-            Partial<{
-              speaker: string;
-              text: string;
-              start_time: number;
-              end_time: number;
-            }>
-          >;
-        }>
+        }> &
+          DescribeOutput
       >;
     }>
   >;
@@ -220,44 +203,11 @@ const ChatCompletionResponse: z.ZodType<ChatCompletionResponse> = z
                     .strict()
                     .passthrough()
                 ),
-                visual_scene_description: z.array(
-                  z
-                    .object({
-                      text: z.string(),
-                      start_time: z.number(),
-                      end_time: z.number(),
-                    })
-                    .partial()
-                    .strict()
-                    .passthrough()
-                ),
-                scene_text: z.array(
-                  z
-                    .object({
-                      text: z.string(),
-                      start_time: z.number(),
-                      end_time: z.number(),
-                    })
-                    .partial()
-                    .strict()
-                    .passthrough()
-                ),
-                speech: z.array(
-                  z
-                    .object({
-                      speaker: z.string(),
-                      text: z.string(),
-                      start_time: z.number(),
-                      end_time: z.number(),
-                    })
-                    .partial()
-                    .strict()
-                    .passthrough()
-                ),
               })
               .partial()
               .strict()
               .passthrough()
+              .and(DescribeOutput)
           ),
         })
         .partial()

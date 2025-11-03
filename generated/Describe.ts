@@ -1,6 +1,9 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { DescribeOutput } from "./common";
+import { DescribeOutputPart } from "./common";
+import { SpeechOutputPart } from "./common";
 import { ThumbnailsConfig } from "./common";
 import { FileSegmentationConfig } from "./common";
 import { SegmentationConfig } from "./common";
@@ -19,35 +22,14 @@ type Describe = {
         enable_speech: boolean;
         enable_visual_scene_description: boolean;
         enable_scene_text: boolean;
+        enable_audio_description: boolean;
       }>
     | undefined;
   data?:
-    | Partial<{
+    | (Partial<{
         content: string;
         title: string;
         summary: string;
-        speech: Array<
-          Partial<{
-            speaker: string;
-            text: string;
-            start_time: number;
-            end_time: number;
-          }>
-        >;
-        visual_scene_description: Array<
-          Partial<{
-            text: string;
-            start_time: number;
-            end_time: number;
-          }>
-        >;
-        scene_text: Array<
-          Partial<{
-            text: string;
-            start_time: number;
-            end_time: number;
-          }>
-        >;
         segment_summary: Array<
           Partial<{
             title: string;
@@ -56,7 +38,8 @@ type Describe = {
             end_time: number;
           }>
         >;
-      }>
+      }> &
+        DescribeOutput)
     | undefined;
   error?: string | undefined;
 };
@@ -66,6 +49,7 @@ type NewDescribe = {
   enable_speech?: boolean | undefined;
   enable_visual_scene_description?: boolean | undefined;
   enable_scene_text?: boolean | undefined;
+  enable_audio_description?: boolean | undefined;
   thumbnails_config?: ThumbnailsConfig | undefined;
 } & FileSegmentationConfig;
 type DescribeList = {
@@ -82,6 +66,7 @@ const NewDescribe: z.ZodType<NewDescribe> = z
     enable_speech: z.boolean().optional().default(true),
     enable_visual_scene_description: z.boolean().optional().default(true),
     enable_scene_text: z.boolean().optional().default(true),
+    enable_audio_description: z.boolean().optional().default(false),
     thumbnails_config: ThumbnailsConfig.optional(),
   })
   .strict()
@@ -106,6 +91,7 @@ const Describe: z.ZodType<Describe> = z
         enable_speech: z.boolean(),
         enable_visual_scene_description: z.boolean(),
         enable_scene_text: z.boolean(),
+        enable_audio_description: z.boolean(),
       })
       .partial()
       .strict()
@@ -116,40 +102,6 @@ const Describe: z.ZodType<Describe> = z
         content: z.string(),
         title: z.string(),
         summary: z.string(),
-        speech: z.array(
-          z
-            .object({
-              speaker: z.string(),
-              text: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
-        visual_scene_description: z.array(
-          z
-            .object({
-              text: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
-        scene_text: z.array(
-          z
-            .object({
-              text: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
         segment_summary: z.array(
           z
             .object({
@@ -166,6 +118,7 @@ const Describe: z.ZodType<Describe> = z
       .partial()
       .strict()
       .passthrough()
+      .and(DescribeOutput)
       .optional(),
     error: z.string().optional(),
   })

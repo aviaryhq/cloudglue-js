@@ -129,12 +129,14 @@ interface CreateCollectionParams {
     enable_speech?: boolean;
     enable_scene_text?: boolean;
     enable_visual_scene_description?: boolean;
+    enable_audio_description?: boolean;
   };
   describe_config?: {
     enable_summary?: boolean;
     enable_speech?: boolean;
     enable_scene_text?: boolean;
     enable_visual_scene_description?: boolean;
+    enable_audio_description?: boolean;
   };
   default_segmentation_config?: SegmentationConfig;   
   default_thumbnails_config?: ThumbnailsConfig;
@@ -874,6 +876,7 @@ class EnhancedDescribeApi {
       enable_speech?: boolean;
       enable_scene_text?: boolean;
       enable_visual_scene_description?: boolean;
+      enable_audio_description?: boolean;
       segmentation_config?: SegmentationConfig;
       segmentation_id?: string;
       thumbnail_config?: ThumbnailsConfig

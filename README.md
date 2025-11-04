@@ -1,7 +1,7 @@
 # Cloudglue JavaScript SDK
 
 [![NPM Version](https://img.shields.io/npm/v/%40aviaryhq%2Fcloudglue-js)](https://www.npmjs.com/package/@aviaryhq/cloudglue-js) 
-[![License](https://img.shields.io/badge/License-ELv2-blue.svg)](LICENSE.md)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.md)
 [![Discord](https://img.shields.io/discord/1366541583272382536?logo=discord&label=Discord)](https://discord.gg/QD5KWFVner)
 
 Cloudglue makes it easy to turn video into LLM ready data. Official JavaScript SDK for the Cloudglue API. 

@@ -136,10 +136,39 @@ for (const file of generatedFiles) {
         nullishFields.add(match[1]); // field name
     }
     
-    // Also find standalone .nullish() calls like z.string().nullish()
-    const inlineNullishPattern = /(\w+):\s*z\.[^,\n]+\.nullish\(\)/g;
-    while ((match = inlineNullishPattern.exec(fileContent)) !== null) {
-        nullishFields.add(match[1]); // field name
+    // Also find standalone .nullish() calls like z.string().nullish() or multi-line z.object().nullish()
+    // Strategy: find all .nullish() and look backwards to find the field name
+    const nullishCallPattern = /\.nullish\(\)/g;
+    while ((match = nullishCallPattern.exec(fileContent)) !== null) {
+        const nullishIndex = match.index;
+        // Look backwards from .nullish() to find the field name
+        // We're looking for: field_name: z... or field_name: SomeType...
+        const beforeNullish = fileContent.substring(Math.max(0, nullishIndex - 1000), nullishIndex);
+        // Get the indent level of the .nullish() line
+        const lineStart = fileContent.lastIndexOf('\n', nullishIndex - 1) + 1;
+        const lineBeforeNullish = fileContent.substring(lineStart, nullishIndex);
+        const nullishIndent = (lineBeforeNullish.match(/^(\s*)/) || ['', ''])[1].length;
+        
+        // Find field definitions before .nullish()
+        // Pattern matches: field_name: z (with newline and whitespace before a dot, or directly z.)
+        // Handles both z\n      .object() and z.object() styles
+        const fieldMatches = [...beforeNullish.matchAll(/(?:^|\n|,)(\s*)(\w+)\s*:\s*z\s*\n\s*\./g)];
+        // Also match single-line z.field() patterns
+        const singleLineMatches = [...beforeNullish.matchAll(/(?:^|\n|,)(\s*)(\w+)\s*:\s*z\./g)];
+        fieldMatches.push(...singleLineMatches);
+        
+        if (fieldMatches.length > 0) {
+            // Find the field at the object property level (same or less indent than .nullish())
+            // Sort by index (most recent first) and find the one with indent <= nullishIndent
+            fieldMatches.sort((a, b) => b.index - a.index); // Most recent first
+            for (const fieldMatch of fieldMatches) {
+                const fieldIndent = fieldMatch[1].replace(/\n/g, '').length; // Count spaces, ignore newline
+                if (fieldIndent <= nullishIndent) {
+                    nullishFields.add(fieldMatch[2]); // field name (index 2 because we capture indent in group 1)
+                    break;
+                }
+            }
+        }
     }
     
     if (nullishFields.size === 0) continue;
@@ -147,16 +176,19 @@ for (const file of generatedFiles) {
     // Now fix the TypeScript type definitions for these fields
     // We need to change: field_name?: Type | undefined
     // to: field_name?: (Type | null) | undefined
+    // This also handles multi-line union types like:
+    // field_name?:
+    //   | Type1
+    //   | Type2
+    //   | undefined;
     for (const fieldName of nullishFields) {
-        // Match patterns like:
-        // fieldName?: Type | undefined
-        // but NOT: fieldName?: (Type | null) | undefined (already fixed)
-        const typePattern = new RegExp(
+        // First, try to match single-line patterns: fieldName?: Type | undefined
+        const singleLinePattern = new RegExp(
             `(\\s+${fieldName}\\?:\\s*)([^|\\n]+?)(\\s*\\|\\s*undefined)`,
             'g'
         );
         
-        fileContent = fileContent.replace(typePattern, (fullMatch, before, type, after) => {
+        fileContent = fileContent.replace(singleLinePattern, (fullMatch, before, type, after) => {
             // Skip if already has null
             if (type.includes('| null') || type.includes('|null')) {
                 return fullMatch;
@@ -169,6 +201,83 @@ for (const file of generatedFiles) {
             const trimmedType = type.trim();
             return `${before}(${trimmedType} | null)${after}`;
         });
+        
+        // Now handle multi-line union types:
+        // fieldName?:
+        //   | Type1
+        //   | Type2
+        //   | undefined;
+        // Simple approach: find fieldName?: followed by content ending with | undefined;
+        // and insert | null before | undefined;
+        const lines = fileContent.split('\n');
+        const newLines = [];
+        let i = 0;
+        
+        while (i < lines.length) {
+            const line = lines[i];
+            // Check if this line contains the field definition
+            const fieldMatch = line.match(new RegExp(`^(\\s+)${fieldName}\\?:\\s*$`));
+            
+            if (fieldMatch) {
+                // Found the field, now look ahead for | undefined;
+                const fieldIndent = fieldMatch[1];
+                newLines.push(line);
+                i++;
+                
+                // Look ahead to find | undefined; that belongs to this field
+                let foundUndefined = false;
+                let j = i;
+                let braceDepth = 0;
+                
+                while (j < lines.length && !foundUndefined) {
+                    const nextLine = lines[j];
+                    const nextIndent = nextLine.match(/^(\s*)/)[1];
+                    
+                    // Track brace depth
+                    braceDepth += (nextLine.match(/\{/g) || []).length;
+                    braceDepth -= (nextLine.match(/\}/g) || []).length;
+                    
+                    // Check if this is the | undefined; for our field
+                    // It must be at the same object level (braceDepth == 0) and same or greater indent
+                    if (nextLine.match(/\|\s*undefined\s*;/) && 
+                        nextIndent.length >= fieldIndent.length &&
+                        braceDepth === 0) {  // Must be back at object property level
+                        // Check if null is already present on the same line or immediately before
+                        // Only check the current line and the previous line to avoid false positives from nested fields
+                        const prevLine = j > 0 ? lines[j - 1] : '';
+                        const hasNull = nextLine.includes('| null') || nextLine.includes('|null') ||
+                                       prevLine.includes('| null') || prevLine.includes('|null');
+                        if (!hasNull) {
+                            // Insert | null before | undefined;
+                            newLines.push(nextIndent + '| null');
+                        }
+                        newLines.push(nextLine);
+                        foundUndefined = true;
+                        i = j + 1;
+                        break;
+                    }
+                    
+                    // If we've closed more braces than opened and we're back at field level, stop
+                    if (braceDepth < 0 && nextIndent.length <= fieldIndent.length) {
+                        newLines.push(nextLine);
+                        i = j + 1;
+                        break;
+                    }
+                    
+                    newLines.push(nextLine);
+                    j++;
+                }
+                
+                if (!foundUndefined) {
+                    i = j;
+                }
+            } else {
+                newLines.push(line);
+                i++;
+            }
+        }
+        
+        fileContent = newLines.join('\n');
     }
     
     fs.writeFileSync(filePath, fileContent);

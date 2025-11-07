@@ -16,7 +16,11 @@ type Collection = {
   object: "collection";
   name: string;
   description?: (string | null) | undefined;
-  collection_type: "media-descriptions" | "entities" | "rich-transcripts";
+  collection_type:
+    | "media-descriptions"
+    | "entities"
+    | "rich-transcripts"
+    | "face-analysis";
   extract_config?:
     | Partial<{
         prompt: string;
@@ -45,11 +49,32 @@ type Collection = {
     | undefined;
   default_segmentation_config?: SegmentationConfig | undefined;
   default_thumbnails_config?: ThumbnailsConfig | undefined;
+  face_detection_config?:
+    | Partial<{
+        frame_extraction_config: {
+          strategy: "uniform";
+          uniform_config?:
+            | Partial<{
+                frames_per_second: number;
+                max_width: number;
+              }>
+            | undefined;
+        };
+        thumbnails_config: Partial<{
+          enable_frame_thumbnails: boolean;
+        }>;
+      }>
+    | null
+    | undefined;
   created_at: number;
   file_count: number;
 };
 type NewCollection = {
-  collection_type: "media-descriptions" | "entities" | "rich-transcripts";
+  collection_type:
+    | "media-descriptions"
+    | "entities"
+    | "rich-transcripts"
+    | "face-analysis";
   name: string;
   description?: (string | null) | undefined;
   describe_config?:
@@ -80,6 +105,23 @@ type NewCollection = {
     | undefined;
   default_segmentation_config?: SegmentationConfig | undefined;
   default_thumbnails_config?: ThumbnailsConfig | undefined;
+  face_detection_config?:
+    | Partial<{
+        frame_extraction_config: {
+          strategy: "uniform";
+          uniform_config?:
+            | Partial<{
+                frames_per_second: number;
+                max_width: number;
+              }>
+            | undefined;
+        };
+        thumbnails_config: Partial<{
+          enable_frame_thumbnails: boolean;
+        }>;
+      }>
+    | null
+    | undefined;
 };
 type CollectionList = {
   object: "list";
@@ -225,6 +267,7 @@ const Collection: z.ZodType<Collection> = z
       "media-descriptions",
       "entities",
       "rich-transcripts",
+      "face-analysis",
     ]),
     extract_config: z
       .object({
@@ -263,6 +306,33 @@ const Collection: z.ZodType<Collection> = z
       .optional(),
     default_segmentation_config: SegmentationConfig.optional(),
     default_thumbnails_config: ThumbnailsConfig.optional(),
+    face_detection_config: z
+      .object({
+        frame_extraction_config: z
+          .object({
+            strategy: z.literal("uniform"),
+            uniform_config: z
+              .object({
+                frames_per_second: z.number().gte(0.1).lte(30).default(1),
+                max_width: z.number().gte(64).lte(4096).default(1024),
+              })
+              .partial()
+              .strict()
+              .passthrough()
+              .optional(),
+          })
+          .strict()
+          .passthrough(),
+        thumbnails_config: z
+          .object({ enable_frame_thumbnails: z.boolean().default(true) })
+          .partial()
+          .strict()
+          .passthrough(),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .nullish(),
     created_at: z.number().int(),
     file_count: z.number().int(),
   })
@@ -274,6 +344,7 @@ const NewCollection: z.ZodType<NewCollection> = z
       "media-descriptions",
       "entities",
       "rich-transcripts",
+      "face-analysis",
     ]),
     name: z.string(),
     description: z.string().nullish(),
@@ -314,6 +385,33 @@ const NewCollection: z.ZodType<NewCollection> = z
       .optional(),
     default_segmentation_config: SegmentationConfig.optional(),
     default_thumbnails_config: ThumbnailsConfig.optional(),
+    face_detection_config: z
+      .object({
+        frame_extraction_config: z
+          .object({
+            strategy: z.literal("uniform"),
+            uniform_config: z
+              .object({
+                frames_per_second: z.number().gte(0.1).lte(30).default(1),
+                max_width: z.number().gte(64).lte(4096).default(1024),
+              })
+              .partial()
+              .strict()
+              .passthrough()
+              .optional(),
+          })
+          .strict()
+          .passthrough(),
+        thumbnails_config: z
+          .object({ enable_frame_thumbnails: z.boolean().default(true) })
+          .partial()
+          .strict()
+          .passthrough(),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .optional(),
   })
   .strict()
   .passthrough();
@@ -594,6 +692,36 @@ const CollectionEntitiesList = z
   })
   .strict()
   .passthrough();
+const FileFaceDetections = z
+  .object({
+    collection_id: z.string(),
+    file_id: z.string(),
+    faces: z.array(
+      z
+        .object({
+          id: z.string().uuid(),
+          face_bounding_box: z
+            .object({
+              height: z.number().gte(0).lte(1),
+              width: z.number().gte(0).lte(1),
+              top: z.number().gte(0).lte(1),
+              left: z.number().gte(0).lte(1),
+            })
+            .strict()
+            .passthrough(),
+          frame_id: z.string().uuid(),
+          timestamp: z.number().gte(0),
+          thumbnail_url: z.string().optional(),
+        })
+        .strict()
+        .passthrough()
+    ),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
 
 export const schemas = {
   Collection,
@@ -611,6 +739,7 @@ export const schemas = {
   CollectionFileDelete,
   FileEntities,
   CollectionEntitiesList,
+  FileFaceDetections,
 };
 
 const endpoints = makeApi([
@@ -683,8 +812,23 @@ const endpoints = makeApi([
         name: "collection_type",
         type: "Query",
         schema: z
-          .enum(["media-descriptions", "entities", "rich-transcripts"])
+          .enum([
+            "media-descriptions",
+            "entities",
+            "rich-transcripts",
+            "face-analysis",
+          ])
           .optional(),
+      },
+      {
+        name: "created_after",
+        type: "Query",
+        schema: z.string().datetime({ offset: true }).optional(),
+      },
+      {
+        name: "created_before",
+        type: "Query",
+        schema: z.string().datetime({ offset: true }).optional(),
       },
     ],
     response: CollectionList,
@@ -1303,6 +1447,53 @@ const endpoints = makeApi([
       {
         status: 404,
         description: `Collection or file not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "get",
+    path: "/collections/:collection_id/videos/:file_id/face-detections",
+    alias: "getFaceDetections",
+    description: `Retrieve face detections for a specific file in a collection. Results are paginated with a default limit of 50 faces per request (maximum 100). Use limit and offset parameters to paginate through all results. This API is only available when the collection is created with collection_type &#x27;face-analysis&#x27;`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "collection_id",
+        type: "Path",
+        schema: z.string(),
+      },
+      {
+        name: "file_id",
+        type: "Path",
+        schema: z.string(),
+      },
+      {
+        name: "limit",
+        type: "Query",
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: "offset",
+        type: "Query",
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+    ],
+    response: FileFaceDetections,
+    errors: [
+      {
+        status: 400,
+        description: `Collection type is not &#x27;face-analysis&#x27;`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 404,
+        description: `Collection, file, or face detection job not found`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {

@@ -158,6 +158,11 @@ export type FileSearchResult = z.infer<typeof searchSchemas.FileSearchResult>;
 export type SegmentSearchResult = z.infer<typeof searchSchemas.SegmentSearchResult>;
 
 /**
+ * Represents a face-level search result
+ */
+export type FaceSearchResult = z.infer<typeof searchSchemas.FaceSearchResult>;
+
+/**
  * Represents search filter criteria for filtering results
  */
 export type SearchFilterCriteria = z.infer<typeof searchSchemas.SearchFilterCriteria>;
@@ -187,6 +192,11 @@ export type CollectionMediaDescription = z.infer<typeof collectionsSchemas.Media
  * Represents a list of media descriptions for files in a collection
  */
 export type CollectionMediaDescriptionsList = z.infer<typeof collectionsSchemas.CollectionMediaDescriptionsList>;
+
+/**
+ * Represents face detections for a file in a collection
+ */
+export type FileFaceDetections = z.infer<typeof collectionsSchemas.FileFaceDetections>;
 
 export type NarrativeConfig = z.infer<typeof segmentsSchemas.NarrativeConfig>;
 

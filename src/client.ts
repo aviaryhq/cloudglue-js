@@ -111,11 +111,11 @@ interface ListCollectionParams {
   offset?: number;
   order?: "name" | "created_at";
   sort?: "asc" | "desc";
-  collection_type?: "entities" | "rich-transcripts" | "media-descriptions";
+  collection_type?: "entities" | "rich-transcripts" | "media-descriptions" | "face-analysis";
 }
 
 interface CreateCollectionParams {
-  collection_type: "entities" | "rich-transcripts" | "media-descriptions";
+  collection_type: "entities" | "rich-transcripts" | "media-descriptions" | "face-analysis";
   name: string;
   description?: string;
   extract_config?: {
@@ -240,9 +240,13 @@ interface ChatCompletionParams {
 }
 
 interface SearchParams {
-  scope: "file" | "segment";
+  scope: "file" | "segment" | "face";
   collections: string[];
-  query: string;
+  query?: string;
+  source_image?: {
+    url?: string;
+    base64?: string;
+  };
   limit?: number;
   filter?: Filter;
 }
@@ -559,6 +563,17 @@ class EnhancedCollectionsApi {
       params: { collection_id: collectionId, file_id: fileId },
       queries: { ...options },
     } as any);
+  }
+
+  async getFaceDetections(
+    collectionId: string,
+    fileId: string,
+    params: {limit?: number, offset?: number} = {}
+  ) {
+    return this.api.getFaceDetections({
+      params: { collection_id: collectionId, file_id: fileId },
+      queries: params
+    });
   }
 
   async listMediaDescriptions(

@@ -35,10 +35,20 @@ type Segment = {
 };
 type SegmentsList = {
   object: "list";
-  data: Array<Segments>;
+  data: Array<SegmentsListItem>;
   total: number;
   limit: number;
   offset: number;
+};
+type SegmentsListItem = {
+  job_id: string;
+  file_id: string;
+  object: "segments";
+  status: "pending" | "processing" | "completed" | "failed";
+  criteria: "shot" | "narrative";
+  created_at: number;
+  shot_config?: ShotConfig | undefined;
+  narrative_config?: NarrativeConfig | undefined;
 };
 
 const ShotConfig: z.ZodType<ShotConfig> = z
@@ -88,10 +98,23 @@ const Segments: z.ZodType<Segments> = z
   })
   .strict()
   .passthrough();
+const SegmentsListItem: z.ZodType<SegmentsListItem> = z
+  .object({
+    job_id: z.string().uuid(),
+    file_id: z.string().uuid(),
+    object: z.literal("segments"),
+    status: z.enum(["pending", "processing", "completed", "failed"]),
+    criteria: z.enum(["shot", "narrative"]),
+    created_at: z.number().int(),
+    shot_config: ShotConfig.optional(),
+    narrative_config: NarrativeConfig.optional(),
+  })
+  .strict()
+  .passthrough();
 const SegmentsList: z.ZodType<SegmentsList> = z
   .object({
     object: z.literal("list"),
-    data: z.array(Segments),
+    data: z.array(SegmentsListItem),
     total: z.number().int(),
     limit: z.number().int(),
     offset: z.number().int(),
@@ -105,6 +128,7 @@ export const schemas = {
   NewSegments,
   Segment,
   Segments,
+  SegmentsListItem,
   SegmentsList,
 };
 

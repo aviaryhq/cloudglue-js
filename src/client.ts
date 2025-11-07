@@ -140,6 +140,18 @@ interface CreateCollectionParams {
   };
   default_segmentation_config?: SegmentationConfig;   
   default_thumbnails_config?: ThumbnailsConfig;
+  face_detection_config?: {
+    frame_extraction_config: {
+      strategy: "uniform";
+      uniform_config?: {
+        frames_per_second?: number;
+        max_width?: number;
+      };
+    };
+    thumbnails_config?: {
+      enable_frame_thumbnails?: boolean;
+    };
+  } | null;
 }
 
 interface ListCollectionVideosParams {

@@ -26,6 +26,8 @@ type ShotConfig = Partial<{
 }>;
 type NarrativeConfig = Partial<{
   prompt: string;
+  strategy: "direct" | "long" | "balanced";
+  number_of_chapters: number;
 }>;
 type Segment = {
   start_time: number;
@@ -61,7 +63,11 @@ const ShotConfig: z.ZodType<ShotConfig> = z
   .strict()
   .passthrough();
 const NarrativeConfig: z.ZodType<NarrativeConfig> = z
-  .object({ prompt: z.string() })
+  .object({
+    prompt: z.string(),
+    strategy: z.enum(["direct", "long", "balanced"]).default("balanced"),
+    number_of_chapters: z.number().int().gte(1),
+  })
   .partial()
   .strict()
   .passthrough();
@@ -139,7 +145,20 @@ const endpoints = makeApi([
     alias: "createSegments",
     description: `Create intelligent video segments based on shot detection or narrative analysis.
 
-**⚠️ Note: YouTube URLs are supported for narrative-based segmentation only.** Shot-based segmentation requires direct video file access. Use Cloudglue Files, HTTP URLs, or files from data connectors for shot-based segmentation.`,
+**⚠️ Note: YouTube URLs are supported for narrative-based segmentation only.** Shot-based segmentation requires direct video file access. Use Cloudglue Files, HTTP URLs, or files from data connectors for shot-based segmentation.
+
+**Narrative Segmentation Strategies:**
+
+• **balanced** (default): Uses multimodal describe job for comprehensive analysis.
+  Recommended for most videos. Supports YouTube URLs.
+
+• **direct**: Directly analyzes the full video URL with AI.
+  Ideal for videos less than 10 minutes long. Provides finer grain control and expressibility with direct integration of your prompt with the Video AI model.
+
+• **long**: Optimized for longer videos beyond 10 minutes.
+  Provides finer grain control and expressibility with direct integration of your prompt with the Video AI model.
+
+**YouTube URLs**: Automatically use the &#x27;balanced&#x27; strategy. The strategy field is ignored for YouTube URLs, and other strategies will be rejected with an error.`,
     requestFormat: "json",
     parameters: [
       {
@@ -153,7 +172,7 @@ const endpoints = makeApi([
     errors: [
       {
         status: 400,
-        description: `Invalid request, missing required parameters, or unsupported URL type (e.g., YouTube URLs with shot-based segmentation are not supported)`,
+        description: `Invalid request, missing required parameters, unsupported URL type (e.g., YouTube URLs with shot-based segmentation), or unsupported strategy for YouTube URLs (YouTube URLs only support &#x27;balanced&#x27; strategy)`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {

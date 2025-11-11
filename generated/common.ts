@@ -69,6 +69,7 @@ export type File = {
         | "upload"
         | "google-drive"
         | "zoom"
+        | "gong"
       )
     | undefined;
 };
@@ -231,6 +232,7 @@ export const File = z
         "upload",
         "google-drive",
         "zoom",
+        "gong",
       ])
       .optional(),
   })

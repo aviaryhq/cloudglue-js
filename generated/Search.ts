@@ -201,7 +201,7 @@ const SearchRequest: z.ZodType<SearchRequest> = z
       .partial()
       .strict()
       .passthrough(),
-    limit: z.number().int().gte(1).lte(100).default(10),
+    limit: z.number().int().gte(1).default(10),
     filter: SearchFilter,
     threshold: z.number(),
     group_by_key: z.literal("file"),

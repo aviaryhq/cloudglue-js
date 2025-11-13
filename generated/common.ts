@@ -25,9 +25,10 @@ export type FileSegmentationConfig = Partial<{
   segmentation_config: SegmentationConfig;
 }>;
 export type SegmentationConfig = {
-  strategy: "uniform" | "shot-detector";
+  strategy: "uniform" | "shot-detector" | "manual";
   uniform_config?: SegmentationUniformConfig | undefined;
   shot_detector_config?: SegmentationShotDetectorConfig | undefined;
+  manual_config?: SegmentationManualConfig | undefined;
   start_time_seconds?: number | undefined;
   end_time_seconds?: number | undefined;
 };
@@ -40,6 +41,14 @@ export type SegmentationShotDetectorConfig = {
   min_seconds?: (number | null) | undefined;
   max_seconds?: (number | null) | undefined;
   detector: "adaptive" | "content";
+};
+export type SegmentationManualConfig = {
+  segments: Array<
+    Partial<{
+      start_time: number;
+      end_time: number;
+    }>
+  >;
 };
 export type File = {
   id: string;
@@ -176,11 +185,24 @@ export const SegmentationShotDetectorConfig = z
   })
   .strict()
   .passthrough();
+export const SegmentationManualConfig = z
+  .object({
+    segments: z.array(
+      z
+        .object({ start_time: z.number(), end_time: z.number() })
+        .partial()
+        .strict()
+        .passthrough()
+    ),
+  })
+  .strict()
+  .passthrough();
 export const SegmentationConfig = z
   .object({
-    strategy: z.enum(["uniform", "shot-detector"]),
+    strategy: z.enum(["uniform", "shot-detector", "manual"]),
     uniform_config: SegmentationUniformConfig.optional(),
     shot_detector_config: SegmentationShotDetectorConfig.optional(),
+    manual_config: SegmentationManualConfig.optional(),
     start_time_seconds: z.number().gte(0).optional(),
     end_time_seconds: z.number().gte(0).optional(),
   })

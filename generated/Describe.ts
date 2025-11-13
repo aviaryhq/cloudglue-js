@@ -9,6 +9,7 @@ import { FileSegmentationConfig } from "./common";
 import { SegmentationConfig } from "./common";
 import { SegmentationUniformConfig } from "./common";
 import { SegmentationShotDetectorConfig } from "./common";
+import { SegmentationManualConfig } from "./common";
 
 type Describe = {
   job_id: string;

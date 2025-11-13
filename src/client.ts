@@ -14,7 +14,7 @@ import {
   Face_MatchApi,
 } from "../generated";
 import { FilterOperator } from "./enums";
-import type { File, NarrativeConfig, SegmentationConfig, ShotConfig, UpdateFileParams } from "./types";
+import type { CloudGlueConfig, File, Filter, ListFilesParams, NarrativeConfig, SearchRequest, SegmentationConfig, ShotConfig, UpdateFileParams } from "./types";
 import { createApiClient as createFilesApiClient } from "../generated/Files";
 import { createApiClient as createCollectionsApiClient } from "../generated/Collections";
 import { createApiClient as createChatApiClient } from "../generated/Chat";
@@ -24,13 +24,14 @@ import { createApiClient as createSegmentationsApiClient, SegmentationsApi } fro
 import { createApiClient as createSearchApiClient } from "../generated/Search";
 import { createApiClient as createDescribeApiClient } from "../generated/Describe";
 import { createApiClient as createSegmentsApiClient } from "../generated/Segments";
-import { createApiClient as createWebhooksApiClient, schemas as webhooksSchemas } from "../generated/Webhooks";
+import { createApiClient as createWebhooksApiClient } from "../generated/Webhooks";
 import { createApiClient as createFramesApiClient } from "../generated/Frames";
 import { createApiClient as createFaceDetectionApiClient } from "../generated/Face_Detection";
 import { createApiClient as createFaceMatchApiClient } from "../generated/Face_Match";
 import { ZodiosOptions } from "@zodios/core";
 import { ThumbnailsConfig, FrameExtractionConfig } from "../generated/common";
 import { WebhookEvents } from './types';
+
 
 export class CloudGlueError extends Error {
   constructor(
@@ -45,57 +46,8 @@ export class CloudGlueError extends Error {
   }
 }
 
-/**
- * Configuration options for initializing the CloudGlue client
- */
-export interface CloudGlueConfig {
-  // Cloudglue API Key
-  apiKey?: string;
-  baseUrl?: string;
-  /**
-   * Time limit in milliseconds before we timeout a request
-   */
-  timeout?: number;
-}
-
-// Filter type for reusable filtering across different APIs
-export interface Filter {
-  metadata?: Array<{
-    path: string;
-    operator: FilterOperator;
-    valueText?: string;
-    valueTextArray?: string[];
-  }>;
-  video_info?: Array<{
-    path: "duration_seconds" | "has_audio";
-    operator: FilterOperator;
-    valueText?: string;
-    valueTextArray?: string[];
-  }>;
-  file?: Array<{
-    path: "bytes" | "filename" | "uri" | "created_at" | "id";
-    operator: FilterOperator;
-    valueText?: string;
-    valueTextArray?: string[];
-  }>;
-}
 
 // Enhanced API interfaces with flattened parameters
-export interface ListFilesParams {
-  status?:
-    | "pending"
-    | "processing"
-    | "completed"
-    | "failed"
-    | "not_applicable";
-  limit?: number;
-  offset?: number;
-  order?: "created_at" | "filename";
-  sort?: "asc" | "desc";
-  created_before?: string;
-  created_after?: string;
-  filter?: Filter;
-}
 
 interface UploadFileParams {
   file: globalThis.File;
@@ -251,20 +203,7 @@ interface ChatCompletionParams {
   temperature?: number;
 }
 
-interface SearchParams {
-  scope: "file" | "segment" | "face";
-  collections: string[];
-  query?: string;
-  source_image?: {
-    url?: string;
-    base64?: string;
-  };
-  limit?: number;
-  filter?: Filter;
-  threshold?: number;
-  group_by_key?: "file";
-  sort_by?: "score" | "item_count";
-}
+
 
 interface WaitForReadyOptions {
   /** Interval in milliseconds between polling attempts. Defaults to 5000ms (5 seconds). */
@@ -891,7 +830,7 @@ class EnhancedSegmentationsApi {
 class EnhancedSearchApi {
   constructor(private readonly api: typeof SearchApi) {}
 
-  async searchContent(params: SearchParams) {
+  async searchContent(params: SearchRequest) {
     return this.api.searchContent(params);
   }
 }

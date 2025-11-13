@@ -13,6 +13,7 @@ import { schemas as webhooksSchemas } from '../generated/Webhooks';
 import { FrameExtraction } from '../generated/common';
 import { schemas as faceDetectionSchemas } from '../generated/Face_Detection';
 import { schemas as faceMatchSchemas } from '../generated/Face_Match';
+import { FilterOperator } from './enums';
 
 /**
  * Represents a video file in the Cloudglue system
@@ -267,3 +268,56 @@ export type EnhancedSourceImage = {
   base64_image?: string;
   file_path?: string;
 };
+
+
+/**
+ * Configuration options for initializing the CloudGlue client
+ */
+export interface CloudGlueConfig {
+  // Cloudglue API Key
+  apiKey?: string;
+  baseUrl?: string;
+  /**
+   * Time limit in milliseconds before we timeout a request
+   */
+  timeout?: number;
+}
+
+// Filter type for reusable filtering across different APIs
+export interface Filter {
+  metadata?: Array<{
+    path: string;
+    operator: FilterOperator;
+    valueText?: string;
+    valueTextArray?: string[];
+  }>;
+  video_info?: Array<{
+    path: "duration_seconds" | "has_audio";
+    operator: FilterOperator;
+    valueText?: string;
+    valueTextArray?: string[];
+  }>;
+  file?: Array<{
+    path: "bytes" | "filename" | "uri" | "created_at" | "id";
+    operator: FilterOperator;
+    valueText?: string;
+    valueTextArray?: string[];
+  }>;
+}
+
+
+export interface ListFilesParams {
+  status?:
+    | "pending"
+    | "processing"
+    | "completed"
+    | "failed"
+    | "not_applicable";
+  limit?: number;
+  offset?: number;
+  order?: "created_at" | "filename";
+  sort?: "asc" | "desc";
+  created_before?: string;
+  created_after?: string;
+  filter?: Filter;
+}

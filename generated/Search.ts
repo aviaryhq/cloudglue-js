@@ -6,8 +6,15 @@ type SearchResponse = {
   object: "search";
   query?: string | undefined;
   scope: "file" | "segment" | "face";
-  search_target?: ("file" | "segment") | undefined;
-  results: Array<FileSearchResult | SegmentSearchResult | FaceSearchResult>;
+  group_by_key?: "file" | undefined;
+  group_count?: number | undefined;
+  results: Array<
+    | FileSearchResult
+    | SegmentSearchResult
+    | FaceSearchResult
+    | SegmentGroupResult
+    | FaceGroupResult
+  >;
   total: number;
   limit: number;
 };
@@ -21,6 +28,9 @@ type SearchRequest = Partial<{
   }>;
   limit: number;
   filter: SearchFilter;
+  threshold: number;
+  group_by_key: "file";
+  sort_by: "score" | "item_count";
 }>;
 type FileSearchResult = {
   type: "file";
@@ -91,6 +101,20 @@ type FaceSearchResult = {
       }
     | undefined;
   thumbnail_url?: string | undefined;
+};
+type SegmentGroupResult = {
+  type: "segment_group";
+  matched_items: Array<SegmentSearchResult>;
+  file_id: string;
+  item_count: number;
+  best_score: number;
+};
+type FaceGroupResult = {
+  type: "face_group";
+  matched_items: Array<FaceSearchResult>;
+  file_id: string;
+  item_count: number;
+  best_score: number;
 };
 type SearchFilter = Partial<{
   metadata: Array<SearchFilterCriteria>;
@@ -179,6 +203,9 @@ const SearchRequest: z.ZodType<SearchRequest> = z
       .passthrough(),
     limit: z.number().int().gte(1).lte(100).default(10),
     filter: SearchFilter,
+    threshold: z.number(),
+    group_by_key: z.literal("file"),
+    sort_by: z.enum(["score", "item_count"]).default("score"),
   })
   .partial()
   .strict()
@@ -260,7 +287,7 @@ const FaceSearchResult: z.ZodType<FaceSearchResult> = z
     collection_id: z.string().uuid(),
     face_id: z.string().uuid(),
     frame_id: z.string().uuid(),
-    score: z.number().gte(0).lte(100),
+    score: z.number(),
     timestamp: z.number().gte(0),
     face_bounding_box: z
       .object({
@@ -276,15 +303,42 @@ const FaceSearchResult: z.ZodType<FaceSearchResult> = z
   })
   .strict()
   .passthrough();
+const SegmentGroupResult: z.ZodType<SegmentGroupResult> = z
+  .object({
+    type: z.literal("segment_group"),
+    matched_items: z.array(SegmentSearchResult),
+    file_id: z.string().uuid(),
+    item_count: z.number().int(),
+    best_score: z.number(),
+  })
+  .strict()
+  .passthrough();
+const FaceGroupResult: z.ZodType<FaceGroupResult> = z
+  .object({
+    type: z.literal("face_group"),
+    matched_items: z.array(FaceSearchResult),
+    file_id: z.string().uuid(),
+    item_count: z.number().int(),
+    best_score: z.number(),
+  })
+  .strict()
+  .passthrough();
 const SearchResponse: z.ZodType<SearchResponse> = z
   .object({
     id: z.string().uuid(),
     object: z.literal("search"),
     query: z.string().optional(),
     scope: z.enum(["file", "segment", "face"]),
-    search_target: z.enum(["file", "segment"]).optional(),
+    group_by_key: z.literal("file").optional(),
+    group_count: z.number().int().optional(),
     results: z.array(
-      z.union([FileSearchResult, SegmentSearchResult, FaceSearchResult])
+      z.union([
+        FileSearchResult,
+        SegmentSearchResult,
+        FaceSearchResult,
+        SegmentGroupResult,
+        FaceGroupResult,
+      ])
     ),
     total: z.number().int(),
     limit: z.number().int(),
@@ -299,6 +353,8 @@ export const schemas = {
   FileSearchResult,
   SegmentSearchResult,
   FaceSearchResult,
+  SegmentGroupResult,
+  FaceGroupResult,
   SearchResponse,
 };
 

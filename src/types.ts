@@ -163,6 +163,16 @@ export type SegmentSearchResult = z.infer<typeof searchSchemas.SegmentSearchResu
 export type FaceSearchResult = z.infer<typeof searchSchemas.FaceSearchResult>;
 
 /**
+ * Represents a grouped segment search result
+ */
+export type SegmentGroupResult = z.infer<typeof searchSchemas.SegmentGroupResult>;
+
+/**
+ * Represents a grouped face search result
+ */
+export type FaceGroupResult = z.infer<typeof searchSchemas.FaceGroupResult>;
+
+/**
  * Represents search filter criteria for filtering results
  */
 export type SearchFilterCriteria = z.infer<typeof searchSchemas.SearchFilterCriteria>;

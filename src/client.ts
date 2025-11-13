@@ -1377,7 +1377,17 @@ export class CloudGlue {
             return response;
           },
           (error) => {
-            if (error.response) {
+              if (error.code === 'ECONNABORTED') {
+                return Promise.reject(
+                  new CloudGlueError(
+                    error.message,
+                    408,
+                    error.config.data,
+                    error.response?.headers ?? error.headers,
+                    error.response?.data
+                  )
+                );
+              } else if (error.response) {
               // The request was made and the server responded with a status code
               // that falls out of the range of 2xx
               const data = error.response.data as { error: string };

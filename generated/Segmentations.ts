@@ -5,6 +5,7 @@ import { Segmentation } from "./common";
 import { SegmentationConfig } from "./common";
 import { SegmentationUniformConfig } from "./common";
 import { SegmentationShotDetectorConfig } from "./common";
+import { SegmentationManualConfig } from "./common";
 import { ThumbnailsConfig } from "./common";
 import { ThumbnailList } from "./common";
 import { Thumbnail } from "./common";

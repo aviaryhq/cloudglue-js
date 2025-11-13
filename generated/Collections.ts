@@ -4,6 +4,7 @@ import { z } from "zod";
 import { SegmentationConfig } from "./common";
 import { SegmentationUniformConfig } from "./common";
 import { SegmentationShotDetectorConfig } from "./common";
+import { SegmentationManualConfig } from "./common";
 import { ThumbnailsConfig } from "./common";
 import { File } from "./common";
 import { FileSegmentationConfig } from "./common";

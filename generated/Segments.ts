@@ -26,7 +26,7 @@ type ShotConfig = Partial<{
 }>;
 type NarrativeConfig = Partial<{
   prompt: string;
-  strategy: "direct" | "long" | "balanced";
+  strategy: "comprehensive" | "balanced";
   number_of_chapters: number;
 }>;
 type Segment = {
@@ -65,7 +65,7 @@ const ShotConfig: z.ZodType<ShotConfig> = z
 const NarrativeConfig: z.ZodType<NarrativeConfig> = z
   .object({
     prompt: z.string(),
-    strategy: z.enum(["direct", "long", "balanced"]).default("balanced"),
+    strategy: z.enum(["comprehensive", "balanced"]).default("balanced"),
     number_of_chapters: z.number().int().gte(1),
   })
   .partial()
@@ -149,14 +149,11 @@ const endpoints = makeApi([
 
 **Narrative Segmentation Strategies:**
 
-• **balanced** (default): Uses multimodal describe job for comprehensive analysis.
+• **balanced** (default): Balanced analysis approach using multiple modalities.
   Recommended for most videos. Supports YouTube URLs.
 
-• **direct**: Directly analyzes the full video URL with AI.
-  Ideal for videos less than 10 minutes long. Provides finer grain control and expressibility with direct integration of your prompt with the Video AI model.
-
-• **long**: Optimized for longer videos beyond 10 minutes.
-  Provides finer grain control and expressibility with direct integration of your prompt with the Video AI model.
+• **comprehensive**: Uses a VLM to deeply analyze logical segments of video.
+  Only available for non-YouTube videos.
 
 **YouTube URLs**: Automatically use the &#x27;balanced&#x27; strategy. The strategy field is ignored for YouTube URLs, and other strategies will be rejected with an error.`,
     requestFormat: "json",

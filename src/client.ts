@@ -261,6 +261,9 @@ interface SearchParams {
   };
   limit?: number;
   filter?: Filter;
+  threshold?: number;
+  group_by_key?: "file";
+  sort_by?: "score" | "item_count";
 }
 
 interface WaitForReadyOptions {

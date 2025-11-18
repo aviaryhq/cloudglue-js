@@ -8,7 +8,7 @@ type SearchResponse = {
   scope: "file" | "segment" | "face";
   group_by_key?: "file" | undefined;
   group_count?: number | undefined;
-  search_scopes?: SearchScopes | undefined;
+  search_modalities?: SearchModalities | undefined;
   results: Array<
     | FileSearchResult
     | SegmentSearchResult
@@ -32,9 +32,11 @@ type SearchRequest = Partial<{
   threshold: number;
   group_by_key: "file";
   sort_by: "score" | "item_count";
-  search_scopes: SearchScopes;
+  search_modalities: SearchModalities;
 }>;
-type SearchScopes = Array<"general_content" | "speech_lexical" | "ocr_lexical">;
+type SearchModalities = Array<
+  "general_content" | "speech_lexical" | "ocr_lexical"
+>;
 type FileSearchResult = {
   type: "file";
   file_id: string;
@@ -194,7 +196,7 @@ const SearchFilter: z.ZodType<SearchFilter> = z
   .partial()
   .strict()
   .passthrough();
-const SearchScopes = z.array(
+const SearchModalities = z.array(
   z.enum(["general_content", "speech_lexical", "ocr_lexical"])
 );
 const SearchRequest: z.ZodType<SearchRequest> = z
@@ -212,7 +214,7 @@ const SearchRequest: z.ZodType<SearchRequest> = z
     threshold: z.number(),
     group_by_key: z.literal("file"),
     sort_by: z.enum(["score", "item_count"]).default("score"),
-    search_scopes: SearchScopes,
+    search_modalities: SearchModalities,
   })
   .partial()
   .strict()
@@ -338,7 +340,7 @@ const SearchResponse: z.ZodType<SearchResponse> = z
     scope: z.enum(["file", "segment", "face"]),
     group_by_key: z.literal("file").optional(),
     group_count: z.number().int().optional(),
-    search_scopes: SearchScopes.optional(),
+    search_modalities: SearchModalities.optional(),
     results: z.array(
       z.union([
         FileSearchResult,
@@ -357,7 +359,7 @@ const SearchResponse: z.ZodType<SearchResponse> = z
 export const schemas = {
   SearchFilterCriteria,
   SearchFilter,
-  SearchScopes,
+  SearchModalities,
   SearchRequest,
   FileSearchResult,
   SegmentSearchResult,

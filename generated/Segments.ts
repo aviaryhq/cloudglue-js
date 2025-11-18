@@ -1,6 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { Shot } from "./common";
+
 type Segments = {
   job_id: string;
   file_id: string;
@@ -11,7 +13,9 @@ type Segments = {
   shot_config?: ShotConfig | undefined;
   narrative_config?: NarrativeConfig | undefined;
   total_segments?: number | undefined;
+  total_shots?: number | undefined;
   segments?: Array<Segment> | undefined;
+  shots?: Array<Shot> | undefined;
 };
 type NewSegments = {
   url: string;
@@ -34,6 +38,7 @@ type Segment = {
   end_time: number;
   description?: string | undefined;
   thumbnail_url?: string | undefined;
+  shot_index?: number | undefined;
 };
 type SegmentsList = {
   object: "list";
@@ -86,6 +91,7 @@ const Segment: z.ZodType<Segment> = z
     end_time: z.number().gte(0),
     description: z.string().optional(),
     thumbnail_url: z.string().url().optional(),
+    shot_index: z.number().int().optional(),
   })
   .strict()
   .passthrough();
@@ -100,7 +106,9 @@ const Segments: z.ZodType<Segments> = z
     shot_config: ShotConfig.optional(),
     narrative_config: NarrativeConfig.optional(),
     total_segments: z.number().int().gte(0).optional(),
+    total_shots: z.number().int().gte(0).optional(),
     segments: z.array(Segment).optional(),
+    shots: z.array(Shot).optional(),
   })
   .strict()
   .passthrough();

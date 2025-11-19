@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 import { File as CloudglueFile } from "./common";
-import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, SegmentationManualConfig, ThumbnailsConfig, ThumbnailList, Thumbnail, FrameExtraction, FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from "./common";
+import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, SegmentationManualConfig, ThumbnailsConfig, Shot, ThumbnailList, Thumbnail, FrameExtraction, FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from "./common";
 
 type FileList = {
   object: "list";
@@ -12,10 +12,19 @@ type FileList = {
 };
 type SegmentationList = {
   object: "list";
-  data: Array<Segmentation>;
+  data: Array<SegmentationListItem>;
   total: number;
   limit: number;
   offset: number;
+};
+type SegmentationListItem = {
+  segmentation_id: string;
+  status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
+  created_at: number;
+  file_id: string;
+  segmentation_config: SegmentationConfig;
+  thumbnails_config: ThumbnailsConfig;
+  total_segments?: number | undefined;
 };
 type FrameExtractionList = {
   object: "list";
@@ -42,10 +51,28 @@ const FileList: z.ZodType<FileList> = z
   })
   .strict()
   .passthrough();
+const SegmentationListItem: z.ZodType<SegmentationListItem> = z
+  .object({
+    segmentation_id: z.string().uuid(),
+    status: z.enum([
+      "pending",
+      "processing",
+      "completed",
+      "failed",
+      "not_applicable",
+    ]),
+    created_at: z.number().gte(0),
+    file_id: z.string().uuid(),
+    segmentation_config: SegmentationConfig,
+    thumbnails_config: ThumbnailsConfig,
+    total_segments: z.number().gte(0).optional(),
+  })
+  .strict()
+  .passthrough();
 const SegmentationList: z.ZodType<SegmentationList> = z
   .object({
     object: z.literal("list"),
-    data: z.array(Segmentation),
+    data: z.array(SegmentationListItem),
     total: z.number().int(),
     limit: z.number().int(),
     offset: z.number().int(),
@@ -99,6 +126,7 @@ const createFileFrameExtraction_Body = FrameExtractionConfig;
 
 export const schemas = {
   FileList,
+  SegmentationListItem,
   SegmentationList,
   FrameExtractionList,
   FileUpload,

@@ -90,6 +90,7 @@ export type Segmentation = {
   segmentation_config: SegmentationConfig;
   thumbnails_config: ThumbnailsConfig;
   total_segments?: number | undefined;
+  total_shots?: number | undefined;
   data?:
     | {
         object: "list";
@@ -101,11 +102,17 @@ export type Segmentation = {
               thumbnail_url?: string | undefined;
             }>
           | undefined;
+        shots?: Array<Shot> | undefined;
         total: number;
         limit: number;
         offset: number;
       }
     | undefined;
+};
+export type Shot = {
+  index: number;
+  start_time: number;
+  end_time: number;
 };
 export type FrameExtractionConfig = {
   strategy: "uniform";
@@ -260,6 +267,14 @@ export const File = z
   })
   .strict()
   .passthrough();
+export const Shot = z
+  .object({
+    index: z.number().int(),
+    start_time: z.number().gte(0),
+    end_time: z.number().gte(0),
+  })
+  .strict()
+  .passthrough();
 export const Segmentation = z
   .object({
     segmentation_id: z.string().uuid(),
@@ -275,6 +290,7 @@ export const Segmentation = z
     segmentation_config: SegmentationConfig,
     thumbnails_config: ThumbnailsConfig,
     total_segments: z.number().gte(0).optional(),
+    total_shots: z.number().gte(0).optional(),
     data: z
       .object({
         object: z.literal("list"),
@@ -291,6 +307,7 @@ export const Segmentation = z
               .passthrough()
           )
           .optional(),
+        shots: z.array(Shot).optional(),
         total: z.number().int(),
         limit: z.number().int(),
         offset: z.number().int(),

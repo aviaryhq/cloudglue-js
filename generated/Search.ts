@@ -8,6 +8,7 @@ type SearchResponse = {
   scope: "file" | "segment" | "face";
   group_by_key?: "file" | undefined;
   group_count?: number | undefined;
+  search_modalities?: SearchModalities | undefined;
   results: Array<
     | FileSearchResult
     | SegmentSearchResult
@@ -31,7 +32,11 @@ type SearchRequest = Partial<{
   threshold: number;
   group_by_key: "file";
   sort_by: "score" | "item_count";
+  search_modalities: SearchModalities;
 }>;
+type SearchModalities = Array<
+  "general_content" | "speech_lexical" | "ocr_lexical"
+>;
 type FileSearchResult = {
   type: "file";
   file_id: string;
@@ -191,6 +196,9 @@ const SearchFilter: z.ZodType<SearchFilter> = z
   .partial()
   .strict()
   .passthrough();
+const SearchModalities = z.array(
+  z.enum(["general_content", "speech_lexical", "ocr_lexical"])
+);
 const SearchRequest: z.ZodType<SearchRequest> = z
   .object({
     scope: z.enum(["file", "segment", "face"]),
@@ -200,12 +208,19 @@ const SearchRequest: z.ZodType<SearchRequest> = z
       .object({ url: z.string(), base64: z.string() })
       .partial()
       .strict()
-      .passthrough(),
+      .passthrough()
+      .refine(
+        (obj) => obj.url !== undefined || obj.base64 !== undefined,
+        {
+          message: "source_image must have at least one of 'url' or 'base64'",
+        }
+      ),
     limit: z.number().int().gte(1).default(10),
     filter: SearchFilter,
     threshold: z.number(),
     group_by_key: z.literal("file"),
     sort_by: z.enum(["score", "item_count"]).default("score"),
+    search_modalities: SearchModalities,
   })
   .partial()
   .strict()
@@ -331,6 +346,7 @@ const SearchResponse: z.ZodType<SearchResponse> = z
     scope: z.enum(["file", "segment", "face"]),
     group_by_key: z.literal("file").optional(),
     group_count: z.number().int().optional(),
+    search_modalities: SearchModalities.optional(),
     results: z.array(
       z.union([
         FileSearchResult,
@@ -349,6 +365,7 @@ const SearchResponse: z.ZodType<SearchResponse> = z
 export const schemas = {
   SearchFilterCriteria,
   SearchFilter,
+  SearchModalities,
   SearchRequest,
   FileSearchResult,
   SegmentSearchResult,

@@ -1,6 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { Shot } from "./common";
+
 type Segments = {
   job_id: string;
   file_id: string;
@@ -11,7 +13,9 @@ type Segments = {
   shot_config?: ShotConfig | undefined;
   narrative_config?: NarrativeConfig | undefined;
   total_segments?: number | undefined;
+  total_shots?: number | undefined;
   segments?: Array<Segment> | undefined;
+  shots?: Array<Shot> | undefined;
 };
 type NewSegments = {
   url: string;
@@ -28,12 +32,15 @@ type NarrativeConfig = Partial<{
   prompt: string;
   strategy: "comprehensive" | "balanced";
   number_of_chapters: number;
+  min_chapters: number;
+  max_chapters: number;
 }>;
 type Segment = {
   start_time: number;
   end_time: number;
   description?: string | undefined;
   thumbnail_url?: string | undefined;
+  shot_index?: number | undefined;
 };
 type SegmentsList = {
   object: "list";
@@ -67,6 +74,8 @@ const NarrativeConfig: z.ZodType<NarrativeConfig> = z
     prompt: z.string(),
     strategy: z.enum(["comprehensive", "balanced"]).default("balanced"),
     number_of_chapters: z.number().int().gte(1),
+    min_chapters: z.number().int().gte(1),
+    max_chapters: z.number().int().gte(1),
   })
   .partial()
   .strict()
@@ -86,6 +95,7 @@ const Segment: z.ZodType<Segment> = z
     end_time: z.number().gte(0),
     description: z.string().optional(),
     thumbnail_url: z.string().url().optional(),
+    shot_index: z.number().int().optional(),
   })
   .strict()
   .passthrough();
@@ -100,7 +110,9 @@ const Segments: z.ZodType<Segments> = z
     shot_config: ShotConfig.optional(),
     narrative_config: NarrativeConfig.optional(),
     total_segments: z.number().int().gte(0).optional(),
+    total_shots: z.number().int().gte(0).optional(),
     segments: z.array(Segment).optional(),
+    shots: z.array(Shot).optional(),
   })
   .strict()
   .passthrough();
@@ -145,17 +157,21 @@ const endpoints = makeApi([
     alias: "createSegments",
     description: `Create intelligent video segments based on shot detection or narrative analysis.
 
-**⚠️ Note: YouTube URLs are supported for narrative-based segmentation only.** Shot-based segmentation requires direct video file access. Use Cloudglue Files, HTTP URLs, or files from data connectors for shot-based segmentation.
+**Note: YouTube URLs are supported for narrative-based segmentation only.** Shot-based segmentation requires direct video file access. Use Cloudglue Files, HTTP URLs, or files from data connectors for shot-based segmentation.
 
 **Narrative Segmentation Strategies:**
 
-• **balanced** (default): Balanced analysis approach using multiple modalities.
-  Recommended for most videos. Supports YouTube URLs.
+- **comprehensive** (default for non-YouTube videos): Uses a VLM to deeply analyze logical segments of video. Only available for non-YouTube videos.
+- **balanced** (default for YouTube videos): Balanced analysis approach using multiple modalities. Supports YouTube URLs.
 
-• **comprehensive**: Uses a VLM to deeply analyze logical segments of video.
-  Only available for non-YouTube videos.
+**YouTube URLs**: Automatically use the &#x27;balanced&#x27; strategy. The strategy field is ignored for YouTube URLs, and other strategies will be rejected with an error.
 
-**YouTube URLs**: Automatically use the &#x27;balanced&#x27; strategy. The strategy field is ignored for YouTube URLs, and other strategies will be rejected with an error.`,
+**Chapter Count Parameters:**
+
+- **number_of_chapters**: Target number of chapters. If only this is provided, min_chapters and max_chapters are calculated automatically.
+- **min_chapters**: Minimum number of chapters. If provided with number_of_chapters and max, validates min is less than or equal to number_of_chapters which is less than or equal to max.
+- **max_chapters**: Maximum number of chapters. If provided with number_of_chapters and min, validates min is less than or equal to number_of_chapters which is less than or equal to max.
+- If none are provided, chapter counts are calculated automatically based on video duration.`,
     requestFormat: "json",
     parameters: [
       {

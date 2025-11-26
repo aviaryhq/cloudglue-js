@@ -208,13 +208,7 @@ const SearchRequest: z.ZodType<SearchRequest> = z
       .object({ url: z.string(), base64: z.string() })
       .partial()
       .strict()
-      .passthrough()
-      .refine(
-        (obj) => obj.url !== undefined || obj.base64 !== undefined,
-        {
-          message: "source_image must have at least one of 'url' or 'base64'",
-        }
-      ),
+      .passthrough(),
     limit: z.number().int().gte(1).default(10),
     filter: SearchFilter,
     threshold: z.number(),

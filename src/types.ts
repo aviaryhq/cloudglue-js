@@ -321,3 +321,4 @@ export interface ListFilesParams {
   created_after?: string;
   filter?: Filter;
 }
+export type DefaultSegmentationConfig = z.infer<typeof collectionsSchemas.DefaultSegmentationConfig>;

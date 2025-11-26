@@ -14,7 +14,7 @@ import {
   Face_MatchApi,
 } from "../generated";
 import { FilterOperator } from "./enums";
-import type { CloudGlueConfig, File, Filter, ListFilesParams, NarrativeConfig, SearchRequest, SegmentationConfig, ShotConfig, UpdateFileParams } from "./types";
+import type { CloudGlueConfig, DefaultSegmentationConfig, File, Filter, ListFilesParams, NarrativeConfig, SearchRequest, SegmentationConfig, ShotConfig, UpdateFileParams } from "./types";
 import { createApiClient as createFilesApiClient } from "../generated/Files";
 import { createApiClient as createCollectionsApiClient } from "../generated/Collections";
 import { createApiClient as createChatApiClient } from "../generated/Chat";
@@ -90,7 +90,7 @@ interface CreateCollectionParams {
     enable_visual_scene_description?: boolean;
     enable_audio_description?: boolean;
   };
-  default_segmentation_config?: SegmentationConfig;   
+  default_segmentation_config?: DefaultSegmentationConfig;   
   default_thumbnails_config?: ThumbnailsConfig;
   face_detection_config?: {
     frame_extraction_config: {

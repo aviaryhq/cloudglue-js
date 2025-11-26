@@ -104,7 +104,7 @@ type NewCollection = {
         enable_audio_description: boolean;
       }>
     | undefined;
-  default_segmentation_config?: SegmentationConfig | undefined;
+  default_segmentation_config?: DefaultSegmentationConfig | undefined;
   default_thumbnails_config?: ThumbnailsConfig | undefined;
   face_detection_config?:
     | Partial<{
@@ -123,6 +123,13 @@ type NewCollection = {
       }>
     | null
     | undefined;
+};
+type DefaultSegmentationConfig = {
+  strategy: "uniform" | "shot-detector";
+  uniform_config?: SegmentationUniformConfig | undefined;
+  shot_detector_config?: SegmentationShotDetectorConfig | undefined;
+  start_time_seconds?: number | undefined;
+  end_time_seconds?: number | undefined;
 };
 type CollectionList = {
   object: "list";
@@ -339,6 +346,16 @@ const Collection: z.ZodType<Collection> = z
   })
   .strict()
   .passthrough();
+const DefaultSegmentationConfig: z.ZodType<DefaultSegmentationConfig> = z
+  .object({
+    strategy: z.enum(["uniform", "shot-detector"]),
+    uniform_config: SegmentationUniformConfig.optional(),
+    shot_detector_config: SegmentationShotDetectorConfig.optional(),
+    start_time_seconds: z.number().gte(0).optional(),
+    end_time_seconds: z.number().gte(0).optional(),
+  })
+  .strict()
+  .passthrough();
 const NewCollection: z.ZodType<NewCollection> = z
   .object({
     collection_type: z.enum([
@@ -384,7 +401,7 @@ const NewCollection: z.ZodType<NewCollection> = z
       .strict()
       .passthrough()
       .optional(),
-    default_segmentation_config: SegmentationConfig.optional(),
+    default_segmentation_config: DefaultSegmentationConfig.optional(),
     default_thumbnails_config: ThumbnailsConfig.optional(),
     face_detection_config: z
       .object({
@@ -726,6 +743,7 @@ const FileFaceDetections = z
 
 export const schemas = {
   Collection,
+  DefaultSegmentationConfig,
   NewCollection,
   CollectionList,
   AddCollectionFile,

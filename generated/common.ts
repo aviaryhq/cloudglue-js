@@ -79,6 +79,7 @@ export type File = {
         | "google-drive"
         | "zoom"
         | "gong"
+        | "recall"
       )
     | undefined;
 };
@@ -262,6 +263,7 @@ export const File = z
         "google-drive",
         "zoom",
         "gong",
+        "recall",
       ])
       .optional(),
   })

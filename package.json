@@ -1,6 +1,6 @@
 {
   "name": "@aviaryhq/cloudglue-js",
-  "version": "0.4.9",
+  "version": "0.4.8",
   "description": "Cloudglue API client for Node.js",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

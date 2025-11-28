@@ -939,7 +939,7 @@ class EnhancedDescribeApi {
 class EnhancedSegmentsApi {
   constructor(private readonly api: typeof SegmentsApi) {}
   async listSegmentJobs(data: {
-    criteria: "shot" | "narrative";
+    criteria?: "shot" | "narrative";
     url?: string;
     status?: "pending" | "processing" | "completed" | "failed";
     limit?: number;

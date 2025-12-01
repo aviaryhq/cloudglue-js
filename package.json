@@ -1,6 +1,6 @@
 {
   "name": "@aviaryhq/cloudglue-js",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "description": "Cloudglue API client for Node.js",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -33,16 +33,23 @@
   "homepage": "https://github.com/aviaryhq/cloudglue-js#readme",
   "dependencies": {
     "@zodios/core": "^10.0.0",
-    "axios": "^1.6.7",
+    "axios": "^1.12.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "openapi-zod-client": "^1.18.3",
-    "rimraf": "^5.0.0",
+    "rimraf": "^6.1.2",
     "typescript": "^5.3.3"
   },
   "peerDependencies": {
     "@zodios/core": "^10.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "js-yaml": "^4.1.1",
+      "axios": "^1.12.0",
+      "glob": "^10.5.0"
+    }
   }
 }

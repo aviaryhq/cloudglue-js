@@ -230,6 +230,11 @@ const endpoints = makeApi([
         type: "Query",
         schema: z.enum(["json", "markdown"]).optional().default("json"),
       },
+      {
+        name: "include_data",
+        type: "Query",
+        schema: z.boolean().optional().default(true),
+      },
     ],
     response: DescribeList,
     errors: [
@@ -274,6 +279,33 @@ const endpoints = makeApi([
       },
     ],
     response: Describe,
+    errors: [
+      {
+        status: 404,
+        description: `Job not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "delete",
+    path: "/describe/:job_id",
+    alias: "deleteDescribe",
+    description: `Delete a media description job`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "job_id",
+        type: "Path",
+        schema: z.string(),
+      },
+    ],
+    response: z.object({ id: z.string() }).strict().passthrough(),
     errors: [
       {
         status: 404,

@@ -218,6 +218,11 @@ const endpoints = makeApi([
         type: "Query",
         schema: z.string().optional(),
       },
+      {
+        name: "include_data",
+        type: "Query",
+        schema: z.boolean().optional().default(true),
+      },
     ],
     response: ExtractList,
     errors: [
@@ -267,6 +272,33 @@ const endpoints = makeApi([
       },
     ],
     response: Extract,
+    errors: [
+      {
+        status: 404,
+        description: `Job not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: "delete",
+    path: "/extract/:job_id",
+    alias: "deleteExtract",
+    description: `Delete an extraction job`,
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "job_id",
+        type: "Path",
+        schema: z.string(),
+      },
+    ],
+    response: z.object({ id: z.string() }).strict().passthrough(),
     errors: [
       {
         status: 404,

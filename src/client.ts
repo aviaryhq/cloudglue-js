@@ -743,9 +743,13 @@ class EnhancedExtractApi {
       created_before?: string;
       created_after?: string;
       url?: string;
+      include_data?: boolean;
     } = {}
   ) {
     return this.api.listExtracts({ queries: params });
+  }
+  async deleteExtract(jobId: string) {
+    return this.api.deleteExtract(undefined, { params: { job_id: jobId } });
   }
 
   /**
@@ -887,11 +891,15 @@ class EnhancedDescribeApi {
       created_after?: string;
       url?: string;
       response_format?: "json" | "markdown";
+      include_data?: boolean;
     } = {}
   ) {
     return this.api.listDescribes({ queries: params });
   }
 
+  async deleteDescribe(jobId: string) { 
+    return this.api.deleteDescribe(undefined, { params: { job_id: jobId } });
+  }
   /**
    * Waits for a description job to be ready by polling the getDescribe endpoint until
    * the job reaches a terminal state (completed, failed, or not_applicable) or until maxAttempts is reached.

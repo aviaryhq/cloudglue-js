@@ -1,6 +1,12 @@
-import { FilesApi } from "../../generated";
-import { FrameExtractionConfig, ListFilesParams, SegmentationConfig, UpdateFileParams, WaitForReadyOptions } from "../types";
-import { CloudGlueError } from "../error";
+import { FilesApi } from '../../generated';
+import {
+  FrameExtractionConfig,
+  ListFilesParams,
+  SegmentationConfig,
+  UpdateFileParams,
+  WaitForReadyOptions,
+} from '../types';
+import { CloudGlueError } from '../error';
 
 type UploadFileParams = {
   file: globalThis.File;
@@ -9,14 +15,14 @@ type UploadFileParams = {
    * If enabled, the file will be segmented and thumbnails will be generated for each segment for the default segmentation config.
    */
   enable_segment_thumbnails?: boolean;
-}
+};
 
 export class EnhancedFilesApi {
   constructor(private readonly api: typeof FilesApi) {}
 
   async listFiles(params: ListFilesParams = {}) {
     const { filter, ...otherParams } = params;
-    
+
     // Convert filter object to JSON string if provided
     const queries: any = { ...otherParams };
     if (filter) {
@@ -24,11 +30,11 @@ export class EnhancedFilesApi {
         queries.filter = JSON.stringify(filter);
       } catch (error) {
         throw new CloudGlueError(
-          `Failed to serialize filter object: ${error instanceof Error ? error.message : 'Unknown error'}`
+          `Failed to serialize filter object: ${error instanceof Error ? error.message : 'Unknown error'}`,
         );
       }
     }
-    
+
     return this.api.listFiles({ queries });
   }
 
@@ -41,29 +47,32 @@ export class EnhancedFilesApi {
     // This is why we use axios directly instead of the generated client method.
 
     const formData = new FormData();
-    formData.append("file", params.file);
+    formData.append('file', params.file);
 
     // Add metadata if provided
     if (params.metadata) {
       try {
-        formData.append("metadata", JSON.stringify(params.metadata));
+        formData.append('metadata', JSON.stringify(params.metadata));
       } catch (error) {
         throw new CloudGlueError(
-          `Failed to serialize metadata object: ${error instanceof Error ? error.message : 'Unknown error'}`
+          `Failed to serialize metadata object: ${error instanceof Error ? error.message : 'Unknown error'}`,
         );
       }
     }
     if (params.enable_segment_thumbnails !== undefined) {
-      formData.append("enable_segment_thumbnails", params.enable_segment_thumbnails.toString());
+      formData.append(
+        'enable_segment_thumbnails',
+        params.enable_segment_thumbnails.toString(),
+      );
     }
 
     // Use axios directly to bypass Zodios validation
     return this.api.axios({
-      method: "post",
-      url: "/files",
+      method: 'post',
+      url: '/files',
       data: formData,
       headers: {
-        "Content-Type": "multipart/form-data",
+        'Content-Type': 'multipart/form-data',
       },
     });
   }
@@ -81,11 +90,14 @@ export class EnhancedFilesApi {
   async updateFile(fileId: string, params: UpdateFileParams) {
     return this.api.updateFile(
       { ...params, filename: params.filename ?? undefined },
-      { params: { file_id: fileId } }
+      { params: { file_id: fileId } },
     );
   }
 
-  async listFileSegmentations(fileId: string, params: {limit?: number, offset?: number} = {}) {
+  async listFileSegmentations(
+    fileId: string,
+    params: { limit?: number; offset?: number } = {},
+  ) {
     return this.api.listFileSegmentations({
       params: { file_id: fileId },
       queries: params,
@@ -98,7 +110,15 @@ export class EnhancedFilesApi {
    * @param params - Optional parameters
    * @returns The thumbnails for the file
    */
-  async getFileThumbnails(fileId: string, params: {limit?: number, offset?: number, isDefault?: boolean, segmentationId?: string} = {}) {
+  async getFileThumbnails(
+    fileId: string,
+    params: {
+      limit?: number;
+      offset?: number;
+      isDefault?: boolean;
+      segmentationId?: string;
+    } = {},
+  ) {
     return this.api.getThumbnails({
       params: { file_id: fileId },
       queries: {
@@ -116,9 +136,12 @@ export class EnhancedFilesApi {
     } as any);
   }
 
-  async createFileFrameExtraction(fileId: string, params: FrameExtractionConfig) {
+  async createFileFrameExtraction(
+    fileId: string,
+    params: FrameExtractionConfig,
+  ) {
     return this.api.createFileFrameExtraction(params, {
-      params: { file_id: fileId }
+      params: { file_id: fileId },
     });
   }
 
@@ -139,8 +162,8 @@ export class EnhancedFilesApi {
       const file = await this.getFile(fileId);
 
       // If we've reached a terminal state, return the file
-      if (["completed", "failed", "not_applicable"].includes(file.status)) {
-        if (file.status === "failed") {
+      if (['completed', 'failed', 'not_applicable'].includes(file.status)) {
+        if (file.status === 'failed') {
           throw new CloudGlueError(`File processing failed: ${fileId}`);
         }
         return file;
@@ -152,7 +175,7 @@ export class EnhancedFilesApi {
     }
 
     throw new CloudGlueError(
-      `Timeout waiting for file ${fileId} to process after ${maxAttempts} attempts`
+      `Timeout waiting for file ${fileId} to process after ${maxAttempts} attempts`,
     );
   }
 }

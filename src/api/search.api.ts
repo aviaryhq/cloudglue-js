@@ -1,5 +1,5 @@
-import { SearchApi } from "../../generated";
-import { SearchRequest } from "../types";
+import { SearchApi } from '../../generated';
+import { SearchRequest } from '../types';
 
 export class EnhancedSearchApi {
   constructor(private readonly api: typeof SearchApi) {}

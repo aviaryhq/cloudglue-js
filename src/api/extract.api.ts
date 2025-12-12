@@ -1,9 +1,8 @@
-import { ExtractApi } from "../../generated";
-import { ThumbnailsConfig } from "../../generated/common";
-import { CloudGlueError } from "../error";
-import { SegmentationConfig, WaitForReadyOptions } from "../types";
+import { ExtractApi } from '../../generated';
+import { ThumbnailsConfig } from '../../generated/common';
+import { CloudGlueError } from '../error';
+import { SegmentationConfig, WaitForReadyOptions } from '../types';
 export class EnhancedExtractApi {
-
   constructor(private readonly api: typeof ExtractApi) {}
 
   async createExtract(
@@ -15,8 +14,8 @@ export class EnhancedExtractApi {
       enable_segment_level_entities?: boolean;
       segmentation_config?: SegmentationConfig;
       segmentation_id?: string;
-      thumbnail_config?: ThumbnailsConfig
-    }
+      thumbnail_config?: ThumbnailsConfig;
+    },
   ) {
     return this.api.createExtract({
       url,
@@ -24,10 +23,13 @@ export class EnhancedExtractApi {
     });
   }
 
-  async getExtract(jobId: string, params: {limit?: number, offset?: number} = {}) {
-    return this.api.getExtract({ 
+  async getExtract(
+    jobId: string,
+    params: { limit?: number; offset?: number } = {},
+  ) {
+    return this.api.getExtract({
       params: { job_id: jobId },
-      queries: params
+      queries: params,
     });
   }
 
@@ -36,16 +38,16 @@ export class EnhancedExtractApi {
       limit?: number;
       offset?: number;
       status?:
-        | "pending"
-        | "processing"
-        | "completed"
-        | "failed"
-        | "not_applicable";
+        | 'pending'
+        | 'processing'
+        | 'completed'
+        | 'failed'
+        | 'not_applicable';
       created_before?: string;
       created_after?: string;
       url?: string;
       include_data?: boolean;
-    } = {}
+    } = {},
   ) {
     return this.api.listExtracts({ queries: params });
   }
@@ -70,8 +72,8 @@ export class EnhancedExtractApi {
       const job = await this.getExtract(jobId);
 
       // If we've reached a terminal state, return the job
-      if (["completed", "failed", "not_applicable"].includes(job.status)) {
-        if (job.status === "failed") {
+      if (['completed', 'failed', 'not_applicable'].includes(job.status)) {
+        if (job.status === 'failed') {
           throw new CloudGlueError(`Extraction job failed: ${jobId}`);
         }
         return job;
@@ -83,7 +85,7 @@ export class EnhancedExtractApi {
     }
 
     throw new CloudGlueError(
-      `Timeout waiting for extraction job ${jobId} to process after ${maxAttempts} attempts`
+      `Timeout waiting for extraction job ${jobId} to process after ${maxAttempts} attempts`,
     );
   }
 }

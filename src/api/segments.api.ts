@@ -1,21 +1,20 @@
-import { SegmentsApi } from "../../generated";
-import { ShotConfig, NarrativeConfig } from "../types";
-import { WaitForReadyOptions } from "../types";
-import { CloudGlueError } from "../error";
+import { SegmentsApi } from '../../generated';
+import { ShotConfig, NarrativeConfig } from '../types';
+import { WaitForReadyOptions } from '../types';
+import { CloudGlueError } from '../error';
 
 export class EnhancedSegmentsApi {
   constructor(private readonly api: typeof SegmentsApi) {}
   async listSegmentJobs(data: {
-    criteria?: "shot" | "narrative";
+    criteria?: 'shot' | 'narrative';
     url?: string;
-    status?: "pending" | "processing" | "completed" | "failed";
+    status?: 'pending' | 'processing' | 'completed' | 'failed';
     limit?: number;
     offset?: number;
     created_before?: string;
     created_after?: string;
-    order?: "created_at";
-    sort?: "asc" | "desc";
-    
+    order?: 'created_at';
+    sort?: 'asc' | 'desc';
   }) {
     return this.api.listSegments({ queries: data });
   }
@@ -24,9 +23,9 @@ export class EnhancedSegmentsApi {
     return this.api.getSegments({ params: { job_id: jobId } });
   }
 
-  async createSegmentJob(params: {  
+  async createSegmentJob(params: {
     url: string;
-    criteria: "shot" | "narrative";
+    criteria: 'shot' | 'narrative';
     shot_config?: ShotConfig;
     narrative_config?: NarrativeConfig;
   }) {
@@ -34,25 +33,19 @@ export class EnhancedSegmentsApi {
   }
 
   async deleteSegmentJob(jobId: string) {
-    return this.api.deleteSegments(
-      undefined,
-      { params: { job_id: jobId } }
-    );
+    return this.api.deleteSegments(undefined, { params: { job_id: jobId } });
   }
 
   async waitForReady(jobId: string, options: WaitForReadyOptions = {}) {
-    const {
-      pollingInterval = 5000,
-      maxAttempts = 36,
-    } = options;
+    const { pollingInterval = 5000, maxAttempts = 36 } = options;
     let attempts = 0;
 
     while (attempts < maxAttempts) {
       const job = await this.getSegmentJob(jobId);
 
       // If we've reached a terminal state, return the job
-      if (["completed", "failed", "not_applicable"].includes(job.status)) {
-        if (job.status === "failed") {
+      if (['completed', 'failed', 'not_applicable'].includes(job.status)) {
+        if (job.status === 'failed') {
           throw new CloudGlueError(`Segment job failed: ${jobId}`);
         }
         return job;
@@ -64,7 +57,7 @@ export class EnhancedSegmentsApi {
     }
 
     throw new CloudGlueError(
-      `Timeout waiting for segment job ${jobId} to process after ${maxAttempts} attempts`
+      `Timeout waiting for segment job ${jobId} to process after ${maxAttempts} attempts`,
     );
   }
 }

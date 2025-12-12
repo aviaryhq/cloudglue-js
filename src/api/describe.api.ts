@@ -1,8 +1,8 @@
-import { DescribeApi } from "../../generated";
-import { SegmentationConfig } from "../types";
-import { ThumbnailsConfig } from "../../generated/common";
-import { WaitForReadyOptions } from "../types";
-import { CloudGlueError } from "../error";
+import { DescribeApi } from '../../generated';
+import { SegmentationConfig } from '../types';
+import { ThumbnailsConfig } from '../../generated/common';
+import { WaitForReadyOptions } from '../types';
+import { CloudGlueError } from '../error';
 
 export class EnhancedDescribeApi {
   constructor(private readonly api: typeof DescribeApi) {}
@@ -17,8 +17,8 @@ export class EnhancedDescribeApi {
       enable_audio_description?: boolean;
       segmentation_config?: SegmentationConfig;
       segmentation_id?: string;
-      thumbnail_config?: ThumbnailsConfig
-    } = {}
+      thumbnail_config?: ThumbnailsConfig;
+    } = {},
   ) {
     return this.api.createDescribe({
       url,
@@ -29,12 +29,12 @@ export class EnhancedDescribeApi {
   async getDescribe(
     jobId: string,
     options: {
-      response_format?: "json" | "markdown";
+      response_format?: 'json' | 'markdown';
       start_time_seconds?: number;
       end_time_seconds?: number;
     } = {
-      response_format: "json",
-    }
+      response_format: 'json',
+    },
   ) {
     return this.api.getDescribe({
       params: { job_id: jobId },
@@ -47,22 +47,22 @@ export class EnhancedDescribeApi {
       limit?: number;
       offset?: number;
       status?:
-        | "pending"
-        | "processing"
-        | "completed"
-        | "failed"
-        | "not_applicable";
+        | 'pending'
+        | 'processing'
+        | 'completed'
+        | 'failed'
+        | 'not_applicable';
       created_before?: string;
       created_after?: string;
       url?: string;
-      response_format?: "json" | "markdown";
+      response_format?: 'json' | 'markdown';
       include_data?: boolean;
-    } = {}
+    } = {},
   ) {
     return this.api.listDescribes({ queries: params });
   }
 
-  async deleteDescribe(jobId: string) { 
+  async deleteDescribe(jobId: string) {
     return this.api.deleteDescribe(undefined, { params: { job_id: jobId } });
   }
   /**
@@ -77,8 +77,8 @@ export class EnhancedDescribeApi {
   async waitForReady(
     jobId: string,
     options: WaitForReadyOptions & {
-      response_format?: "json" | "markdown";
-    } = {}
+      response_format?: 'json' | 'markdown';
+    } = {},
   ) {
     const {
       pollingInterval = 5000,
@@ -91,8 +91,8 @@ export class EnhancedDescribeApi {
       const job = await this.getDescribe(jobId, { response_format });
 
       // If we've reached a terminal state, return the job
-      if (["completed", "failed", "not_applicable"].includes(job.status)) {
-        if (job.status === "failed") {
+      if (['completed', 'failed', 'not_applicable'].includes(job.status)) {
+        if (job.status === 'failed') {
           throw new CloudGlueError(`Description job failed: ${jobId}`);
         }
         return job;
@@ -104,7 +104,7 @@ export class EnhancedDescribeApi {
     }
 
     throw new CloudGlueError(
-      `Timeout waiting for description job ${jobId} to process after ${maxAttempts} attempts`
+      `Timeout waiting for description job ${jobId} to process after ${maxAttempts} attempts`,
     );
   }
 }

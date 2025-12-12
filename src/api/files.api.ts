@@ -119,14 +119,13 @@ export class EnhancedFilesApi {
       isDefault?: boolean;
       segmentationId?: string;
       type?: ThumbnailType[];
-    } = {
-      isDefault: false,
     },
   ) {
     return this.api.getThumbnails({
       params: { file_id: fileId },
       queries: {
         ...params,
+        is_default: params.isDefault ?? false,
         type: params.type?.join(','),
       },
     });

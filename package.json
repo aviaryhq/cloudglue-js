@@ -39,6 +39,7 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "openapi-zod-client": "^1.18.3",
+    "prettier": "^3.7.4",
     "rimraf": "^6.1.2",
     "typescript": "^5.3.3"
   },

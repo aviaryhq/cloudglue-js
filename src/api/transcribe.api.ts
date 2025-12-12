@@ -1,7 +1,7 @@
-import { TranscribeApi } from "../../generated";
-import { ThumbnailsConfig } from "../../generated/common";
-import { CloudGlueError } from "../error";
-import { SegmentationConfig, WaitForReadyOptions } from "../types";
+import { TranscribeApi } from '../../generated';
+import { ThumbnailsConfig } from '../../generated/common';
+import { CloudGlueError } from '../error';
+import { SegmentationConfig, WaitForReadyOptions } from '../types';
 
 /**
  * @deprecated
@@ -21,8 +21,8 @@ export class EnhancedTranscribeApi {
       enable_visual_scene_description?: boolean;
       segmentation_config?: SegmentationConfig;
       segmentation_id?: string;
-      thumbnail_config?: ThumbnailsConfig
-    } = {}
+      thumbnail_config?: ThumbnailsConfig;
+    } = {},
   ) {
     return this.api.createTranscribe({
       url,
@@ -36,8 +36,8 @@ export class EnhancedTranscribeApi {
   async getTranscribe(
     jobId: string,
     options: {
-      response_format?: "json" | "markdown";
-    } = {}
+      response_format?: 'json' | 'markdown';
+    } = {},
   ) {
     return this.api.getTranscribe({
       params: { job_id: jobId },
@@ -53,16 +53,16 @@ export class EnhancedTranscribeApi {
       limit?: number;
       offset?: number;
       status?:
-        | "pending"
-        | "processing"
-        | "completed"
-        | "failed"
-        | "not_applicable";
+        | 'pending'
+        | 'processing'
+        | 'completed'
+        | 'failed'
+        | 'not_applicable';
       created_before?: string;
       created_after?: string;
       url?: string;
-      response_format?: "json" | "markdown";
-    } = {}
+      response_format?: 'json' | 'markdown';
+    } = {},
   ) {
     return this.api.listTranscribes({ queries: params });
   }
@@ -80,8 +80,8 @@ export class EnhancedTranscribeApi {
   async waitForReady(
     jobId: string,
     options: WaitForReadyOptions & {
-      response_format?: "json" | "markdown";
-    } = {}
+      response_format?: 'json' | 'markdown';
+    } = {},
   ) {
     const {
       pollingInterval = 5000,
@@ -94,8 +94,8 @@ export class EnhancedTranscribeApi {
       const job = await this.getTranscribe(jobId, { response_format });
 
       // If we've reached a terminal state, return the job
-      if (["completed", "failed", "not_applicable"].includes(job.status)) {
-        if (job.status === "failed") {
+      if (['completed', 'failed', 'not_applicable'].includes(job.status)) {
+        if (job.status === 'failed') {
           throw new CloudGlueError(`Transcription job failed: ${jobId}`);
         }
         return job;
@@ -107,7 +107,7 @@ export class EnhancedTranscribeApi {
     }
 
     throw new CloudGlueError(
-      `Timeout waiting for transcription job ${jobId} to process after ${maxAttempts} attempts`
+      `Timeout waiting for transcription job ${jobId} to process after ${maxAttempts} attempts`,
     );
   }
 }

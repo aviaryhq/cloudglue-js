@@ -145,6 +145,22 @@ export class EnhancedFilesApi {
     });
   }
 
+  async getFileSegment(fileId: string, segmentId: string) {
+    return this.api.getFileSegment({
+      params: { file_id: fileId, segment_id: segmentId },
+    });
+  }
+
+  async updateFileSegment(
+    fileId: string,
+    segmentId: string,
+    body: { metadata?: Record<string, any> },
+  ) {
+    return this.api.updateFileSegment(body, {
+      params: { file_id: fileId, segment_id: segmentId },
+    });
+  }
+
   /**
    * Waits for a file to finish processing by polling the getFile endpoint until the file
    * reaches a terminal state (completed, failed, or not_applicable) or until maxAttempts is reached.

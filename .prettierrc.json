@@ -10,7 +10,5 @@
     "^~/(.*)$",
     "^[./]"
   ],
-  "importOrderSeparation": true,
-  "importOrderSortSpecifiers": true,
   "plugins": []
 }

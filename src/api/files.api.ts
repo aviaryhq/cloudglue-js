@@ -3,6 +3,7 @@ import {
   FrameExtractionConfig,
   ListFilesParams,
   SegmentationConfig,
+  ThumbnailType,
   UpdateFileParams,
   WaitForReadyOptions,
 } from '../types';
@@ -117,14 +118,16 @@ export class EnhancedFilesApi {
       offset?: number;
       isDefault?: boolean;
       segmentationId?: string;
-    } = {},
+      type?: ThumbnailType[];
+    } = {
+      isDefault: false,
+    },
   ) {
     return this.api.getThumbnails({
       params: { file_id: fileId },
       queries: {
         ...params,
-        is_default: params.isDefault ?? false,
-        segmentation_id: params.segmentationId ?? undefined,
+        type: params.type?.join(','),
       },
     });
   }

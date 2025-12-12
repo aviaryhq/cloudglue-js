@@ -363,3 +363,5 @@ export type WaitForReadyOptions = {
   /** Maximum number of polling attempts before giving up. Defaults to 36 (3 minutes total with default interval). */
   maxAttempts?: number;
 };
+
+export type ThumbnailType = 'segment' | 'keyframe' | 'file' | 'frame';

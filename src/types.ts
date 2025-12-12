@@ -8,7 +8,11 @@ import { schemas as extractSchemas } from '../generated/Extract';
 import { schemas as searchSchemas } from '../generated/Search';
 import { schemas as describeSchemas } from '../generated/Describe';
 import { schemas as segmentsSchemas } from '../generated/Segments';
-import { SegmentationUniformConfig as SegmentationUniformConfigType, SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType, SegmentationConfig as SegmentationConfigType } from '../generated/common';
+import {
+  SegmentationUniformConfig as SegmentationUniformConfigType,
+  SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType,
+  SegmentationConfig as SegmentationConfigType,
+} from '../generated/common';
 import { schemas as webhooksSchemas } from '../generated/Webhooks';
 import { FrameExtraction } from '../generated/common';
 import { schemas as faceDetectionSchemas } from '../generated/Face_Detection';
@@ -20,7 +24,6 @@ import { FilterOperator } from './enums';
  * Contains metadata about the file including its status, size, and video information
  */
 export type { File } from '../generated/common';
-
 
 /**
  * Represents the status of a job
@@ -41,7 +44,9 @@ export interface UpdateFileParams {
 /**
  * Parameters for creating a new collection
  */
-export type NewCollectionParams = z.infer<typeof collectionsSchemas.NewCollection>;
+export type NewCollectionParams = z.infer<
+  typeof collectionsSchemas.NewCollection
+>;
 
 /**
  * Represents a collection of videos
@@ -55,30 +60,34 @@ export type Collection = z.infer<typeof collectionsSchemas.Collection>;
  */
 export type CollectionFile = z.infer<typeof collectionsSchemas.CollectionFile>;
 
-
 /**
  * Represents a paginated list of files within a collection
  */
-export type CollectionFileList = z.infer<typeof collectionsSchemas.CollectionFileList>;
-
+export type CollectionFileList = z.infer<
+  typeof collectionsSchemas.CollectionFileList
+>;
 
 /**
  * Represents a segment of video with extracted entities
  * This is inferred from the FileEntities schema's segment_entities array type
  */
-export type EntitySegment = NonNullable<z.infer<typeof collectionsSchemas.FileEntities>['segment_entities']>[number];
+export type EntitySegment = NonNullable<
+  z.infer<typeof collectionsSchemas.FileEntities>['segment_entities']
+>[number];
 
 /**
  * Represents the full entities response for a video in a collection
  */
-export type CollectionVideoEntities = z.infer<typeof collectionsSchemas.FileEntities>;
+export type CollectionVideoEntities = z.infer<
+  typeof collectionsSchemas.FileEntities
+>;
 
 /**
  * Represents a message in a chat conversation
  * Used for interacting with videos through natural language
  */
 export type ChatMessage = {
-  role: "system" | "user" | "assistant";
+  role: 'system' | 'user' | 'assistant';
   content: string;
   name?: string;
 };
@@ -87,7 +96,9 @@ export type ChatMessage = {
  * Represents the response from a chat completion request
  * Contains the model's response and any relevant citations from videos
  */
-export type ChatCompletionResponse = z.infer<typeof chatSchemas.ChatCompletionResponse>;
+export type ChatCompletionResponse = z.infer<
+  typeof chatSchemas.ChatCompletionResponse
+>;
 
 /**
  * Represents the result of a video transcription request
@@ -109,7 +120,7 @@ export type Extract = z.infer<typeof extractSchemas.Extract>;
 /**
  * Represents a list of extraction jobs
  */
-export type ExtractList = z.infer<typeof extractSchemas.ExtractList>; 
+export type ExtractList = z.infer<typeof extractSchemas.ExtractList>;
 
 /**
  * Represents a rich transcript for a video
@@ -119,22 +130,30 @@ export type RichTranscript = z.infer<typeof collectionsSchemas.RichTranscript>;
 /**
  * Represents a list of entities for files in a collection
  */
-export type CollectionEntitiesList = z.infer<typeof collectionsSchemas.CollectionEntitiesList>;
+export type CollectionEntitiesList = z.infer<
+  typeof collectionsSchemas.CollectionEntitiesList
+>;
 
 /**
  * Represents a list of rich transcripts for files in a collection
  */
-export type CollectionRichTranscriptsList = z.infer<typeof collectionsSchemas.CollectionRichTranscriptsList>;
+export type CollectionRichTranscriptsList = z.infer<
+  typeof collectionsSchemas.CollectionRichTranscriptsList
+>;
 
 /**
  * Segmentation config for the Uniform strategy
  */
-export type SegmentationUniformConfig = z.infer<typeof SegmentationUniformConfigType>;
+export type SegmentationUniformConfig = z.infer<
+  typeof SegmentationUniformConfigType
+>;
 
 /**
  * Segmentation config for the Shot Detector strategy
  */
-export type SegmentationShotDetectorConfig = z.infer<typeof SegmentationShotDetectorConfigType>;
+export type SegmentationShotDetectorConfig = z.infer<
+  typeof SegmentationShotDetectorConfigType
+>;
 export type SegmentationConfig = z.infer<typeof SegmentationConfigType>;
 
 /**
@@ -156,7 +175,9 @@ export type FileSearchResult = z.infer<typeof searchSchemas.FileSearchResult>;
 /**
  * Represents a segment-level search result
  */
-export type SegmentSearchResult = z.infer<typeof searchSchemas.SegmentSearchResult>;
+export type SegmentSearchResult = z.infer<
+  typeof searchSchemas.SegmentSearchResult
+>;
 
 /**
  * Represents a face-level search result
@@ -166,7 +187,9 @@ export type FaceSearchResult = z.infer<typeof searchSchemas.FaceSearchResult>;
 /**
  * Represents a grouped segment search result
  */
-export type SegmentGroupResult = z.infer<typeof searchSchemas.SegmentGroupResult>;
+export type SegmentGroupResult = z.infer<
+  typeof searchSchemas.SegmentGroupResult
+>;
 
 /**
  * Represents a grouped face search result
@@ -176,7 +199,9 @@ export type FaceGroupResult = z.infer<typeof searchSchemas.FaceGroupResult>;
 /**
  * Represents search filter criteria for filtering results
  */
-export type SearchFilterCriteria = z.infer<typeof searchSchemas.SearchFilterCriteria>;
+export type SearchFilterCriteria = z.infer<
+  typeof searchSchemas.SearchFilterCriteria
+>;
 
 /**
  * Represents search filter options for metadata, video info, and file properties
@@ -197,23 +222,29 @@ export type DescribeList = z.infer<typeof describeSchemas.DescribeList>;
 /**
  * Represents media description data for a video in a collection
  */
-export type CollectionMediaDescription = z.infer<typeof collectionsSchemas.MediaDescription>;
+export type CollectionMediaDescription = z.infer<
+  typeof collectionsSchemas.MediaDescription
+>;
 
 /**
  * Represents a list of media descriptions for files in a collection
  */
-export type CollectionMediaDescriptionsList = z.infer<typeof collectionsSchemas.CollectionMediaDescriptionsList>;
+export type CollectionMediaDescriptionsList = z.infer<
+  typeof collectionsSchemas.CollectionMediaDescriptionsList
+>;
 
 /**
  * Represents face detections for a file in a collection
  */
-export type FileFaceDetections = z.infer<typeof collectionsSchemas.FileFaceDetections>;
+export type FileFaceDetections = z.infer<
+  typeof collectionsSchemas.FileFaceDetections
+>;
 
 export type NarrativeConfig = z.infer<typeof segmentsSchemas.NarrativeConfig>;
 
 export type ShotConfig = z.infer<typeof segmentsSchemas.ShotConfig>;
 
-export type WebhookEvents = z.infer<typeof webhooksSchemas['WebhookEvents']>;
+export type WebhookEvents = z.infer<(typeof webhooksSchemas)['WebhookEvents']>;
 
 /**
  * Represents a frame extraction job
@@ -223,7 +254,11 @@ export type { FrameExtraction };
 /**
  * Configuration for frame extraction
  */
-export type { FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from '../generated/common';
+export type {
+  FrameExtractionConfig,
+  FrameExtractionUniformConfig,
+  FrameExtractionThumbnailsConfig,
+} from '../generated/common';
 
 /**
  * Represents a face detection job
@@ -233,7 +268,9 @@ export type FaceDetection = z.infer<typeof faceDetectionSchemas.FaceDetection>;
 /**
  * Represents a face detection request
  */
-export type FaceDetectionRequest = z.infer<typeof faceDetectionSchemas.FaceDetectionRequest>;
+export type FaceDetectionRequest = z.infer<
+  typeof faceDetectionSchemas.FaceDetectionRequest
+>;
 
 /**
  * Represents a detected face
@@ -248,7 +285,9 @@ export type FaceMatch = z.infer<typeof faceMatchSchemas.FaceMatch>;
 /**
  * Represents a face match request
  */
-export type FaceMatchRequest = z.infer<typeof faceMatchSchemas.FaceMatchRequest>;
+export type FaceMatchRequest = z.infer<
+  typeof faceMatchSchemas.FaceMatchRequest
+>;
 
 /**
  * Represents a face match result
@@ -268,7 +307,6 @@ export type EnhancedSourceImage = {
   base64_image?: string;
   file_path?: string;
 };
-
 
 /**
  * Configuration options for initializing the CloudGlue client
@@ -292,33 +330,36 @@ export interface Filter {
     valueTextArray?: string[];
   }>;
   video_info?: Array<{
-    path: "duration_seconds" | "has_audio";
+    path: 'duration_seconds' | 'has_audio';
     operator: FilterOperator;
     valueText?: string;
     valueTextArray?: string[];
   }>;
   file?: Array<{
-    path: "bytes" | "filename" | "uri" | "created_at" | "id";
+    path: 'bytes' | 'filename' | 'uri' | 'created_at' | 'id';
     operator: FilterOperator;
     valueText?: string;
     valueTextArray?: string[];
   }>;
 }
 
-
 export interface ListFilesParams {
-  status?:
-    | "pending"
-    | "processing"
-    | "completed"
-    | "failed"
-    | "not_applicable";
+  status?: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
   limit?: number;
   offset?: number;
-  order?: "created_at" | "filename";
-  sort?: "asc" | "desc";
+  order?: 'created_at' | 'filename';
+  sort?: 'asc' | 'desc';
   created_before?: string;
   created_after?: string;
   filter?: Filter;
 }
-export type DefaultSegmentationConfig = z.infer<typeof collectionsSchemas.DefaultSegmentationConfig>;
+export type DefaultSegmentationConfig = z.infer<
+  typeof collectionsSchemas.DefaultSegmentationConfig
+>;
+
+export type WaitForReadyOptions = {
+  /** Interval in milliseconds between polling attempts. Defaults to 5000ms (5 seconds). */
+  pollingInterval?: number;
+  /** Maximum number of polling attempts before giving up. Defaults to 36 (3 minutes total with default interval). */
+  maxAttempts?: number;
+};

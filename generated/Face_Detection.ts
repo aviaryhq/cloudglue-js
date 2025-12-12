@@ -1,20 +1,20 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
-import { FaceBoundingBox } from "./common";
-import { FrameExtractionConfig } from "./common";
-import { FrameExtractionUniformConfig } from "./common";
-import { FrameExtractionThumbnailsConfig } from "./common";
+import { FaceBoundingBox } from './common';
+import { FrameExtractionConfig } from './common';
+import { FrameExtractionUniformConfig } from './common';
+import { FrameExtractionThumbnailsConfig } from './common';
 
 type FaceDetection = {
   face_detection_id: string;
   frame_extraction_id?: string | undefined;
   file_id?: string | undefined;
-  status: "pending" | "processing" | "completed" | "failed";
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   created_at: number;
   data?:
     | Partial<{
-        object: "list";
+        object: 'list';
         total: number;
         limit: number;
         offset: number;
@@ -58,11 +58,11 @@ const FaceDetection: z.ZodType<FaceDetection> = z
     face_detection_id: z.string().uuid(),
     frame_extraction_id: z.string().uuid().optional(),
     file_id: z.string().uuid().optional(),
-    status: z.enum(["pending", "processing", "completed", "failed"]),
+    status: z.enum(['pending', 'processing', 'completed', 'failed']),
     created_at: z.number(),
     data: z
       .object({
-        object: z.literal("list"),
+        object: z.literal('list'),
         total: z.number().int(),
         limit: z.number().int().gte(1).lte(100),
         offset: z.number().int().gte(0),
@@ -84,16 +84,16 @@ export const schemas = {
 
 const endpoints = makeApi([
   {
-    method: "post",
-    path: "/face-detect",
-    alias: "createFaceDetection",
+    method: 'post',
+    path: '/face-detect',
+    alias: 'createFaceDetection',
     description: `Analyze video to detect all faces`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Face detection request parameters`,
-        type: "Body",
+        type: 'Body',
         schema: FaceDetectionRequest,
       },
     ],
@@ -122,25 +122,25 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/face-detect/:face_detection_id",
-    alias: "getFaceDetection",
+    method: 'get',
+    path: '/face-detect/:face_detection_id',
+    alias: 'getFaceDetection',
     description: `Retrieve face detection results including all detected faces`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "face_detection_id",
-        type: "Path",
+        name: 'face_detection_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
       },
     ],
@@ -159,15 +159,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/face-detect/:face_detection_id",
-    alias: "deleteFaceDetection",
+    method: 'delete',
+    path: '/face-detect/:face_detection_id',
+    alias: 'deleteFaceDetection',
     description: `Delete a specific face detection analysis`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "face_detection_id",
-        type: "Path",
+        name: 'face_detection_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
     ],
@@ -188,7 +188,7 @@ const endpoints = makeApi([
 ]);
 
 export const Face_DetectionApi = new Zodios(
-  "https://api.cloudglue.dev/v1",
+  'https://api.cloudglue.dev/v1',
   endpoints
 );
 

@@ -1,22 +1,22 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
-import { FaceBoundingBox } from "./common";
-import { FrameExtractionConfig } from "./common";
-import { FrameExtractionUniformConfig } from "./common";
-import { FrameExtractionThumbnailsConfig } from "./common";
+import { FaceBoundingBox } from './common';
+import { FrameExtractionConfig } from './common';
+import { FrameExtractionUniformConfig } from './common';
+import { FrameExtractionThumbnailsConfig } from './common';
 
 type FaceMatch = {
   face_match_id: string;
   face_detection_id?: string | undefined;
   frame_extraction_id?: string | undefined;
   file_id?: string | undefined;
-  status: "pending" | "processing" | "completed" | "failed";
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   created_at: number;
   source_face_bounding_box?: (FaceBoundingBox | null) | undefined;
   data?:
     | Partial<{
-        object: "list";
+        object: 'list';
         total: number;
         limit: number;
         offset: number;
@@ -78,12 +78,12 @@ const FaceMatch: z.ZodType<FaceMatch> = z
     face_detection_id: z.string().uuid().optional(),
     frame_extraction_id: z.string().uuid().optional(),
     file_id: z.string().uuid().optional(),
-    status: z.enum(["pending", "processing", "completed", "failed"]),
+    status: z.enum(['pending', 'processing', 'completed', 'failed']),
     created_at: z.number(),
     source_face_bounding_box: FaceBoundingBox.nullish(),
     data: z
       .object({
-        object: z.literal("list"),
+        object: z.literal('list'),
         total: z.number().int(),
         limit: z.number().int().gte(1).lte(100),
         offset: z.number().int().gte(0),
@@ -106,16 +106,16 @@ export const schemas = {
 
 const endpoints = makeApi([
   {
-    method: "post",
-    path: "/face-match",
-    alias: "createFaceMatch",
+    method: 'post',
+    path: '/face-match',
+    alias: 'createFaceMatch',
     description: `Search for a source face in a target video using facial recognition`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Face match request parameters`,
-        type: "Body",
+        type: 'Body',
         schema: FaceMatchRequest,
       },
     ],
@@ -144,25 +144,25 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/face-match/:face_match_id",
-    alias: "getFaceMatch",
+    method: 'get',
+    path: '/face-match/:face_match_id',
+    alias: 'getFaceMatch',
     description: `Retrieve face match results including detected faces and similarity scores`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "face_match_id",
-        type: "Path",
+        name: 'face_match_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
       },
     ],
@@ -181,22 +181,22 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/face-match/:face_match_id",
-    alias: "deleteFaceMatch",
+    method: 'delete',
+    path: '/face-match/:face_match_id',
+    alias: 'deleteFaceMatch',
     description: `Delete a specific face match analysis`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "face_match_id",
-        type: "Path",
+        name: 'face_match_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
     ],
     response: z
       .object({
         face_match_id: z.string().uuid(),
-        object: z.literal("face_match"),
+        object: z.literal('face_match'),
       })
       .strict()
       .passthrough(),
@@ -216,7 +216,7 @@ const endpoints = makeApi([
 ]);
 
 export const Face_MatchApi = new Zodios(
-  "https://api.cloudglue.dev/v1",
+  'https://api.cloudglue.dev/v1',
   endpoints
 );
 

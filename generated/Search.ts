@@ -1,12 +1,12 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
 type SearchResponse = {
   id: string;
-  object: "search";
+  object: 'search';
   query?: string | undefined;
-  scope: "file" | "segment" | "face";
-  group_by_key?: "file" | undefined;
+  scope: 'file' | 'segment' | 'face';
+  group_by_key?: 'file' | undefined;
   group_count?: number | undefined;
   search_modalities?: SearchModalities | undefined;
   results: Array<
@@ -20,7 +20,7 @@ type SearchResponse = {
   limit: number;
 };
 type SearchRequest = Partial<{
-  scope: "file" | "segment" | "face";
+  scope: 'file' | 'segment' | 'face';
   collections: Array<string>;
   query: string;
   source_image: Partial<{
@@ -30,15 +30,15 @@ type SearchRequest = Partial<{
   limit: number;
   filter: SearchFilter;
   threshold: number;
-  group_by_key: "file";
-  sort_by: "score" | "item_count";
+  group_by_key: 'file';
+  sort_by: 'score' | 'item_count';
   search_modalities: SearchModalities;
 }>;
 type SearchModalities = Array<
-  "general_content" | "speech_lexical" | "ocr_lexical"
+  'general_content' | 'speech_lexical' | 'ocr_lexical'
 >;
 type FileSearchResult = {
-  type: "file";
+  type: 'file';
   file_id: string;
   collection_id: string;
   id: string;
@@ -49,7 +49,7 @@ type FileSearchResult = {
   thumbnail_url?: string | undefined;
 };
 type SegmentSearchResult = {
-  type: "segment";
+  type: 'segment';
   file_id: string;
   collection_id: string;
   segment_id: string;
@@ -88,9 +88,17 @@ type SegmentSearchResult = {
       >
     | undefined;
   thumbnail_url?: string | undefined;
+  keyframes?:
+    | Array<
+        Partial<{
+          time_in_seconds: number;
+          thumbnail_url: string;
+        }>
+      >
+    | undefined;
 };
 type FaceSearchResult = {
-  type: "face";
+  type: 'face';
   file_id: string;
   collection_id: string;
   face_id: string;
@@ -108,14 +116,14 @@ type FaceSearchResult = {
   thumbnail_url?: string | undefined;
 };
 type SegmentGroupResult = {
-  type: "segment_group";
+  type: 'segment_group';
   matched_items: Array<SegmentSearchResult>;
   file_id: string;
   item_count: number;
   best_score: number;
 };
 type FaceGroupResult = {
-  type: "face_group";
+  type: 'face_group';
   matched_items: Array<FaceSearchResult>;
   file_id: string;
   item_count: number;
@@ -126,43 +134,60 @@ type SearchFilter = Partial<{
   video_info: Array<
     SearchFilterCriteria &
       Partial<{
-        path: "duration_seconds" | "has_audio";
+        path: 'duration_seconds' | 'has_audio';
       }>
   >;
   file: Array<
     SearchFilterCriteria &
       Partial<{
-        path: "bytes" | "filename" | "uri" | "created_at" | "id";
+        path: 'bytes' | 'filename' | 'uri' | 'created_at' | 'id';
       }>
   >;
 }>;
 type SearchFilterCriteria = {
   path: string;
   operator:
-    | "NotEqual"
-    | "Equal"
-    | "LessThan"
-    | "GreaterThan"
-    | "ContainsAny"
-    | "ContainsAll"
-    | "In"
-    | "Like";
+    | 'NotEqual'
+    | 'Equal'
+    | 'LessThan'
+    | 'GreaterThan'
+    | 'ContainsAny'
+    | 'ContainsAll'
+    | 'In'
+    | 'Like';
   valueText?: string | undefined;
   valueTextArray?: Array<string> | undefined;
+};
+type SearchResponseList = {
+  object: 'list';
+  data: Array<{
+    id: string;
+    object: 'search';
+    query?: string | undefined;
+    scope: 'file' | 'segment' | 'face';
+    group_by_key?: 'file' | undefined;
+    group_count?: number | undefined;
+    search_modalities?: SearchModalities | undefined;
+    total: number;
+    limit: number;
+  }>;
+  total: number;
+  limit: number;
+  offset: number;
 };
 
 const SearchFilterCriteria: z.ZodType<SearchFilterCriteria> = z
   .object({
     path: z.string(),
     operator: z.enum([
-      "NotEqual",
-      "Equal",
-      "LessThan",
-      "GreaterThan",
-      "ContainsAny",
-      "ContainsAll",
-      "In",
-      "Like",
+      'NotEqual',
+      'Equal',
+      'LessThan',
+      'GreaterThan',
+      'ContainsAny',
+      'ContainsAll',
+      'In',
+      'Like',
     ]),
     valueText: z.string().optional(),
     valueTextArray: z.array(z.string()).optional(),
@@ -175,7 +200,7 @@ const SearchFilter: z.ZodType<SearchFilter> = z
     video_info: z.array(
       SearchFilterCriteria.and(
         z
-          .object({ path: z.enum(["duration_seconds", "has_audio"]) })
+          .object({ path: z.enum(['duration_seconds', 'has_audio']) })
           .partial()
           .strict()
           .passthrough()
@@ -185,7 +210,7 @@ const SearchFilter: z.ZodType<SearchFilter> = z
       SearchFilterCriteria.and(
         z
           .object({
-            path: z.enum(["bytes", "filename", "uri", "created_at", "id"]),
+            path: z.enum(['bytes', 'filename', 'uri', 'created_at', 'id']),
           })
           .partial()
           .strict()
@@ -197,11 +222,11 @@ const SearchFilter: z.ZodType<SearchFilter> = z
   .strict()
   .passthrough();
 const SearchModalities = z.array(
-  z.enum(["general_content", "speech_lexical", "ocr_lexical"])
+  z.enum(['general_content', 'speech_lexical', 'ocr_lexical'])
 );
 const SearchRequest: z.ZodType<SearchRequest> = z
   .object({
-    scope: z.enum(["file", "segment", "face"]),
+    scope: z.enum(['file', 'segment', 'face']),
     collections: z.array(z.string().uuid()).min(1),
     query: z.string().min(1),
     source_image: z
@@ -212,16 +237,41 @@ const SearchRequest: z.ZodType<SearchRequest> = z
     limit: z.number().int().gte(1).default(10),
     filter: SearchFilter,
     threshold: z.number(),
-    group_by_key: z.literal("file"),
-    sort_by: z.enum(["score", "item_count"]).default("score"),
+    group_by_key: z.literal('file'),
+    sort_by: z.enum(['score', 'item_count']).default('score'),
     search_modalities: SearchModalities,
   })
   .partial()
   .strict()
   .passthrough();
+const SearchResponseList: z.ZodType<SearchResponseList> = z
+  .object({
+    object: z.literal('list'),
+    data: z.array(
+      z
+        .object({
+          id: z.string().uuid(),
+          object: z.literal('search'),
+          query: z.string().optional(),
+          scope: z.enum(['file', 'segment', 'face']),
+          group_by_key: z.literal('file').optional(),
+          group_count: z.number().int().optional(),
+          search_modalities: SearchModalities.optional(),
+          total: z.number().int(),
+          limit: z.number().int(),
+        })
+        .strict()
+        .passthrough()
+    ),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
 const FileSearchResult: z.ZodType<FileSearchResult> = z
   .object({
-    type: z.literal("file"),
+    type: z.literal('file'),
     file_id: z.string().uuid(),
     collection_id: z.string().uuid(),
     id: z.string().uuid(),
@@ -235,7 +285,7 @@ const FileSearchResult: z.ZodType<FileSearchResult> = z
   .passthrough();
 const SegmentSearchResult: z.ZodType<SegmentSearchResult> = z
   .object({
-    type: z.literal("segment"),
+    type: z.literal('segment'),
     file_id: z.string().uuid(),
     collection_id: z.string().uuid(),
     segment_id: z.string().uuid(),
@@ -286,12 +336,24 @@ const SegmentSearchResult: z.ZodType<SegmentSearchResult> = z
       )
       .optional(),
     thumbnail_url: z.string().url().optional(),
+    keyframes: z
+      .array(
+        z
+          .object({
+            time_in_seconds: z.number(),
+            thumbnail_url: z.string().url(),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+      .optional(),
   })
   .strict()
   .passthrough();
 const FaceSearchResult: z.ZodType<FaceSearchResult> = z
   .object({
-    type: z.literal("face"),
+    type: z.literal('face'),
     file_id: z.string().uuid(),
     collection_id: z.string().uuid(),
     face_id: z.string().uuid(),
@@ -314,7 +376,7 @@ const FaceSearchResult: z.ZodType<FaceSearchResult> = z
   .passthrough();
 const SegmentGroupResult: z.ZodType<SegmentGroupResult> = z
   .object({
-    type: z.literal("segment_group"),
+    type: z.literal('segment_group'),
     matched_items: z.array(SegmentSearchResult),
     file_id: z.string().uuid(),
     item_count: z.number().int(),
@@ -324,7 +386,7 @@ const SegmentGroupResult: z.ZodType<SegmentGroupResult> = z
   .passthrough();
 const FaceGroupResult: z.ZodType<FaceGroupResult> = z
   .object({
-    type: z.literal("face_group"),
+    type: z.literal('face_group'),
     matched_items: z.array(FaceSearchResult),
     file_id: z.string().uuid(),
     item_count: z.number().int(),
@@ -335,10 +397,10 @@ const FaceGroupResult: z.ZodType<FaceGroupResult> = z
 const SearchResponse: z.ZodType<SearchResponse> = z
   .object({
     id: z.string().uuid(),
-    object: z.literal("search"),
+    object: z.literal('search'),
     query: z.string().optional(),
-    scope: z.enum(["file", "segment", "face"]),
-    group_by_key: z.literal("file").optional(),
+    scope: z.enum(['file', 'segment', 'face']),
+    group_by_key: z.literal('file').optional(),
     group_count: z.number().int().optional(),
     search_modalities: SearchModalities.optional(),
     results: z.array(
@@ -361,6 +423,7 @@ export const schemas = {
   SearchFilter,
   SearchModalities,
   SearchRequest,
+  SearchResponseList,
   FileSearchResult,
   SegmentSearchResult,
   FaceSearchResult,
@@ -371,16 +434,16 @@ export const schemas = {
 
 const endpoints = makeApi([
   {
-    method: "post",
-    path: "/search",
-    alias: "searchContent",
+    method: 'post',
+    path: '/search',
+    alias: 'searchContent',
     description: `Search for videos or video segments in collections to find relevant videos or moments/clips in a video`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Search parameters`,
-        type: "Body",
+        type: 'Body',
         schema: SearchRequest,
       },
     ],
@@ -403,9 +466,68 @@ const endpoints = makeApi([
       },
     ],
   },
+  {
+    method: 'get',
+    path: '/search',
+    alias: 'getSearch',
+    description: `Get a list of search responses. Order by &#x60;created_at&#x60; in descending order by default.`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: 'offset',
+        type: 'Query',
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+    ],
+    response: SearchResponseList,
+    errors: [
+      {
+        status: 404,
+        description: `Search not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/search/:search_id',
+    alias: 'getSearchById',
+    description: `Get a search response by search_id. `,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'search_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+    ],
+    response: SearchResponse,
+    errors: [
+      {
+        status: 404,
+        description: `Search response not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
 ]);
 
-export const SearchApi = new Zodios("https://api.cloudglue.dev/v1", endpoints);
+export const SearchApi = new Zodios('https://api.cloudglue.dev/v1', endpoints);
 
 export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
   return new Zodios(baseUrl, endpoints, options);

@@ -37,7 +37,7 @@ type ListCollectionParams = {
     | 'rich-transcripts'
     | 'media-descriptions'
     | 'face-analysis';
-  order: 'name' | 'created_at';
+  order?: 'name' | 'created_at';
 } & PaginationParams;
 
 type ListCollectionVideosParams = {

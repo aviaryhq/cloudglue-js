@@ -1,14 +1,14 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
-import { Shot } from "./common";
+import { Shot } from './common';
 
 type Segments = {
   job_id: string;
   file_id: string;
-  object: "segments";
-  status: "pending" | "processing" | "completed" | "failed";
-  criteria: "shot" | "narrative";
+  object: 'segments';
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  criteria: 'shot' | 'narrative';
   created_at: number;
   shot_config?: ShotConfig | undefined;
   narrative_config?: NarrativeConfig | undefined;
@@ -19,18 +19,18 @@ type Segments = {
 };
 type NewSegments = {
   url: string;
-  criteria: "shot" | "narrative";
+  criteria: 'shot' | 'narrative';
   shot_config?: ShotConfig | undefined;
   narrative_config?: NarrativeConfig | undefined;
 };
 type ShotConfig = Partial<{
-  detector: "content" | "adaptive";
+  detector: 'content' | 'adaptive';
   max_duration_seconds: number;
   min_duration_seconds: number;
 }>;
 type NarrativeConfig = Partial<{
   prompt: string;
-  strategy: "comprehensive" | "balanced";
+  strategy: 'comprehensive' | 'balanced';
   number_of_chapters: number;
   min_chapters: number;
   max_chapters: number;
@@ -43,7 +43,7 @@ type Segment = {
   shot_index?: number | undefined;
 };
 type SegmentsList = {
-  object: "list";
+  object: 'list';
   data: Array<SegmentsListItem>;
   total: number;
   limit: number;
@@ -52,9 +52,9 @@ type SegmentsList = {
 type SegmentsListItem = {
   job_id: string;
   file_id: string;
-  object: "segments";
-  status: "pending" | "processing" | "completed" | "failed";
-  criteria: "shot" | "narrative";
+  object: 'segments';
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  criteria: 'shot' | 'narrative';
   created_at: number;
   shot_config?: ShotConfig | undefined;
   narrative_config?: NarrativeConfig | undefined;
@@ -62,7 +62,7 @@ type SegmentsListItem = {
 
 const ShotConfig: z.ZodType<ShotConfig> = z
   .object({
-    detector: z.enum(["content", "adaptive"]).default("adaptive"),
+    detector: z.enum(['content', 'adaptive']).default('adaptive'),
     max_duration_seconds: z.number().int().gte(1).lte(3600).default(300),
     min_duration_seconds: z.number().int().gte(1).lte(3600).default(1),
   })
@@ -72,7 +72,7 @@ const ShotConfig: z.ZodType<ShotConfig> = z
 const NarrativeConfig: z.ZodType<NarrativeConfig> = z
   .object({
     prompt: z.string(),
-    strategy: z.enum(["comprehensive", "balanced"]).default("balanced"),
+    strategy: z.enum(['comprehensive', 'balanced']).default('balanced'),
     number_of_chapters: z.number().int().gte(1),
     min_chapters: z.number().int().gte(1),
     max_chapters: z.number().int().gte(1),
@@ -83,7 +83,7 @@ const NarrativeConfig: z.ZodType<NarrativeConfig> = z
 const NewSegments: z.ZodType<NewSegments> = z
   .object({
     url: z.string(),
-    criteria: z.enum(["shot", "narrative"]),
+    criteria: z.enum(['shot', 'narrative']),
     shot_config: ShotConfig.optional(),
     narrative_config: NarrativeConfig.optional(),
   })
@@ -103,9 +103,9 @@ const Segments: z.ZodType<Segments> = z
   .object({
     job_id: z.string().uuid(),
     file_id: z.string().uuid(),
-    object: z.literal("segments"),
-    status: z.enum(["pending", "processing", "completed", "failed"]),
-    criteria: z.enum(["shot", "narrative"]),
+    object: z.literal('segments'),
+    status: z.enum(['pending', 'processing', 'completed', 'failed']),
+    criteria: z.enum(['shot', 'narrative']),
     created_at: z.number().int(),
     shot_config: ShotConfig.optional(),
     narrative_config: NarrativeConfig.optional(),
@@ -120,9 +120,9 @@ const SegmentsListItem: z.ZodType<SegmentsListItem> = z
   .object({
     job_id: z.string().uuid(),
     file_id: z.string().uuid(),
-    object: z.literal("segments"),
-    status: z.enum(["pending", "processing", "completed", "failed"]),
-    criteria: z.enum(["shot", "narrative"]),
+    object: z.literal('segments'),
+    status: z.enum(['pending', 'processing', 'completed', 'failed']),
+    criteria: z.enum(['shot', 'narrative']),
     created_at: z.number().int(),
     shot_config: ShotConfig.optional(),
     narrative_config: NarrativeConfig.optional(),
@@ -131,7 +131,7 @@ const SegmentsListItem: z.ZodType<SegmentsListItem> = z
   .passthrough();
 const SegmentsList: z.ZodType<SegmentsList> = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(SegmentsListItem),
     total: z.number().int(),
     limit: z.number().int(),
@@ -152,9 +152,9 @@ export const schemas = {
 
 const endpoints = makeApi([
   {
-    method: "post",
-    path: "/segments",
-    alias: "createSegments",
+    method: 'post',
+    path: '/segments',
+    alias: 'createSegments',
     description: `Create intelligent video segments based on shot detection or narrative analysis.
 
 **Note: YouTube URLs are supported for narrative-based segmentation only.** Shot-based segmentation requires direct video file access. Use Cloudglue Files, HTTP URLs, or files from data connectors for shot-based segmentation.
@@ -172,12 +172,12 @@ const endpoints = makeApi([
 - **min_chapters**: Minimum number of chapters. If provided with number_of_chapters and max, validates min is less than or equal to number_of_chapters which is less than or equal to max.
 - **max_chapters**: Maximum number of chapters. If provided with number_of_chapters and min, validates min is less than or equal to number_of_chapters which is less than or equal to max.
 - If none are provided, chapter counts are calculated automatically based on video duration.`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Segmentation job parameters`,
-        type: "Body",
+        type: 'Body',
         schema: NewSegments,
       },
     ],
@@ -206,47 +206,47 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/segments",
-    alias: "listSegments",
+    method: 'get',
+    path: '/segments',
+    alias: 'listSegments',
     description: `List all segmentation jobs with optional filtering`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "status",
-        type: "Query",
+        name: 'status',
+        type: 'Query',
         schema: z
-          .enum(["pending", "processing", "completed", "failed"])
+          .enum(['pending', 'processing', 'completed', 'failed'])
           .optional(),
       },
       {
-        name: "criteria",
-        type: "Query",
-        schema: z.enum(["shot", "narrative"]).optional(),
+        name: 'criteria',
+        type: 'Query',
+        schema: z.enum(['shot', 'narrative']).optional(),
       },
       {
-        name: "created_before",
-        type: "Query",
+        name: 'created_before',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "created_after",
-        type: "Query",
+        name: 'created_after',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "url",
-        type: "Query",
+        name: 'url',
+        type: 'Query',
         schema: z.string().optional(),
       },
     ],
@@ -265,15 +265,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/segments/:job_id",
-    alias: "getSegments",
+    method: 'get',
+    path: '/segments/:job_id',
+    alias: 'getSegments',
     description: `Retrieve the current state of a segmentation job`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "job_id",
-        type: "Path",
+        name: 'job_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
     ],
@@ -292,15 +292,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/segments/:job_id",
-    alias: "deleteSegments",
+    method: 'delete',
+    path: '/segments/:job_id',
+    alias: 'deleteSegments',
     description: `Delete a specific segments job`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "job_id",
-        type: "Path",
+        name: 'job_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
     ],
@@ -321,7 +321,7 @@ const endpoints = makeApi([
 ]);
 
 export const SegmentsApi = new Zodios(
-  "https://api.cloudglue.dev/v1",
+  'https://api.cloudglue.dev/v1',
   endpoints
 );
 

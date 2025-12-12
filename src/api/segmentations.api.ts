@@ -1,4 +1,5 @@
 import { SegmentationsApi } from '../../generated';
+import { ThumbnailType } from '../types';
 
 export class EnhancedSegmentationsApi {
   constructor(private readonly api: typeof SegmentationsApi) {}
@@ -36,6 +37,7 @@ export class EnhancedSegmentationsApi {
        * The IDs of the segments to get thumbnails for. If not provided, all segments will be used.
        */
       segment_ids?: string[];
+      type?: ThumbnailType[];
     } = {},
   ) {
     return this.api.getSegmentationThumbnails({
@@ -43,6 +45,7 @@ export class EnhancedSegmentationsApi {
       queries: {
         ...params,
         segment_ids: params.segment_ids?.join(','),
+        type: params.type?.join(','),
       },
     });
   }

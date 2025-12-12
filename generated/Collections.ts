@@ -1,27 +1,28 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
-import { SegmentationConfig } from "./common";
-import { SegmentationUniformConfig } from "./common";
-import { SegmentationShotDetectorConfig } from "./common";
-import { SegmentationManualConfig } from "./common";
-import { ThumbnailsConfig } from "./common";
-import { File } from "./common";
-import { FileSegmentationConfig } from "./common";
-import { DescribeOutput } from "./common";
-import { DescribeOutputPart } from "./common";
-import { SpeechOutputPart } from "./common";
+import { SegmentationConfig } from './common';
+import { SegmentationUniformConfig } from './common';
+import { SegmentationShotDetectorConfig } from './common';
+import { SegmentationManualConfig } from './common';
+import { KeyframeConfig } from './common';
+import { ThumbnailsConfig } from './common';
+import { File } from './common';
+import { FileSegmentationConfig } from './common';
+import { DescribeOutput } from './common';
+import { DescribeOutputPart } from './common';
+import { SpeechOutputPart } from './common';
 
 type Collection = {
   id: string;
-  object: "collection";
+  object: 'collection';
   name: string;
   description?: (string | null) | undefined;
   collection_type:
-    | "media-descriptions"
-    | "entities"
-    | "rich-transcripts"
-    | "face-analysis";
+    | 'media-descriptions'
+    | 'entities'
+    | 'rich-transcripts'
+    | 'face-analysis';
   extract_config?:
     | Partial<{
         prompt: string;
@@ -53,7 +54,7 @@ type Collection = {
   face_detection_config?:
     | Partial<{
         frame_extraction_config: {
-          strategy: "uniform";
+          strategy: 'uniform';
           uniform_config?:
             | Partial<{
                 frames_per_second: number;
@@ -72,10 +73,10 @@ type Collection = {
 };
 type NewCollection = {
   collection_type:
-    | "media-descriptions"
-    | "entities"
-    | "rich-transcripts"
-    | "face-analysis";
+    | 'media-descriptions'
+    | 'entities'
+    | 'rich-transcripts'
+    | 'face-analysis';
   name: string;
   description?: (string | null) | undefined;
   describe_config?:
@@ -109,7 +110,7 @@ type NewCollection = {
   face_detection_config?:
     | Partial<{
         frame_extraction_config: {
-          strategy: "uniform";
+          strategy: 'uniform';
           uniform_config?:
             | Partial<{
                 frames_per_second: number;
@@ -125,14 +126,15 @@ type NewCollection = {
     | undefined;
 };
 type DefaultSegmentationConfig = {
-  strategy: "uniform" | "shot-detector";
+  strategy: 'uniform' | 'shot-detector';
   uniform_config?: SegmentationUniformConfig | undefined;
   shot_detector_config?: SegmentationShotDetectorConfig | undefined;
+  keyframe_config?: KeyframeConfig | undefined;
   start_time_seconds?: number | undefined;
   end_time_seconds?: number | undefined;
 };
 type CollectionList = {
-  object: "list";
+  object: 'list';
   data: Array<Collection>;
   total: number;
   limit: number;
@@ -141,19 +143,19 @@ type CollectionList = {
 type CollectionFile = {
   collection_id: string;
   file_id: string;
-  object: "collection_file";
+  object: 'collection_file';
   added_at: number;
-  status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
   file?: File | undefined;
   segmentation?:
     | {
         id: string;
         status:
-          | "pending"
-          | "processing"
-          | "completed"
-          | "failed"
-          | "not_applicable";
+          | 'pending'
+          | 'processing'
+          | 'completed'
+          | 'failed'
+          | 'not_applicable';
         file_id: string;
         segmentation_config: SegmentationConfig;
       }
@@ -172,7 +174,7 @@ type AddCollectionFile = (
     thumbnails_config: ThumbnailsConfig;
   }>;
 type CollectionFileList = {
-  object: "list";
+  object: 'list';
   data: Array<CollectionFile>;
   total: number;
   limit: number;
@@ -197,7 +199,7 @@ type RichTranscript = {
     | undefined;
 } & DescribeOutput;
 type CollectionRichTranscriptsList = {
-  object: "list";
+  object: 'list';
   data: Array<{
     file_id: string;
     duration_seconds?: number | undefined;
@@ -221,11 +223,11 @@ type CollectionRichTranscriptsList = {
   offset: number;
 };
 type CollectionMediaDescriptionsList = {
-  object: "list";
+  object: 'list';
   data: Array<{
     file_id: string;
     added_at: number;
-    object: "collection_file";
+    object: 'collection_file';
     duration_seconds?: number | undefined;
     data: Partial<{
       content: string;
@@ -268,14 +270,14 @@ type MediaDescription = {
 const Collection: z.ZodType<Collection> = z
   .object({
     id: z.string(),
-    object: z.literal("collection"),
+    object: z.literal('collection'),
     name: z.string(),
     description: z.string().nullish(),
     collection_type: z.enum([
-      "media-descriptions",
-      "entities",
-      "rich-transcripts",
-      "face-analysis",
+      'media-descriptions',
+      'entities',
+      'rich-transcripts',
+      'face-analysis',
     ]),
     extract_config: z
       .object({
@@ -318,7 +320,7 @@ const Collection: z.ZodType<Collection> = z
       .object({
         frame_extraction_config: z
           .object({
-            strategy: z.literal("uniform"),
+            strategy: z.literal('uniform'),
             uniform_config: z
               .object({
                 frames_per_second: z.number().gte(0.1).lte(30).default(1),
@@ -348,9 +350,10 @@ const Collection: z.ZodType<Collection> = z
   .passthrough();
 const DefaultSegmentationConfig: z.ZodType<DefaultSegmentationConfig> = z
   .object({
-    strategy: z.enum(["uniform", "shot-detector"]),
+    strategy: z.enum(['uniform', 'shot-detector']),
     uniform_config: SegmentationUniformConfig.optional(),
     shot_detector_config: SegmentationShotDetectorConfig.optional(),
+    keyframe_config: KeyframeConfig.optional(),
     start_time_seconds: z.number().gte(0).optional(),
     end_time_seconds: z.number().gte(0).optional(),
   })
@@ -359,10 +362,10 @@ const DefaultSegmentationConfig: z.ZodType<DefaultSegmentationConfig> = z
 const NewCollection: z.ZodType<NewCollection> = z
   .object({
     collection_type: z.enum([
-      "media-descriptions",
-      "entities",
-      "rich-transcripts",
-      "face-analysis",
+      'media-descriptions',
+      'entities',
+      'rich-transcripts',
+      'face-analysis',
     ]),
     name: z.string(),
     description: z.string().nullish(),
@@ -407,7 +410,7 @@ const NewCollection: z.ZodType<NewCollection> = z
       .object({
         frame_extraction_config: z
           .object({
-            strategy: z.literal("uniform"),
+            strategy: z.literal('uniform'),
             uniform_config: z
               .object({
                 frames_per_second: z.number().gte(0.1).lte(30).default(1),
@@ -435,7 +438,7 @@ const NewCollection: z.ZodType<NewCollection> = z
   .passthrough();
 const CollectionList: z.ZodType<CollectionList> = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(Collection),
     total: z.number().int(),
     limit: z.number().int(),
@@ -460,25 +463,25 @@ const CollectionFile: z.ZodType<CollectionFile> = z
   .object({
     collection_id: z.string(),
     file_id: z.string(),
-    object: z.literal("collection_file"),
+    object: z.literal('collection_file'),
     added_at: z.number().int(),
     status: z.enum([
-      "pending",
-      "processing",
-      "completed",
-      "failed",
-      "not_applicable",
+      'pending',
+      'processing',
+      'completed',
+      'failed',
+      'not_applicable',
     ]),
     file: File.optional(),
     segmentation: z
       .object({
         id: z.string().uuid(),
         status: z.enum([
-          "pending",
-          "processing",
-          "completed",
-          "failed",
-          "not_applicable",
+          'pending',
+          'processing',
+          'completed',
+          'failed',
+          'not_applicable',
         ]),
         file_id: z.string().uuid(),
         segmentation_config: SegmentationConfig,
@@ -491,7 +494,7 @@ const CollectionFile: z.ZodType<CollectionFile> = z
   .passthrough();
 const CollectionFileList: z.ZodType<CollectionFileList> = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(CollectionFile),
     total: z.number().int(),
     limit: z.number().int(),
@@ -554,7 +557,7 @@ const RichTranscript: z.ZodType<RichTranscript> = z
 const CollectionRichTranscriptsList: z.ZodType<CollectionRichTranscriptsList> =
   z
     .object({
-      object: z.literal("list"),
+      object: z.literal('list'),
       data: z.array(
         z
           .object({
@@ -595,13 +598,13 @@ const CollectionRichTranscriptsList: z.ZodType<CollectionRichTranscriptsList> =
 const CollectionMediaDescriptionsList: z.ZodType<CollectionMediaDescriptionsList> =
   z
     .object({
-      object: z.literal("list"),
+      object: z.literal('list'),
       data: z.array(
         z
           .object({
             file_id: z.string(),
             added_at: z.number().int(),
-            object: z.literal("collection_file"),
+            object: z.literal('collection_file'),
             duration_seconds: z.number().optional(),
             data: z
               .object({
@@ -636,7 +639,7 @@ const CollectionMediaDescriptionsList: z.ZodType<CollectionMediaDescriptionsList
     .strict()
     .passthrough();
 const CollectionDelete = z
-  .object({ id: z.string(), object: z.literal("collection") })
+  .object({ id: z.string(), object: z.literal('collection') })
   .strict()
   .passthrough();
 const CollectionUpdate = z
@@ -648,7 +651,7 @@ const CollectionFileDelete = z
   .object({
     collection_id: z.string(),
     file_id: z.string(),
-    object: z.literal("collection_file"),
+    object: z.literal('collection_file'),
   })
   .strict()
   .passthrough();
@@ -676,7 +679,7 @@ const FileEntities = z
   .passthrough();
 const CollectionEntitiesList = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(
       z
         .object({
@@ -763,16 +766,16 @@ export const schemas = {
 
 const endpoints = makeApi([
   {
-    method: "post",
-    path: "/collections",
-    alias: "createCollection",
+    method: 'post',
+    path: '/collections',
+    alias: 'createCollection',
     description: `Create a new collection to organize and process video files. Collections are used to group files together and process them in a consistent way.`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Collection creation parameters`,
-        type: "Body",
+        type: 'Body',
         schema: NewCollection,
       },
     ],
@@ -801,52 +804,52 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections",
-    alias: "listCollections",
+    method: 'get',
+    path: '/collections',
+    alias: 'listCollections',
     description: `List all collections`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "order",
-        type: "Query",
-        schema: z.enum(["name", "created_at"]).optional().default("created_at"),
+        name: 'order',
+        type: 'Query',
+        schema: z.enum(['name', 'created_at']).optional().default('created_at'),
       },
       {
-        name: "sort",
-        type: "Query",
-        schema: z.enum(["asc", "desc"]).optional().default("desc"),
+        name: 'sort',
+        type: 'Query',
+        schema: z.enum(['asc', 'desc']).optional().default('desc'),
       },
       {
-        name: "collection_type",
-        type: "Query",
+        name: 'collection_type',
+        type: 'Query',
         schema: z
           .enum([
-            "media-descriptions",
-            "entities",
-            "rich-transcripts",
-            "face-analysis",
+            'media-descriptions',
+            'entities',
+            'rich-transcripts',
+            'face-analysis',
           ])
           .optional(),
       },
       {
-        name: "created_after",
-        type: "Query",
+        name: 'created_after',
+        type: 'Query',
         schema: z.string().datetime({ offset: true }).optional(),
       },
       {
-        name: "created_before",
-        type: "Query",
+        name: 'created_before',
+        type: 'Query',
         schema: z.string().datetime({ offset: true }).optional(),
       },
     ],
@@ -860,15 +863,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections/:collection_id",
-    alias: "getCollection",
+    method: 'get',
+    path: '/collections/:collection_id',
+    alias: 'getCollection',
     description: `Retrieve details about a specific collection`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -887,15 +890,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/collections/:collection_id",
-    alias: "deleteCollection",
+    method: 'delete',
+    path: '/collections/:collection_id',
+    alias: 'deleteCollection',
     description: `Delete a collection`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -914,21 +917,21 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "put",
-    path: "/collections/:collection_id",
-    alias: "updateCollection",
+    method: 'put',
+    path: '/collections/:collection_id',
+    alias: 'updateCollection',
     description: `Update a collection`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Collection update parameters`,
-        type: "Body",
+        type: 'Body',
         schema: CollectionUpdate,
       },
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -952,21 +955,21 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "post",
-    path: "/collections/:collection_id/videos",
-    alias: "addVideo",
+    method: 'post',
+    path: '/collections/:collection_id/videos',
+    alias: 'addVideo',
     description: `Add a video to a collection`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `File association parameters`,
-        type: "Body",
+        type: 'Body',
         schema: AddCollectionFile,
       },
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -990,63 +993,63 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections/:collection_id/videos",
-    alias: "listVideos",
+    method: 'get',
+    path: '/collections/:collection_id/videos',
+    alias: 'listVideos',
     description: `List all files in a collection`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "status",
-        type: "Query",
+        name: 'status',
+        type: 'Query',
         schema: z
           .enum([
-            "pending",
-            "processing",
-            "completed",
-            "failed",
-            "not_applicable",
+            'pending',
+            'processing',
+            'completed',
+            'failed',
+            'not_applicable',
           ])
           .optional(),
       },
       {
-        name: "added_before",
-        type: "Query",
+        name: 'added_before',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "added_after",
-        type: "Query",
+        name: 'added_after',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "order",
-        type: "Query",
-        schema: z.enum(["added_at", "filename"]).optional().default("added_at"),
+        name: 'order',
+        type: 'Query',
+        schema: z.enum(['added_at', 'filename']).optional().default('added_at'),
       },
       {
-        name: "sort",
-        type: "Query",
-        schema: z.enum(["asc", "desc"]).optional().default("desc"),
+        name: 'sort',
+        type: 'Query',
+        schema: z.enum(['asc', 'desc']).optional().default('desc'),
       },
       {
-        name: "filter",
-        type: "Query",
+        name: 'filter',
+        type: 'Query',
         schema: z.string().optional(),
       },
     ],
@@ -1065,20 +1068,20 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections/:collection_id/videos/:file_id",
-    alias: "getVideo",
+    method: 'get',
+    path: '/collections/:collection_id/videos/:file_id',
+    alias: 'getVideo',
     description: `Retrieve information about a specific video file in a collection`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -1097,20 +1100,20 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/collections/:collection_id/videos/:file_id",
-    alias: "deleteVideo",
+    method: 'delete',
+    path: '/collections/:collection_id/videos/:file_id',
+    alias: 'deleteVideo',
     description: `Remove a video file from a collection`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -1129,30 +1132,30 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections/:collection_id/videos/:file_id/entities",
-    alias: "getEntities",
+    method: 'get',
+    path: '/collections/:collection_id/videos/:file_id/entities',
+    alias: 'getEntities',
     description: `Retrieve extracted entities for a specific file in a collection. Results are paginated with a default limit of 50 segment entities per request (maximum 100). Use limit and offset parameters to paginate through all results. This API is only available when the collection is created with collection_type &#x27;entities&#x27;`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
       },
     ],
@@ -1176,35 +1179,35 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections/:collection_id/videos/:file_id/rich-transcripts",
-    alias: "getTranscripts",
+    method: 'get',
+    path: '/collections/:collection_id/videos/:file_id/rich-transcripts',
+    alias: 'getTranscripts',
     description: `Retrieve rich transcription data for a specific file in a collection. This API is only available when the a collection is created with collection_type &#x27;rich-transcripts&#x27;`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "response_format",
-        type: "Query",
-        schema: z.enum(["json", "markdown"]).optional().default("json"),
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
       },
       {
-        name: "start_time_seconds",
-        type: "Query",
+        name: 'start_time_seconds',
+        type: 'Query',
         schema: z.number().optional(),
       },
       {
-        name: "end_time_seconds",
-        type: "Query",
+        name: 'end_time_seconds',
+        type: 'Query',
         schema: z.number().optional(),
       },
     ],
@@ -1228,45 +1231,45 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections/:collection_id/entities",
-    alias: "listCollectionEntities",
+    method: 'get',
+    path: '/collections/:collection_id/entities',
+    alias: 'listCollectionEntities',
     description: `List all extracted entities for files in a collection. This API is only available when a collection is created with collection_type &#x27;entities&#x27;`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "order",
-        type: "Query",
-        schema: z.enum(["added_at", "filename"]).optional().default("added_at"),
+        name: 'order',
+        type: 'Query',
+        schema: z.enum(['added_at', 'filename']).optional().default('added_at'),
       },
       {
-        name: "sort",
-        type: "Query",
-        schema: z.enum(["asc", "desc"]).optional().default("desc"),
+        name: 'sort',
+        type: 'Query',
+        schema: z.enum(['asc', 'desc']).optional().default('desc'),
       },
       {
-        name: "added_before",
-        type: "Query",
+        name: 'added_before',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "added_after",
-        type: "Query",
+        name: 'added_after',
+        type: 'Query',
         schema: z.string().optional(),
       },
     ],
@@ -1290,51 +1293,51 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections/:collection_id/rich-transcripts",
-    alias: "listCollectionRichTranscripts",
+    method: 'get',
+    path: '/collections/:collection_id/rich-transcripts',
+    alias: 'listCollectionRichTranscripts',
     description: `List all rich transcription data for files in a collection. This API is only available when a collection is created with collection_type &#x27;rich-transcripts&#x27;`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(20),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "order",
-        type: "Query",
-        schema: z.enum(["added_at", "filename"]).optional().default("added_at"),
+        name: 'order',
+        type: 'Query',
+        schema: z.enum(['added_at', 'filename']).optional().default('added_at'),
       },
       {
-        name: "sort",
-        type: "Query",
-        schema: z.enum(["asc", "desc"]).optional().default("desc"),
+        name: 'sort',
+        type: 'Query',
+        schema: z.enum(['asc', 'desc']).optional().default('desc'),
       },
       {
-        name: "added_before",
-        type: "Query",
+        name: 'added_before',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "added_after",
-        type: "Query",
+        name: 'added_after',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "response_format",
-        type: "Query",
-        schema: z.enum(["json", "markdown"]).optional().default("json"),
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
       },
     ],
     response: CollectionRichTranscriptsList,
@@ -1357,51 +1360,51 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections/:collection_id/media-descriptions",
-    alias: "listCollectionMediaDescriptions",
+    method: 'get',
+    path: '/collections/:collection_id/media-descriptions',
+    alias: 'listCollectionMediaDescriptions',
     description: `List all media description data for files in a collection. This API is only available when a collection is created with collection_type &#x27;media-descriptions&#x27;`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(20),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "order",
-        type: "Query",
-        schema: z.enum(["added_at", "filename"]).optional().default("added_at"),
+        name: 'order',
+        type: 'Query',
+        schema: z.enum(['added_at', 'filename']).optional().default('added_at'),
       },
       {
-        name: "sort",
-        type: "Query",
-        schema: z.enum(["asc", "desc"]).optional().default("desc"),
+        name: 'sort',
+        type: 'Query',
+        schema: z.enum(['asc', 'desc']).optional().default('desc'),
       },
       {
-        name: "added_before",
-        type: "Query",
+        name: 'added_before',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "added_after",
-        type: "Query",
+        name: 'added_after',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "response_format",
-        type: "Query",
-        schema: z.enum(["json", "markdown"]).optional().default("json"),
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
       },
     ],
     response: CollectionMediaDescriptionsList,
@@ -1424,35 +1427,35 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections/:collection_id/videos/:file_id/media-descriptions",
-    alias: "getMediaDescriptions",
+    method: 'get',
+    path: '/collections/:collection_id/videos/:file_id/media-descriptions',
+    alias: 'getMediaDescriptions',
     description: `Retrieve media description data for a specific file in a collection. This API is only available when the collection is created with collection_type &#x27;media-descriptions&#x27;`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "response_format",
-        type: "Query",
-        schema: z.enum(["json", "markdown"]).optional().default("json"),
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
       },
       {
-        name: "start_time_seconds",
-        type: "Query",
+        name: 'start_time_seconds',
+        type: 'Query',
         schema: z.number().optional(),
       },
       {
-        name: "end_time_seconds",
-        type: "Query",
+        name: 'end_time_seconds',
+        type: 'Query',
         schema: z.number().optional(),
       },
     ],
@@ -1476,30 +1479,30 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/collections/:collection_id/videos/:file_id/face-detections",
-    alias: "getFaceDetections",
+    method: 'get',
+    path: '/collections/:collection_id/videos/:file_id/face-detections',
+    alias: 'getFaceDetections',
     description: `Retrieve face detections for a specific file in a collection. Results are paginated with a default limit of 50 faces per request (maximum 100). Use limit and offset parameters to paginate through all results. This API is only available when the collection is created with collection_type &#x27;face-analysis&#x27;`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "collection_id",
-        type: "Path",
+        name: 'collection_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
       },
     ],
@@ -1525,7 +1528,7 @@ const endpoints = makeApi([
 ]);
 
 export const CollectionsApi = new Zodios(
-  "https://api.cloudglue.dev/v1",
+  'https://api.cloudglue.dev/v1',
   endpoints
 );
 

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export type DescribeOutput = Partial<{
   visual_scene_description: Array<DescribeOutputPart>;
@@ -25,10 +25,11 @@ export type FileSegmentationConfig = Partial<{
   segmentation_config: SegmentationConfig;
 }>;
 export type SegmentationConfig = {
-  strategy: "uniform" | "shot-detector" | "manual";
+  strategy: 'uniform' | 'shot-detector' | 'manual';
   uniform_config?: SegmentationUniformConfig | undefined;
   shot_detector_config?: SegmentationShotDetectorConfig | undefined;
   manual_config?: SegmentationManualConfig | undefined;
+  keyframe_config?: KeyframeConfig | undefined;
   start_time_seconds?: number | undefined;
   end_time_seconds?: number | undefined;
 };
@@ -40,7 +41,7 @@ export type SegmentationShotDetectorConfig = {
   threshold?: (number | null) | undefined;
   min_seconds?: (number | null) | undefined;
   max_seconds?: (number | null) | undefined;
-  detector: "adaptive" | "content";
+  detector: 'adaptive' | 'content';
 };
 export type SegmentationManualConfig = {
   segments: Array<
@@ -50,9 +51,13 @@ export type SegmentationManualConfig = {
     }>
   >;
 };
+export type KeyframeConfig = {
+  frames_per_segment: number;
+  max_width?: number | undefined;
+};
 export type File = {
   id: string;
-  status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
   bytes?: (number | null) | undefined;
   created_at?: number | undefined;
   filename?: string | undefined;
@@ -70,22 +75,22 @@ export type File = {
   thumbnail_url?: string | undefined;
   source?:
     | (
-        | "video"
-        | "youtube"
-        | "s3"
-        | "dropbox"
-        | "http"
-        | "upload"
-        | "google-drive"
-        | "zoom"
-        | "gong"
-        | "recall"
+        | 'video'
+        | 'youtube'
+        | 's3'
+        | 'dropbox'
+        | 'http'
+        | 'upload'
+        | 'google-drive'
+        | 'zoom'
+        | 'gong'
+        | 'recall'
       )
     | undefined;
 };
 export type Segmentation = {
   segmentation_id: string;
-  status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
   created_at: number;
   file_id: string;
   segmentation_config: SegmentationConfig;
@@ -94,7 +99,7 @@ export type Segmentation = {
   total_shots?: number | undefined;
   data?:
     | {
-        object: "list";
+        object: 'list';
         segments?:
           | Array<{
               id: string;
@@ -116,7 +121,7 @@ export type Shot = {
   end_time: number;
 };
 export type FrameExtractionConfig = {
-  strategy: "uniform";
+  strategy: 'uniform';
   uniform_config?: FrameExtractionUniformConfig | undefined;
   thumbnails_config?: FrameExtractionThumbnailsConfig | undefined;
   start_time_seconds?: number | undefined;
@@ -131,14 +136,14 @@ export type FrameExtractionThumbnailsConfig = Partial<{
 }>;
 export type FrameExtraction = {
   frame_extraction_id: string;
-  status: "pending" | "processing" | "completed" | "failed";
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   created_at: number;
   file_id: string;
   frame_extraction_config: FrameExtractionConfig;
   frame_count?: number | undefined;
   data?:
     | {
-        object: "list";
+        object: 'list';
         frames?:
           | Array<{
               id: string;
@@ -153,7 +158,7 @@ export type FrameExtraction = {
     | undefined;
 };
 export type ThumbnailList = {
-  object: "list";
+  object: 'list';
   total: number;
   limit: number;
   offset: number;
@@ -164,8 +169,10 @@ export type Thumbnail = {
   url: string;
   time: number;
   segmentation_id?: string | undefined;
+  type?: ThumbnailType | undefined;
   segment_id?: string | undefined;
 };
+export type ThumbnailType = string;
 export type FaceBoundingBox = {
   height: number;
   width: number;
@@ -189,7 +196,7 @@ export const SegmentationShotDetectorConfig = z
     threshold: z.number().nullish(),
     min_seconds: z.number().gte(1).lte(120).nullish(),
     max_seconds: z.number().gte(1).lte(120).nullish(),
-    detector: z.enum(["adaptive", "content"]),
+    detector: z.enum(['adaptive', 'content']),
   })
   .strict()
   .passthrough();
@@ -205,12 +212,20 @@ export const SegmentationManualConfig = z
   })
   .strict()
   .passthrough();
+export const KeyframeConfig = z
+  .object({
+    frames_per_segment: z.number().gte(0).lte(8),
+    max_width: z.number().gte(144).lte(4320).optional().default(280),
+  })
+  .strict()
+  .passthrough();
 export const SegmentationConfig = z
   .object({
-    strategy: z.enum(["uniform", "shot-detector", "manual"]),
+    strategy: z.enum(['uniform', 'shot-detector', 'manual']),
     uniform_config: SegmentationUniformConfig.optional(),
     shot_detector_config: SegmentationShotDetectorConfig.optional(),
     manual_config: SegmentationManualConfig.optional(),
+    keyframe_config: KeyframeConfig.optional(),
     start_time_seconds: z.number().gte(0).optional(),
     end_time_seconds: z.number().gte(0).optional(),
   })
@@ -228,11 +243,11 @@ export const File = z
   .object({
     id: z.string(),
     status: z.enum([
-      "pending",
-      "processing",
-      "completed",
-      "failed",
-      "not_applicable",
+      'pending',
+      'processing',
+      'completed',
+      'failed',
+      'not_applicable',
     ]),
     bytes: z.number().int().nullish(),
     created_at: z.number().int().optional(),
@@ -254,16 +269,16 @@ export const File = z
     thumbnail_url: z.string().optional(),
     source: z
       .enum([
-        "video",
-        "youtube",
-        "s3",
-        "dropbox",
-        "http",
-        "upload",
-        "google-drive",
-        "zoom",
-        "gong",
-        "recall",
+        'video',
+        'youtube',
+        's3',
+        'dropbox',
+        'http',
+        'upload',
+        'google-drive',
+        'zoom',
+        'gong',
+        'recall',
       ])
       .optional(),
   })
@@ -281,11 +296,11 @@ export const Segmentation = z
   .object({
     segmentation_id: z.string().uuid(),
     status: z.enum([
-      "pending",
-      "processing",
-      "completed",
-      "failed",
-      "not_applicable",
+      'pending',
+      'processing',
+      'completed',
+      'failed',
+      'not_applicable',
     ]),
     created_at: z.number().gte(0),
     file_id: z.string().uuid(),
@@ -295,7 +310,7 @@ export const Segmentation = z
     total_shots: z.number().gte(0).optional(),
     data: z
       .object({
-        object: z.literal("list"),
+        object: z.literal('list'),
         segments: z
           .array(
             z
@@ -320,19 +335,21 @@ export const Segmentation = z
   })
   .strict()
   .passthrough();
+export const ThumbnailType = z.string();
 export const Thumbnail = z
   .object({
     id: z.string().uuid(),
     url: z.string(),
     time: z.number(),
     segmentation_id: z.string().uuid().optional(),
+    type: ThumbnailType.optional(),
     segment_id: z.string().uuid().optional(),
   })
   .strict()
   .passthrough();
 export const ThumbnailList = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     total: z.number().int(),
     limit: z.number().int(),
     offset: z.number().int(),
@@ -380,7 +397,7 @@ export const FrameExtractionThumbnailsConfig = z
   .passthrough();
 export const FrameExtractionConfig = z
   .object({
-    strategy: z.literal("uniform"),
+    strategy: z.literal('uniform'),
     uniform_config: FrameExtractionUniformConfig.optional(),
     thumbnails_config: FrameExtractionThumbnailsConfig.optional(),
     start_time_seconds: z.number().gte(0).optional(),
@@ -391,14 +408,14 @@ export const FrameExtractionConfig = z
 export const FrameExtraction = z
   .object({
     frame_extraction_id: z.string().uuid(),
-    status: z.enum(["pending", "processing", "completed", "failed"]),
+    status: z.enum(['pending', 'processing', 'completed', 'failed']),
     created_at: z.number().gte(0),
     file_id: z.string().uuid(),
     frame_extraction_config: FrameExtractionConfig,
     frame_count: z.number().gte(0).optional(),
     data: z
       .object({
-        object: z.literal("list"),
+        object: z.literal('list'),
         frames: z
           .array(
             z

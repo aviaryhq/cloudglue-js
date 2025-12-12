@@ -322,3 +322,10 @@ export interface ListFilesParams {
   filter?: Filter;
 }
 export type DefaultSegmentationConfig = z.infer<typeof collectionsSchemas.DefaultSegmentationConfig>;
+
+export type WaitForReadyOptions = {
+  /** Interval in milliseconds between polling attempts. Defaults to 5000ms (5 seconds). */
+  pollingInterval?: number;
+  /** Maximum number of polling attempts before giving up. Defaults to 36 (3 minutes total with default interval). */
+  maxAttempts?: number;
+}

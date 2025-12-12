@@ -1,8 +1,8 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
 type WebhookList = {
-  object: "list";
+  object: 'list';
   data: Array<Webhook>;
   total: number;
   limit: number;
@@ -10,7 +10,7 @@ type WebhookList = {
 };
 type Webhook = {
   id: string;
-  object: "webhook";
+  object: 'webhook';
   created_at: number;
   webhook_secret: string;
   endpoint: string;
@@ -19,23 +19,23 @@ type Webhook = {
   subscribed_events: Array<WebhookEvents>;
 };
 type WebhookEvents =
-  | "describe.job.processing"
-  | "describe.job.completed"
-  | "describe.job.failed"
-  | "extract.job.processing"
-  | "extract.job.completed"
-  | "extract.job.failed"
-  | "file.job.processing"
-  | "file.job.completed"
-  | "file.job.failed"
-  | "file.job.deleted"
-  | "collection.file.job.processing"
-  | "collection.file.job.completed"
-  | "collection.file.job.failed"
-  | "collection.file.job.deleted"
-  | "segment.job.processing"
-  | "segment.job.completed"
-  | "segment.job.failed";
+  | 'describe.job.processing'
+  | 'describe.job.completed'
+  | 'describe.job.failed'
+  | 'extract.job.processing'
+  | 'extract.job.completed'
+  | 'extract.job.failed'
+  | 'file.job.processing'
+  | 'file.job.completed'
+  | 'file.job.failed'
+  | 'file.job.deleted'
+  | 'collection.file.job.processing'
+  | 'collection.file.job.completed'
+  | 'collection.file.job.failed'
+  | 'collection.file.job.deleted'
+  | 'segment.job.processing'
+  | 'segment.job.completed'
+  | 'segment.job.failed';
 type WebhookCreateRequest = Partial<{
   description: string;
   endpoint: string;
@@ -49,28 +49,28 @@ type WebhookUpdateRequest = Partial<{
 }>;
 
 const WebhookEvents = z.enum([
-  "describe.job.processing",
-  "describe.job.completed",
-  "describe.job.failed",
-  "extract.job.processing",
-  "extract.job.completed",
-  "extract.job.failed",
-  "file.job.processing",
-  "file.job.completed",
-  "file.job.failed",
-  "file.job.deleted",
-  "collection.file.job.processing",
-  "collection.file.job.completed",
-  "collection.file.job.failed",
-  "collection.file.job.deleted",
-  "segment.job.processing",
-  "segment.job.completed",
-  "segment.job.failed",
+  'describe.job.processing',
+  'describe.job.completed',
+  'describe.job.failed',
+  'extract.job.processing',
+  'extract.job.completed',
+  'extract.job.failed',
+  'file.job.processing',
+  'file.job.completed',
+  'file.job.failed',
+  'file.job.deleted',
+  'collection.file.job.processing',
+  'collection.file.job.completed',
+  'collection.file.job.failed',
+  'collection.file.job.deleted',
+  'segment.job.processing',
+  'segment.job.completed',
+  'segment.job.failed',
 ]);
 const Webhook: z.ZodType<Webhook> = z
   .object({
     id: z.string(),
-    object: z.literal("webhook"),
+    object: z.literal('webhook'),
     created_at: z.number().int(),
     webhook_secret: z.string(),
     endpoint: z.string(),
@@ -82,7 +82,7 @@ const Webhook: z.ZodType<Webhook> = z
   .passthrough();
 const WebhookList: z.ZodType<WebhookList> = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(Webhook),
     total: z.number().int(),
     limit: z.number().int(),
@@ -110,7 +110,7 @@ const WebhookUpdateRequest: z.ZodType<WebhookUpdateRequest> = z
   .strict()
   .passthrough();
 const WebhookDeleteResponse = z
-  .object({ id: z.string(), object: z.literal("webhook") })
+  .object({ id: z.string(), object: z.literal('webhook') })
   .strict()
   .passthrough();
 
@@ -125,31 +125,31 @@ export const schemas = {
 
 const endpoints = makeApi([
   {
-    method: "get",
-    path: "/webhooks",
-    alias: "listWebhooks",
+    method: 'get',
+    path: '/webhooks',
+    alias: 'listWebhooks',
     description: `List all webhooks`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "order",
-        type: "Query",
-        schema: z.literal("created_at").optional().default("created_at"),
+        name: 'order',
+        type: 'Query',
+        schema: z.literal('created_at').optional().default('created_at'),
       },
       {
-        name: "sort",
-        type: "Query",
-        schema: z.enum(["asc", "desc"]).optional().default("desc"),
+        name: 'sort',
+        type: 'Query',
+        schema: z.enum(['asc', 'desc']).optional().default('desc'),
       },
     ],
     response: WebhookList,
@@ -162,16 +162,16 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "post",
-    path: "/webhooks",
-    alias: "createWebhook",
+    method: 'post',
+    path: '/webhooks',
+    alias: 'createWebhook',
     description: `Create a webhook`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Webhook creation parameters`,
-        type: "Body",
+        type: 'Body',
         schema: WebhookCreateRequest,
       },
     ],
@@ -190,15 +190,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/webhooks/:webhook_id",
-    alias: "getWebhookById",
+    method: 'get',
+    path: '/webhooks/:webhook_id',
+    alias: 'getWebhookById',
     description: `Get a webhook by ID`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "webhook_id",
-        type: "Path",
+        name: 'webhook_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -217,15 +217,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/webhooks/:webhook_id",
-    alias: "deleteWebhook",
+    method: 'delete',
+    path: '/webhooks/:webhook_id',
+    alias: 'deleteWebhook',
     description: `Delete a webhook`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "webhook_id",
-        type: "Path",
+        name: 'webhook_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -244,21 +244,21 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "put",
-    path: "/webhooks/:webhook_id",
-    alias: "updateWebhook",
+    method: 'put',
+    path: '/webhooks/:webhook_id',
+    alias: 'updateWebhook',
     description: `Update a webhook`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Webhook update parameters`,
-        type: "Body",
+        type: 'Body',
         schema: WebhookUpdateRequest,
       },
       {
-        name: "webhook_id",
-        type: "Path",
+        name: 'webhook_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -279,7 +279,7 @@ const endpoints = makeApi([
 ]);
 
 export const WebhooksApi = new Zodios(
-  "https://api.cloudglue.dev/v1",
+  'https://api.cloudglue.dev/v1',
   endpoints
 );
 

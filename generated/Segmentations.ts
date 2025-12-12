@@ -1,37 +1,39 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
-import { Segmentation } from "./common";
-import { SegmentationConfig } from "./common";
-import { SegmentationUniformConfig } from "./common";
-import { SegmentationShotDetectorConfig } from "./common";
-import { SegmentationManualConfig } from "./common";
-import { ThumbnailsConfig } from "./common";
-import { Shot } from "./common";
-import { ThumbnailList } from "./common";
-import { Thumbnail } from "./common";
+import { Segmentation } from './common';
+import { SegmentationConfig } from './common';
+import { SegmentationUniformConfig } from './common';
+import { SegmentationShotDetectorConfig } from './common';
+import { SegmentationManualConfig } from './common';
+import { KeyframeConfig } from './common';
+import { ThumbnailsConfig } from './common';
+import { Shot } from './common';
+import { ThumbnailList } from './common';
+import { Thumbnail } from './common';
+import { ThumbnailType } from './common';
 
 const endpoints = makeApi([
   {
-    method: "get",
-    path: "/segmentations/:segmentation_id",
-    alias: "getSegmentation",
+    method: 'get',
+    path: '/segmentations/:segmentation_id',
+    alias: 'getSegmentation',
     description: `Retrieve details about a specific segmentation including its segments`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "segmentation_id",
-        type: "Path",
+        name: 'segmentation_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(10),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
       },
     ],
@@ -50,15 +52,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/segmentations/:segmentation_id",
-    alias: "deleteSegmentation",
+    method: 'delete',
+    path: '/segmentations/:segmentation_id',
+    alias: 'deleteSegmentation',
     description: `Delete a specific segmentation`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "segmentation_id",
-        type: "Path",
+        name: 'segmentation_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
     ],
@@ -77,31 +79,36 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/segmentations/:segmentation_id/thumbnails",
-    alias: "getSegmentationThumbnails",
+    method: 'get',
+    path: '/segmentations/:segmentation_id/thumbnails',
+    alias: 'getSegmentationThumbnails',
     description: `Get all thumbnails for a segmentation`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "segmentation_id",
-        type: "Path",
+        name: 'segmentation_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
       {
-        name: "segment_ids",
-        type: "Query",
+        name: 'segment_ids',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
+      },
+      {
+        name: 'type',
+        type: 'Query',
+        schema: z.string().optional(),
       },
     ],
     response: ThumbnailList,
@@ -121,7 +128,7 @@ const endpoints = makeApi([
 ]);
 
 export const SegmentationsApi = new Zodios(
-  "https://api.cloudglue.dev/v1",
+  'https://api.cloudglue.dev/v1',
   endpoints
 );
 

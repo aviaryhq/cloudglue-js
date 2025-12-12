@@ -1,19 +1,20 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
-import { DescribeOutput } from "./common";
-import { DescribeOutputPart } from "./common";
-import { SpeechOutputPart } from "./common";
-import { ThumbnailsConfig } from "./common";
-import { FileSegmentationConfig } from "./common";
-import { SegmentationConfig } from "./common";
-import { SegmentationUniformConfig } from "./common";
-import { SegmentationShotDetectorConfig } from "./common";
-import { SegmentationManualConfig } from "./common";
+import { DescribeOutput } from './common';
+import { DescribeOutputPart } from './common';
+import { SpeechOutputPart } from './common';
+import { ThumbnailsConfig } from './common';
+import { FileSegmentationConfig } from './common';
+import { SegmentationConfig } from './common';
+import { SegmentationUniformConfig } from './common';
+import { SegmentationShotDetectorConfig } from './common';
+import { SegmentationManualConfig } from './common';
+import { KeyframeConfig } from './common';
 
 type Transcribe = {
   job_id: string;
-  status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
   url?: string | undefined;
   created_at?: number | undefined;
   transcribe_config?:
@@ -52,7 +53,7 @@ type NewTranscribe = {
   thumbnails_config?: ThumbnailsConfig | undefined;
 } & FileSegmentationConfig;
 type TranscribeList = {
-  object: "list";
+  object: 'list';
   data: Array<Transcribe>;
   total: number;
   limit: number;
@@ -62,11 +63,11 @@ const Transcribe: z.ZodType<Transcribe> = z
   .object({
     job_id: z.string(),
     status: z.enum([
-      "pending",
-      "processing",
-      "completed",
-      "failed",
-      "not_applicable",
+      'pending',
+      'processing',
+      'completed',
+      'failed',
+      'not_applicable',
     ]),
     url: z.string().optional(),
     created_at: z.number().int().optional(),
@@ -123,7 +124,7 @@ const NewTranscribe: z.ZodType<NewTranscribe> = z
   .and(FileSegmentationConfig);
 const TranscribeList: z.ZodType<TranscribeList> = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(Transcribe),
     total: z.number().int(),
     limit: z.number().int(),
@@ -139,18 +140,18 @@ export const schemas = {
 
 const endpoints = makeApi([
   {
-    method: "post",
-    path: "/transcribe",
-    alias: "createTranscribe",
+    method: 'post',
+    path: '/transcribe',
+    alias: 'createTranscribe',
     description: `Creates a new transcription job for video content.
 
 Note: For most use cases, you should use the &#x60;/describe&#x60; endpoint instead. This API will be deprecated in the future and only supports speech level understanding.`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Transcription job parameters`,
-        type: "Body",
+        type: 'Body',
         schema: NewTranscribe,
       },
     ],
@@ -179,54 +180,54 @@ Note: For most use cases, you should use the &#x60;/describe&#x60; endpoint inst
     ],
   },
   {
-    method: "get",
-    path: "/transcribe",
-    alias: "listTranscribes",
+    method: 'get',
+    path: '/transcribe',
+    alias: 'listTranscribes',
     description: `List all transcription jobs with optional filtering`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(20),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "status",
-        type: "Query",
+        name: 'status',
+        type: 'Query',
         schema: z
           .enum([
-            "pending",
-            "processing",
-            "completed",
-            "failed",
-            "not_applicable",
+            'pending',
+            'processing',
+            'completed',
+            'failed',
+            'not_applicable',
           ])
           .optional(),
       },
       {
-        name: "created_before",
-        type: "Query",
+        name: 'created_before',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "created_after",
-        type: "Query",
+        name: 'created_after',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "url",
-        type: "Query",
+        name: 'url',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "response_format",
-        type: "Query",
-        schema: z.enum(["json", "markdown"]).optional().default("json"),
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
       },
     ],
     response: TranscribeList,
@@ -244,21 +245,21 @@ Note: For most use cases, you should use the &#x60;/describe&#x60; endpoint inst
     ],
   },
   {
-    method: "get",
-    path: "/transcribe/:job_id",
-    alias: "getTranscribe",
+    method: 'get',
+    path: '/transcribe/:job_id',
+    alias: 'getTranscribe',
     description: `Retrieve the current state of a transcription job`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "job_id",
-        type: "Path",
+        name: 'job_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "response_format",
-        type: "Query",
-        schema: z.enum(["json", "markdown"]).optional().default("json"),
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
       },
     ],
     response: Transcribe,
@@ -278,7 +279,7 @@ Note: For most use cases, you should use the &#x60;/describe&#x60; endpoint inst
 ]);
 
 export const TranscribeApi = new Zodios(
-  "https://api.cloudglue.dev/v1",
+  'https://api.cloudglue.dev/v1',
   endpoints
 );
 

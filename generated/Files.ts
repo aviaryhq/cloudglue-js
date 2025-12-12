@@ -1,17 +1,17 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 import { File as CloudglueFile } from "./common";
-import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, SegmentationManualConfig, ThumbnailsConfig, Shot, ThumbnailList, Thumbnail, FrameExtraction, FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from "./common";
+import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, SegmentationManualConfig, KeyframeConfig, ThumbnailsConfig, Shot, ThumbnailList, Thumbnail, ThumbnailType, FrameExtraction, FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from "./common";
 
 type FileList = {
-  object: "list";
+  object: 'list';
   data: Array<CloudglueFile>;
   total: number;
   limit: number;
   offset: number;
 };
 type SegmentationList = {
-  object: "list";
+  object: 'list';
   data: Array<SegmentationListItem>;
   total: number;
   limit: number;
@@ -19,7 +19,7 @@ type SegmentationList = {
 };
 type SegmentationListItem = {
   segmentation_id: string;
-  status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
   created_at: number;
   file_id: string;
   segmentation_config: SegmentationConfig;
@@ -27,10 +27,10 @@ type SegmentationListItem = {
   total_segments?: number | undefined;
 };
 type FrameExtractionList = {
-  object: "list";
+  object: 'list';
   data: Array<{
     frame_extraction_id: string;
-    status: "pending" | "processing" | "completed" | "failed";
+    status: 'pending' | 'processing' | 'completed' | 'failed';
     created_at: number;
     file_id: string;
     frame_extraction_config: FrameExtractionConfig;
@@ -43,7 +43,7 @@ type FrameExtractionList = {
 
 const FileList: z.ZodType<FileList> = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(CloudglueFile),
     total: z.number().int(),
     limit: z.number().int(),
@@ -55,11 +55,11 @@ const SegmentationListItem: z.ZodType<SegmentationListItem> = z
   .object({
     segmentation_id: z.string().uuid(),
     status: z.enum([
-      "pending",
-      "processing",
-      "completed",
-      "failed",
-      "not_applicable",
+      'pending',
+      'processing',
+      'completed',
+      'failed',
+      'not_applicable',
     ]),
     created_at: z.number().gte(0),
     file_id: z.string().uuid(),
@@ -71,7 +71,7 @@ const SegmentationListItem: z.ZodType<SegmentationListItem> = z
   .passthrough();
 const SegmentationList: z.ZodType<SegmentationList> = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(SegmentationListItem),
     total: z.number().int(),
     limit: z.number().int(),
@@ -81,12 +81,12 @@ const SegmentationList: z.ZodType<SegmentationList> = z
   .passthrough();
 const FrameExtractionList: z.ZodType<FrameExtractionList> = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(
       z
         .object({
           frame_extraction_id: z.string().uuid(),
-          status: z.enum(["pending", "processing", "completed", "failed"]),
+          status: z.enum(['pending', 'processing', 'completed', 'failed']),
           created_at: z.number().gte(0),
           file_id: z.string().uuid(),
           frame_extraction_config: FrameExtractionConfig,
@@ -110,7 +110,7 @@ const FileUpload = z
   .strict()
   .passthrough();
 const FileDelete = z
-  .object({ id: z.string(), object: z.literal("file") })
+  .object({ id: z.string(), object: z.literal('file') })
   .strict()
   .passthrough();
 const FileUpdate = z
@@ -122,6 +122,18 @@ const FileUpdate = z
   .strict()
   .passthrough();
 const createFileSegmentation_Body = SegmentationConfig;
+const FileSegment = z
+  .object({
+    id: z.string().uuid(),
+    file_id: z.string().uuid(),
+    start_time: z.number(),
+    end_time: z.number(),
+    thumbnail_url: z.string(),
+    metadata: z.object({}).partial().strict().passthrough().optional(),
+    segmentation_id: z.string().uuid().optional(),
+  })
+  .strict()
+  .passthrough();
 const createFileFrameExtraction_Body = FrameExtractionConfig;
 
 export const schemas = {
@@ -133,21 +145,22 @@ export const schemas = {
   FileDelete,
   FileUpdate,
   createFileSegmentation_Body,
+  FileSegment,
   createFileFrameExtraction_Body,
 };
 
 const endpoints = makeApi([
   {
-    method: "post",
-    path: "/files",
-    alias: "uploadFile",
+    method: 'post',
+    path: '/files',
+    alias: 'uploadFile',
     description: `Upload a video file that can be used with Cloudglue services`,
-    requestFormat: "form-data",
+    requestFormat: 'form-data',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Upload a video file`,
-        type: "Body",
+        type: 'Body',
         schema: FileUpload,
       },
     ],
@@ -176,61 +189,61 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/files",
-    alias: "listFiles",
+    method: 'get',
+    path: '/files',
+    alias: 'listFiles',
     description: `List files that have been uploaded to Cloudglue`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "status",
-        type: "Query",
+        name: 'status',
+        type: 'Query',
         schema: z
           .enum([
-            "pending",
-            "processing",
-            "completed",
-            "failed",
-            "not_applicable",
+            'pending',
+            'processing',
+            'completed',
+            'failed',
+            'not_applicable',
           ])
           .optional(),
       },
       {
-        name: "created_before",
-        type: "Query",
+        name: 'created_before',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "created_after",
-        type: "Query",
+        name: 'created_after',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "order",
-        type: "Query",
+        name: 'order',
+        type: 'Query',
         schema: z
-          .enum(["created_at", "filename"])
+          .enum(['created_at', 'filename'])
           .optional()
-          .default("created_at"),
+          .default('created_at'),
       },
       {
-        name: "sort",
-        type: "Query",
-        schema: z.enum(["asc", "desc"]).optional().default("desc"),
+        name: 'sort',
+        type: 'Query',
+        schema: z.enum(['asc', 'desc']).optional().default('desc'),
       },
       {
-        name: "filter",
-        type: "Query",
+        name: 'filter',
+        type: 'Query',
         schema: z.string().optional(),
       },
     ],
@@ -244,15 +257,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/files/:file_id",
-    alias: "getFile",
+    method: 'get',
+    path: '/files/:file_id',
+    alias: 'getFile',
     description: `Retrieve details about a specific file`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -271,15 +284,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/files/:file_id",
-    alias: "deleteFile",
+    method: 'delete',
+    path: '/files/:file_id',
+    alias: 'deleteFile',
     description: `Delete a file`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -298,21 +311,21 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "put",
-    path: "/files/:file_id",
-    alias: "updateFile",
+    method: 'put',
+    path: '/files/:file_id',
+    alias: 'updateFile',
     description: `Update a file`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `File update parameters`,
-        type: "Body",
+        type: 'Body',
         schema: FileUpdate,
       },
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -326,21 +339,21 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "post",
-    path: "/files/:file_id/segmentations",
-    alias: "createFileSegmentation",
+    method: 'post',
+    path: '/files/:file_id/segmentations',
+    alias: 'createFileSegmentation',
     description: `Create a new segmentation for a file using the specified segmentation configuration`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Segmentation configuration`,
-        type: "Body",
+        type: 'Body',
         schema: createFileSegmentation_Body,
       },
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
     ],
@@ -364,25 +377,25 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/files/:file_id/segmentations",
-    alias: "listFileSegmentations",
+    method: 'get',
+    path: '/files/:file_id/segmentations',
+    alias: 'listFileSegmentations',
     description: `List all segmentations for a specific file`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
       },
     ],
@@ -401,36 +414,41 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/files/:file_id/thumbnails",
-    alias: "getThumbnails",
+    method: 'get',
+    path: '/files/:file_id/thumbnails',
+    alias: 'getThumbnails',
     description: `Get all thumbnails for a file`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
       {
-        name: "is_default",
-        type: "Query",
+        name: 'is_default',
+        type: 'Query',
         schema: z.boolean().optional().default(false),
       },
       {
-        name: "segmentation_id",
-        type: "Query",
+        name: 'segmentation_id',
+        type: 'Query',
         schema: z.string().uuid().optional(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
+      },
+      {
+        name: 'type',
+        type: 'Query',
+        schema: z.string().optional(),
       },
     ],
     response: ThumbnailList,
@@ -448,21 +466,100 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "post",
-    path: "/files/:file_id/frames",
-    alias: "createFileFrameExtraction",
-    description: `Create a new frame extraction for a file using the specified frame extraction configuration. This is an async operation that returns immediately with a &#x27;pending&#x27; status. Results are cached, so identical requests will return the same frame extraction.`,
-    requestFormat: "json",
+    method: 'get',
+    path: '/files/:file_id/segments/:segment_id',
+    alias: 'getFileSegment',
+    description: `Get a file segment`,
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'file_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+      {
+        name: 'segment_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+    ],
+    response: FileSegment,
+    errors: [
+      {
+        status: 404,
+        description: `File segment not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'put',
+    path: '/files/:file_id/segments/:segment_id',
+    alias: 'updateFileSegment',
+    description: `Update a file segment`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        description: `File segment update parameters`,
+        type: 'Body',
+        schema: z
+          .object({ metadata: z.object({}).partial().strict().passthrough() })
+          .partial()
+          .strict()
+          .passthrough(),
+      },
+      {
+        name: 'file_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+      {
+        name: 'segment_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+    ],
+    response: FileSegment,
+    errors: [
+      {
+        status: 400,
+        description: `Invalid request or malformed file segment update parameters`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 404,
+        description: `File segment not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/files/:file_id/frames',
+    alias: 'createFileFrameExtraction',
+    description: `Create a new frame extraction for a file using the specified frame extraction configuration. This is an async operation that returns immediately with a &#x27;pending&#x27; status. Results are cached, so identical requests will return the same frame extraction.`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
         description: `Frame extraction configuration`,
-        type: "Body",
+        type: 'Body',
         schema: createFileFrameExtraction_Body,
       },
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
     ],
@@ -486,25 +583,25 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/files/:file_id/frames",
-    alias: "listFileFrameExtractions",
+    method: 'get',
+    path: '/files/:file_id/frames',
+    alias: 'listFileFrameExtractions',
     description: `List all frame extractions for a specific file`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "file_id",
-        type: "Path",
+        name: 'file_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
       },
     ],
@@ -524,7 +621,7 @@ const endpoints = makeApi([
   },
 ]);
 
-export const FilesApi = new Zodios("https://api.cloudglue.dev/v1", endpoints);
+export const FilesApi = new Zodios('https://api.cloudglue.dev/v1', endpoints);
 
 export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
   return new Zodios(baseUrl, endpoints, options);

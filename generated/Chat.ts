@@ -1,9 +1,9 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
-import { DescribeOutput } from "./common";
-import { DescribeOutputPart } from "./common";
-import { SpeechOutputPart } from "./common";
+import { DescribeOutput } from './common';
+import { DescribeOutputPart } from './common';
+import { SpeechOutputPart } from './common';
 
 type ChatCompletionResponse = Partial<{
   id: string;
@@ -40,7 +40,7 @@ type ChatCompletionResponse = Partial<{
   }>;
 }>;
 type ChatCompletionRequest = {
-  model: "nimbus-001";
+  model: 'nimbus-001';
   messages: Array<ChatMessage>;
   collections: Array<string>;
   filter?:
@@ -48,39 +48,39 @@ type ChatCompletionRequest = {
         metadata: Array<{
           path: string;
           operator:
-            | "NotEqual"
-            | "Equal"
-            | "LessThan"
-            | "GreaterThan"
-            | "In"
-            | "ContainsAny"
-            | "ContainsAll";
+            | 'NotEqual'
+            | 'Equal'
+            | 'LessThan'
+            | 'GreaterThan'
+            | 'In'
+            | 'ContainsAny'
+            | 'ContainsAll';
           valueText?: string | undefined;
           valueTextArray?: Array<string> | undefined;
         }>;
         video_info: Array<{
           path: string;
           operator:
-            | "NotEqual"
-            | "Equal"
-            | "LessThan"
-            | "GreaterThan"
-            | "In"
-            | "ContainsAny"
-            | "ContainsAll";
+            | 'NotEqual'
+            | 'Equal'
+            | 'LessThan'
+            | 'GreaterThan'
+            | 'In'
+            | 'ContainsAny'
+            | 'ContainsAll';
           valueText?: string | undefined;
           valueTextArray?: Array<string> | undefined;
         }>;
         file: Array<{
           path: string;
           operator:
-            | "NotEqual"
-            | "Equal"
-            | "LessThan"
-            | "GreaterThan"
-            | "In"
-            | "ContainsAny"
-            | "ContainsAll";
+            | 'NotEqual'
+            | 'Equal'
+            | 'LessThan'
+            | 'GreaterThan'
+            | 'In'
+            | 'ContainsAny'
+            | 'ContainsAll';
           valueText?: string | undefined;
           valueTextArray?: Array<string> | undefined;
         }>;
@@ -89,14 +89,14 @@ type ChatCompletionRequest = {
   temperature?: number | undefined;
 };
 type ChatMessage = {
-  role: "system" | "user" | "assistant";
+  role: 'system' | 'user' | 'assistant';
   content: string;
   name?: string | undefined;
 };
 
 const ChatMessage: z.ZodType<ChatMessage> = z
   .object({
-    role: z.enum(["system", "user", "assistant"]),
+    role: z.enum(['system', 'user', 'assistant']),
     content: z.string(),
     name: z.string().optional(),
   })
@@ -104,7 +104,7 @@ const ChatMessage: z.ZodType<ChatMessage> = z
   .passthrough();
 const ChatCompletionRequest: z.ZodType<ChatCompletionRequest> = z
   .object({
-    model: z.literal("nimbus-001"),
+    model: z.literal('nimbus-001'),
     messages: z.array(ChatMessage),
     collections: z.array(z.string()).min(1).max(1),
     filter: z
@@ -114,13 +114,13 @@ const ChatCompletionRequest: z.ZodType<ChatCompletionRequest> = z
             .object({
               path: z.string(),
               operator: z.enum([
-                "NotEqual",
-                "Equal",
-                "LessThan",
-                "GreaterThan",
-                "In",
-                "ContainsAny",
-                "ContainsAll",
+                'NotEqual',
+                'Equal',
+                'LessThan',
+                'GreaterThan',
+                'In',
+                'ContainsAny',
+                'ContainsAll',
               ]),
               valueText: z.string().optional(),
               valueTextArray: z.array(z.string()).optional(),
@@ -133,13 +133,13 @@ const ChatCompletionRequest: z.ZodType<ChatCompletionRequest> = z
             .object({
               path: z.string(),
               operator: z.enum([
-                "NotEqual",
-                "Equal",
-                "LessThan",
-                "GreaterThan",
-                "In",
-                "ContainsAny",
-                "ContainsAll",
+                'NotEqual',
+                'Equal',
+                'LessThan',
+                'GreaterThan',
+                'In',
+                'ContainsAny',
+                'ContainsAll',
               ]),
               valueText: z.string().optional(),
               valueTextArray: z.array(z.string()).optional(),
@@ -152,13 +152,13 @@ const ChatCompletionRequest: z.ZodType<ChatCompletionRequest> = z
             .object({
               path: z.string(),
               operator: z.enum([
-                "NotEqual",
-                "Equal",
-                "LessThan",
-                "GreaterThan",
-                "In",
-                "ContainsAny",
-                "ContainsAll",
+                'NotEqual',
+                'Equal',
+                'LessThan',
+                'GreaterThan',
+                'In',
+                'ContainsAny',
+                'ContainsAll',
               ]),
               valueText: z.string().optional(),
               valueTextArray: z.array(z.string()).optional(),
@@ -236,16 +236,16 @@ export const schemas = {
 
 const endpoints = makeApi([
   {
-    method: "post",
-    path: "/chat/completions",
-    alias: "createCompletion",
+    method: 'post',
+    path: '/chat/completions',
+    alias: 'createCompletion',
     description: `Generate a model response to a conversation that can include references to video content`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Chat completion parameters`,
-        type: "Body",
+        type: 'Body',
         schema: ChatCompletionRequest,
       },
     ],
@@ -275,7 +275,7 @@ const endpoints = makeApi([
   },
 ]);
 
-export const ChatApi = new Zodios("https://api.cloudglue.dev/v1", endpoints);
+export const ChatApi = new Zodios('https://api.cloudglue.dev/v1', endpoints);
 
 export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
   return new Zodios(baseUrl, endpoints, options);

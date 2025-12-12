@@ -1,19 +1,20 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
-import { DescribeOutput } from "./common";
-import { DescribeOutputPart } from "./common";
-import { SpeechOutputPart } from "./common";
-import { ThumbnailsConfig } from "./common";
-import { FileSegmentationConfig } from "./common";
-import { SegmentationConfig } from "./common";
-import { SegmentationUniformConfig } from "./common";
-import { SegmentationShotDetectorConfig } from "./common";
-import { SegmentationManualConfig } from "./common";
+import { DescribeOutput } from './common';
+import { DescribeOutputPart } from './common';
+import { SpeechOutputPart } from './common';
+import { ThumbnailsConfig } from './common';
+import { FileSegmentationConfig } from './common';
+import { SegmentationConfig } from './common';
+import { SegmentationUniformConfig } from './common';
+import { SegmentationShotDetectorConfig } from './common';
+import { SegmentationManualConfig } from './common';
+import { KeyframeConfig } from './common';
 
 type Describe = {
   job_id: string;
-  status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
   url?: string | undefined;
   duration_seconds?: number | undefined;
   created_at?: number | undefined;
@@ -54,7 +55,7 @@ type NewDescribe = {
   thumbnails_config?: ThumbnailsConfig | undefined;
 } & FileSegmentationConfig;
 type DescribeList = {
-  object: "list";
+  object: 'list';
   data: Array<Describe>;
   total: number;
   limit: number;
@@ -77,11 +78,11 @@ const Describe: z.ZodType<Describe> = z
   .object({
     job_id: z.string(),
     status: z.enum([
-      "pending",
-      "processing",
-      "completed",
-      "failed",
-      "not_applicable",
+      'pending',
+      'processing',
+      'completed',
+      'failed',
+      'not_applicable',
     ]),
     url: z.string().optional(),
     duration_seconds: z.number().optional(),
@@ -127,7 +128,7 @@ const Describe: z.ZodType<Describe> = z
   .passthrough();
 const DescribeList: z.ZodType<DescribeList> = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(Describe),
     total: z.number().int(),
     limit: z.number().int(),
@@ -143,16 +144,16 @@ export const schemas = {
 
 const endpoints = makeApi([
   {
-    method: "post",
-    path: "/describe",
-    alias: "createDescribe",
+    method: 'post',
+    path: '/describe',
+    alias: 'createDescribe',
     description: `Get a comprehensive multimodal description of a video`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Media description job parameters`,
-        type: "Body",
+        type: 'Body',
         schema: NewDescribe,
       },
     ],
@@ -181,58 +182,58 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/describe",
-    alias: "listDescribes",
+    method: 'get',
+    path: '/describe',
+    alias: 'listDescribes',
     description: `List all media description jobs with optional filtering`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(20),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "status",
-        type: "Query",
+        name: 'status',
+        type: 'Query',
         schema: z
           .enum([
-            "pending",
-            "processing",
-            "completed",
-            "failed",
-            "not_applicable",
+            'pending',
+            'processing',
+            'completed',
+            'failed',
+            'not_applicable',
           ])
           .optional(),
       },
       {
-        name: "created_before",
-        type: "Query",
+        name: 'created_before',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "created_after",
-        type: "Query",
+        name: 'created_after',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "url",
-        type: "Query",
+        name: 'url',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "response_format",
-        type: "Query",
-        schema: z.enum(["json", "markdown"]).optional().default("json"),
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
       },
       {
-        name: "include_data",
-        type: "Query",
+        name: 'include_data',
+        type: 'Query',
         schema: z.boolean().optional().default(true),
       },
     ],
@@ -251,30 +252,30 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/describe/:job_id",
-    alias: "getDescribe",
+    method: 'get',
+    path: '/describe/:job_id',
+    alias: 'getDescribe',
     description: `Retrieve the current state of a media description job`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "job_id",
-        type: "Path",
+        name: 'job_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "response_format",
-        type: "Query",
-        schema: z.enum(["json", "markdown"]).optional().default("json"),
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
       },
       {
-        name: "start_time_seconds",
-        type: "Query",
+        name: 'start_time_seconds',
+        type: 'Query',
         schema: z.number().optional(),
       },
       {
-        name: "end_time_seconds",
-        type: "Query",
+        name: 'end_time_seconds',
+        type: 'Query',
         schema: z.number().optional(),
       },
     ],
@@ -293,15 +294,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/describe/:job_id",
-    alias: "deleteDescribe",
+    method: 'delete',
+    path: '/describe/:job_id',
+    alias: 'deleteDescribe',
     description: `Delete a media description job`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "job_id",
-        type: "Path",
+        name: 'job_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -322,7 +323,7 @@ const endpoints = makeApi([
 ]);
 
 export const DescribeApi = new Zodios(
-  "https://api.cloudglue.dev/v1",
+  'https://api.cloudglue.dev/v1',
   endpoints
 );
 

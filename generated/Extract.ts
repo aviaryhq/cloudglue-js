@@ -1,16 +1,17 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
-import { ThumbnailsConfig } from "./common";
-import { FileSegmentationConfig } from "./common";
-import { SegmentationConfig } from "./common";
-import { SegmentationUniformConfig } from "./common";
-import { SegmentationShotDetectorConfig } from "./common";
-import { SegmentationManualConfig } from "./common";
+import { ThumbnailsConfig } from './common';
+import { FileSegmentationConfig } from './common';
+import { SegmentationConfig } from './common';
+import { SegmentationUniformConfig } from './common';
+import { SegmentationShotDetectorConfig } from './common';
+import { SegmentationManualConfig } from './common';
+import { KeyframeConfig } from './common';
 
 type Extract = {
   job_id: string;
-  status: "pending" | "processing" | "completed" | "failed" | "not_applicable";
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
   url?: string | undefined;
   created_at?: number | undefined;
   extract_config?:
@@ -48,7 +49,7 @@ type NewExtract = {
   thumbnails_config?: ThumbnailsConfig | undefined;
 } & FileSegmentationConfig;
 type ExtractList = {
-  object: "list";
+  object: 'list';
   data: Array<Extract>;
   total: number;
   limit: number;
@@ -59,11 +60,11 @@ const Extract: z.ZodType<Extract> = z
   .object({
     job_id: z.string(),
     status: z.enum([
-      "pending",
-      "processing",
-      "completed",
-      "failed",
-      "not_applicable",
+      'pending',
+      'processing',
+      'completed',
+      'failed',
+      'not_applicable',
     ]),
     url: z.string().optional(),
     created_at: z.number().int().optional(),
@@ -107,7 +108,7 @@ const Extract: z.ZodType<Extract> = z
   .passthrough();
 const ExtractList: z.ZodType<ExtractList> = z
   .object({
-    object: z.literal("list"),
+    object: z.literal('list'),
     data: z.array(Extract),
     total: z.number().int(),
     limit: z.number().int(),
@@ -136,16 +137,16 @@ export const schemas = {
 
 const endpoints = makeApi([
   {
-    method: "post",
-    path: "/extract",
-    alias: "createExtract",
+    method: 'post',
+    path: '/extract',
+    alias: 'createExtract',
     description: `Extract structured data from a video`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "body",
+        name: 'body',
         description: `Extract job parameters`,
-        type: "Body",
+        type: 'Body',
         schema: NewExtract,
       },
     ],
@@ -174,53 +175,53 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/extract",
-    alias: "listExtracts",
+    method: 'get',
+    path: '/extract',
+    alias: 'listExtracts',
     description: `List all extract jobs with optional filtering`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().optional().default(0),
       },
       {
-        name: "status",
-        type: "Query",
+        name: 'status',
+        type: 'Query',
         schema: z
           .enum([
-            "pending",
-            "processing",
-            "completed",
-            "failed",
-            "not_applicable",
+            'pending',
+            'processing',
+            'completed',
+            'failed',
+            'not_applicable',
           ])
           .optional(),
       },
       {
-        name: "created_before",
-        type: "Query",
+        name: 'created_before',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "created_after",
-        type: "Query",
+        name: 'created_after',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "url",
-        type: "Query",
+        name: 'url',
+        type: 'Query',
         schema: z.string().optional(),
       },
       {
-        name: "include_data",
-        type: "Query",
+        name: 'include_data',
+        type: 'Query',
         schema: z.boolean().optional().default(true),
       },
     ],
@@ -249,25 +250,25 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "get",
-    path: "/extract/:job_id",
-    alias: "getExtract",
+    method: 'get',
+    path: '/extract/:job_id',
+    alias: 'getExtract',
     description: `Retrieve the current state of an extraction job. Results are paginated with a default limit of 50 segment entities per request (maximum 100). Use limit and offset parameters to paginate through all segment entities.`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "job_id",
-        type: "Path",
+        name: 'job_id',
+        type: 'Path',
         schema: z.string(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
       },
     ],
@@ -286,15 +287,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/extract/:job_id",
-    alias: "deleteExtract",
+    method: 'delete',
+    path: '/extract/:job_id',
+    alias: 'deleteExtract',
     description: `Delete an extraction job`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "job_id",
-        type: "Path",
+        name: 'job_id',
+        type: 'Path',
         schema: z.string(),
       },
     ],
@@ -314,7 +315,7 @@ const endpoints = makeApi([
   },
 ]);
 
-export const ExtractApi = new Zodios("https://api.cloudglue.dev/v1", endpoints);
+export const ExtractApi = new Zodios('https://api.cloudglue.dev/v1', endpoints);
 
 export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
   return new Zodios(baseUrl, endpoints, options);

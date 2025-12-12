@@ -1,32 +1,32 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
 
-import { FrameExtraction } from "./common";
-import { FrameExtractionConfig } from "./common";
-import { FrameExtractionUniformConfig } from "./common";
-import { FrameExtractionThumbnailsConfig } from "./common";
+import { FrameExtraction } from './common';
+import { FrameExtractionConfig } from './common';
+import { FrameExtractionUniformConfig } from './common';
+import { FrameExtractionThumbnailsConfig } from './common';
 
 const endpoints = makeApi([
   {
-    method: "get",
-    path: "/frames/:frame_extraction_id",
-    alias: "getFrameExtraction",
+    method: 'get',
+    path: '/frames/:frame_extraction_id',
+    alias: 'getFrameExtraction',
     description: `Retrieve details about a specific frame extraction including its frames`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "frame_extraction_id",
-        type: "Path",
+        name: 'frame_extraction_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
       {
-        name: "limit",
-        type: "Query",
+        name: 'limit',
+        type: 'Query',
         schema: z.number().int().gte(1).lte(100).optional().default(50),
       },
       {
-        name: "offset",
-        type: "Query",
+        name: 'offset',
+        type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
       },
     ],
@@ -45,15 +45,15 @@ const endpoints = makeApi([
     ],
   },
   {
-    method: "delete",
-    path: "/frames/:frame_extraction_id",
-    alias: "deleteFrameExtraction",
+    method: 'delete',
+    path: '/frames/:frame_extraction_id',
+    alias: 'deleteFrameExtraction',
     description: `Delete a specific frame extraction`,
-    requestFormat: "json",
+    requestFormat: 'json',
     parameters: [
       {
-        name: "frame_extraction_id",
-        type: "Path",
+        name: 'frame_extraction_id',
+        type: 'Path',
         schema: z.string().uuid(),
       },
     ],
@@ -73,7 +73,7 @@ const endpoints = makeApi([
   },
 ]);
 
-export const FramesApi = new Zodios("https://api.cloudglue.dev/v1", endpoints);
+export const FramesApi = new Zodios('https://api.cloudglue.dev/v1', endpoints);
 
 export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
   return new Zodios(baseUrl, endpoints, options);

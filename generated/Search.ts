@@ -33,9 +33,14 @@ type SearchRequest = Partial<{
   group_by_key: 'file';
   sort_by: 'score' | 'item_count';
   search_modalities: SearchModalities;
+  label_filters: Array<string>;
 }>;
 type SearchModalities = Array<
-  'general_content' | 'speech_lexical' | 'ocr_lexical'
+  | 'general_content'
+  | 'speech_lexical'
+  | 'ocr_lexical'
+  | 'tag_semantic'
+  | 'tag_lexical'
 >;
 type FileSearchResult = {
   type: 'file';
@@ -47,7 +52,13 @@ type FileSearchResult = {
   summary?: (string | null) | undefined;
   generated_title?: (string | null) | undefined;
   thumbnail_url?: string | undefined;
+  tag?: SearchTagResponse | undefined;
 };
+type SearchTagResponse = Partial<{
+  id: string;
+  value: string;
+  label: string;
+}>;
 type SegmentSearchResult = {
   type: 'segment';
   file_id: string;
@@ -88,6 +99,8 @@ type SegmentSearchResult = {
       >
     | undefined;
   thumbnail_url?: string | undefined;
+  tag?: SearchTagResponse | undefined;
+  metadata?: {} | undefined;
   keyframes?:
     | Array<
         Partial<{
@@ -130,7 +143,12 @@ type FaceGroupResult = {
   best_score: number;
 };
 type SearchFilter = Partial<{
-  metadata: Array<SearchFilterCriteria>;
+  metadata: Array<
+    SearchFilterCriteria &
+      Partial<{
+        scope: 'file' | 'segment';
+      }>
+  >;
   video_info: Array<
     SearchFilterCriteria &
       Partial<{
@@ -196,7 +214,15 @@ const SearchFilterCriteria: z.ZodType<SearchFilterCriteria> = z
   .passthrough();
 const SearchFilter: z.ZodType<SearchFilter> = z
   .object({
-    metadata: z.array(SearchFilterCriteria),
+    metadata: z.array(
+      SearchFilterCriteria.and(
+        z
+          .object({ scope: z.enum(['file', 'segment']).default('file') })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+    ),
     video_info: z.array(
       SearchFilterCriteria.and(
         z
@@ -222,7 +248,13 @@ const SearchFilter: z.ZodType<SearchFilter> = z
   .strict()
   .passthrough();
 const SearchModalities = z.array(
-  z.enum(['general_content', 'speech_lexical', 'ocr_lexical'])
+  z.enum([
+    'general_content',
+    'speech_lexical',
+    'ocr_lexical',
+    'tag_semantic',
+    'tag_lexical',
+  ])
 );
 const SearchRequest: z.ZodType<SearchRequest> = z
   .object({
@@ -240,6 +272,7 @@ const SearchRequest: z.ZodType<SearchRequest> = z
     group_by_key: z.literal('file'),
     sort_by: z.enum(['score', 'item_count']).default('score'),
     search_modalities: SearchModalities,
+    label_filters: z.array(z.string()),
   })
   .partial()
   .strict()
@@ -269,6 +302,11 @@ const SearchResponseList: z.ZodType<SearchResponseList> = z
   })
   .strict()
   .passthrough();
+const SearchTagResponse: z.ZodType<SearchTagResponse> = z
+  .object({ id: z.string().uuid(), value: z.string(), label: z.string() })
+  .partial()
+  .strict()
+  .passthrough();
 const FileSearchResult: z.ZodType<FileSearchResult> = z
   .object({
     type: z.literal('file'),
@@ -280,6 +318,7 @@ const FileSearchResult: z.ZodType<FileSearchResult> = z
     summary: z.string().nullish(),
     generated_title: z.string().nullish(),
     thumbnail_url: z.string().url().optional(),
+    tag: SearchTagResponse.optional(),
   })
   .strict()
   .passthrough();
@@ -336,6 +375,8 @@ const SegmentSearchResult: z.ZodType<SegmentSearchResult> = z
       )
       .optional(),
     thumbnail_url: z.string().url().optional(),
+    tag: SearchTagResponse.optional(),
+    metadata: z.object({}).partial().strict().passthrough().optional(),
     keyframes: z
       .array(
         z
@@ -424,6 +465,7 @@ export const schemas = {
   SearchModalities,
   SearchRequest,
   SearchResponseList,
+  SearchTagResponse,
   FileSearchResult,
   SegmentSearchResult,
   FaceSearchResult,

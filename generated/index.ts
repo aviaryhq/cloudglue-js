@@ -1,3 +1,4 @@
+export { TagsApi } from './Tags';
 export { ExtractApi } from './Extract';
 export { FilesApi } from './Files';
 export { CollectionsApi } from './Collections';

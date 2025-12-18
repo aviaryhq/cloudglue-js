@@ -13,8 +13,10 @@ import { createApiClient as createWebhooksApiClient } from '../generated/Webhook
 import { createApiClient as createFramesApiClient } from '../generated/Frames';
 import { createApiClient as createFaceDetectionApiClient } from '../generated/Face_Detection';
 import { createApiClient as createFaceMatchApiClient } from '../generated/Face_Match';
+import { createApiClient as createTagsApiClient } from '../generated/Tags';
 import { ZodiosOptions } from '@zodios/core';
 import { EnhancedWebhooksApi } from './api/webhooks.api';
+import { EnhancedTagsApi } from './api/tags.api';
 import { CloudGlueError } from './error';
 import { EnhancedFilesApi } from './api/files.api';
 import { EnhancedDescribeApi } from './api/describe.api';
@@ -111,6 +113,12 @@ export class CloudGlue {
    */
   public readonly webhooks: EnhancedWebhooksApi;
 
+  /**
+   * Tags API for managing tags
+   * Provides methods for creating and managing tags
+   */
+  public readonly tags: EnhancedTagsApi;
+
   constructor(config: CloudGlueConfig = {}) {
     this.apiKey = config.apiKey || process.env.CLOUDGLUE_API_KEY || '';
     this.baseUrl = config.baseUrl || 'https://api.cloudglue.dev/v1';
@@ -161,6 +169,7 @@ export class CloudGlue {
     );
     const faceMatchApi = createFaceMatchApiClient(this.baseUrl, sharedConfig);
     const webhooksApi = createWebhooksApiClient(this.baseUrl, sharedConfig);
+    const tagsApi = createTagsApiClient(this.baseUrl, sharedConfig);
     // Configure base URL and axios config for all clients
     [
       filesApi,
@@ -176,6 +185,7 @@ export class CloudGlue {
       faceDetectionApi,
       faceMatchApi,
       webhooksApi,
+      tagsApi,
     ].forEach((client) => {
       Object.assign(client.axios.defaults, axiosConfig);
 
@@ -238,5 +248,6 @@ export class CloudGlue {
     this.faceDetection = new EnhancedFaceDetectionApi(faceDetectionApi);
     this.faceMatch = new EnhancedFaceMatchApi(faceMatchApi);
     this.webhooks = new EnhancedWebhooksApi(webhooksApi);
+    this.tags = new EnhancedTagsApi(tagsApi);
   }
 }

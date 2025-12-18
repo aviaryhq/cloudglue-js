@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 
 // Import schemas from generated files
+import { ListVideoTagsResponse, VideoTag } from '../generated/common';
 import { schemas as collectionsSchemas } from '../generated/Collections';
 import { schemas as chatSchemas } from '../generated/Chat';
 import { schemas as transcribeSchemas } from '../generated/Transcribe';
@@ -18,6 +19,7 @@ import { FrameExtraction } from '../generated/common';
 import { schemas as faceDetectionSchemas } from '../generated/Face_Detection';
 import { schemas as faceMatchSchemas } from '../generated/Face_Match';
 import { FilterOperator } from './enums';
+import { schemas as tagsSchemas } from '../generated/Tags';
 
 /**
  * Represents a video file in the Cloudglue system
@@ -365,3 +367,12 @@ export type WaitForReadyOptions = {
 };
 
 export type ThumbnailType = 'segment' | 'keyframe' | 'file' | 'frame';
+
+export type CreateVideoTagParams = z.infer<
+  typeof tagsSchemas.CreateVideoTagRequest
+>;
+export type UpdateVideoTagParams = z.infer<
+  typeof tagsSchemas.UpdateVideoTagRequest
+>;
+
+export type { ListVideoTagsResponse, VideoTag };

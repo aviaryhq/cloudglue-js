@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
 import { z } from 'zod';
 import { File as CloudglueFile } from "./common";
-import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, SegmentationManualConfig, KeyframeConfig, ThumbnailsConfig, Shot, ThumbnailList, Thumbnail, ThumbnailType, FrameExtraction, FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from "./common";
+import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, SegmentationManualConfig, KeyframeConfig, ThumbnailsConfig, Shot, ThumbnailList, Thumbnail, ThumbnailType, ListVideoTagsResponse, PaginationResponse, VideoTag, FrameExtraction, FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from "./common";
 
 type FileList = {
   object: 'list';
@@ -467,6 +467,21 @@ const endpoints = makeApi([
   },
   {
     method: 'get',
+    path: '/files/:file_id/tags',
+    alias: 'listFileTags',
+    description: `List all tags for a specific file`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'file_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+    ],
+    response: ListVideoTagsResponse,
+  },
+  {
+    method: 'get',
     path: '/files/:file_id/segments/:segment_id',
     alias: 'getFileSegment',
     description: `Get a file segment`,
@@ -543,6 +558,26 @@ const endpoints = makeApi([
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],
+  },
+  {
+    method: 'get',
+    path: '/files/:file_id/segments/:segment_id/tags',
+    alias: 'listFileSegmentTags',
+    description: `List all tags for a specific file segment`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'file_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+      {
+        name: 'segment_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+    ],
+    response: ListVideoTagsResponse,
   },
   {
     method: 'post',

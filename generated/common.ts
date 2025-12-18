@@ -179,7 +179,52 @@ export type FaceBoundingBox = {
   top: number;
   left: number;
 };
+export type ListVideoTagsResponse = PaginationResponse &
+  Partial<{
+    data: Array<VideoTag>;
+  }>;
+export type PaginationResponse = {
+  object: 'list';
+  total: number;
+  limit: number;
+  offset: number;
+};
+export type VideoTag = {
+  id: string;
+  label: string;
+  value: string;
+  type: 'file' | 'segment';
+  file_id: string;
+  segment_id?: string | undefined;
+};
 
+export const VideoTag = z
+  .object({
+    id: z.string().uuid(),
+    label: z.string(),
+    value: z.string(),
+    type: z.enum(['file', 'segment']),
+    file_id: z.string().uuid(),
+    segment_id: z.string().uuid().optional(),
+  })
+  .strict()
+  .passthrough();
+export const PaginationResponse = z
+  .object({
+    object: z.literal('list'),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
+export const ListVideoTagsResponse = PaginationResponse.and(
+  z
+    .object({ data: z.array(VideoTag) })
+    .partial()
+    .strict()
+    .passthrough()
+);
 export const ThumbnailsConfig = z
   .object({ enable_segment_thumbnails: z.boolean() })
   .strict()

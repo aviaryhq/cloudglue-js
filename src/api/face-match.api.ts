@@ -37,6 +37,15 @@ export class EnhancedFaceMatchApi {
     });
   }
 
+  async listFaceMatches(
+    params: {
+      limit?: number;
+      offset?: number;
+    } = {},
+  ) {
+    return this.api.listFaceMatch({ queries: params });
+  }
+
   async waitForReady(faceMatchId: string, options: WaitForReadyOptions = {}) {
     const { pollingInterval = 5000, maxAttempts = 36 } = options;
     let attempts = 0;

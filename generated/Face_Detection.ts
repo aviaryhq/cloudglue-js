@@ -5,6 +5,7 @@ import { FaceBoundingBox } from './common';
 import { FrameExtractionConfig } from './common';
 import { FrameExtractionUniformConfig } from './common';
 import { FrameExtractionThumbnailsConfig } from './common';
+import { PaginationResponse } from './common';
 
 type FaceDetection = {
   face_detection_id: string;
@@ -34,6 +35,17 @@ type DetectedFace = {
   timestamp: number;
   thumbnail_url?: string | undefined;
 };
+type FaceDetectionListResponse = PaginationResponse &
+  Partial<{
+    data: Array<{
+      job_id: string;
+      frame_extraction_id?: string | undefined;
+      file_id?: string | undefined;
+      status: 'pending' | 'processing' | 'completed' | 'failed';
+      created_at: number;
+      total_faces?: number | undefined;
+    }>;
+  }>;
 
 const FaceDetectionRequest: z.ZodType<FaceDetectionRequest> = z
   .object({
@@ -75,11 +87,34 @@ const FaceDetection: z.ZodType<FaceDetection> = z
   })
   .strict()
   .passthrough();
+const FaceDetectionListResponse: z.ZodType<FaceDetectionListResponse> =
+  PaginationResponse.and(
+    z
+      .object({
+        data: z.array(
+          z
+            .object({
+              job_id: z.string().uuid(),
+              frame_extraction_id: z.string().uuid().optional(),
+              file_id: z.string().uuid().optional(),
+              status: z.enum(['pending', 'processing', 'completed', 'failed']),
+              created_at: z.number(),
+              total_faces: z.number().int().optional(),
+            })
+            .strict()
+            .passthrough()
+        ),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+  );
 
 export const schemas = {
   FaceDetectionRequest,
   DetectedFace,
   FaceDetection,
+  FaceDetectionListResponse,
 };
 
 const endpoints = makeApi([
@@ -120,6 +155,26 @@ const endpoints = makeApi([
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],
+  },
+  {
+    method: 'get',
+    path: '/face-detect',
+    alias: 'listFaceDetection',
+    description: `List all face detection jobs`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: 'offset',
+        type: 'Query',
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+    ],
+    response: FaceDetectionListResponse,
   },
   {
     method: 'get',

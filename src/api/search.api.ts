@@ -8,7 +8,12 @@ export class EnhancedSearchApi {
     return this.api.searchContent(params);
   }
 
-  async listSearchResponses(params: { limit?: number; offset?: number }) {
+  async listSearchResponses(params: {
+    limit?: number;
+    offset?: number;
+    created_before?: string;
+    created_after?: string;
+  }) {
     return this.api.getSearch({
       queries: params,
     });

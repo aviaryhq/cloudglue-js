@@ -38,6 +38,9 @@ export class EnhancedFaceDetectionApi {
     params: {
       limit?: number;
       offset?: number;
+      created_before?: string;
+      created_after?: string;
+      status?: 'pending' | 'processing' | 'completed' | 'failed';
     } = {},
   ) {
     return this.api.listFaceDetection({ queries: params });

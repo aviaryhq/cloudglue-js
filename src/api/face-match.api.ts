@@ -39,8 +39,11 @@ export class EnhancedFaceMatchApi {
 
   async listFaceMatches(
     params: {
-      limit?: number;
       offset?: number;
+      limit?: number;
+      created_before?: string;
+      created_after?: string;
+      status?: 'pending' | 'processing' | 'completed' | 'failed';
     } = {},
   ) {
     return this.api.listFaceMatch({ queries: params });

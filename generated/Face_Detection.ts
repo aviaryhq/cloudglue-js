@@ -173,6 +173,23 @@ const endpoints = makeApi([
         type: 'Query',
         schema: z.number().int().gte(0).optional().default(0),
       },
+      {
+        name: 'created_before',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'created_after',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'status',
+        type: 'Query',
+        schema: z
+          .enum(['pending', 'processing', 'completed', 'failed'])
+          .optional(),
+      },
     ],
     response: FaceDetectionListResponse,
   },

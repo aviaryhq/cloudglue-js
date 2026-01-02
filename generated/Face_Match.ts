@@ -5,6 +5,7 @@ import { FaceBoundingBox } from './common';
 import { FrameExtractionConfig } from './common';
 import { FrameExtractionUniformConfig } from './common';
 import { FrameExtractionThumbnailsConfig } from './common';
+import { PaginationResponse } from './common';
 
 type FaceMatch = {
   face_match_id: string;
@@ -44,6 +45,19 @@ type SourceImage = Partial<{
   url: string;
   base64_image: string;
 }>;
+type FaceMatchListResponse = PaginationResponse &
+  Partial<{
+    data: Array<{
+      job_id: string;
+      face_detection_id?: string | undefined;
+      frame_extraction_id?: string | undefined;
+      file_id?: string | undefined;
+      status: 'pending' | 'processing' | 'completed' | 'failed';
+      created_at: number;
+      source_face_bounding_box?: (FaceBoundingBox | null) | undefined;
+      match_count?: number | undefined;
+    }>;
+  }>;
 
 const SourceImage: z.ZodType<SourceImage> = z
   .object({ url: z.string(), base64_image: z.string() })
@@ -96,12 +110,37 @@ const FaceMatch: z.ZodType<FaceMatch> = z
   })
   .strict()
   .passthrough();
+const FaceMatchListResponse: z.ZodType<FaceMatchListResponse> =
+  PaginationResponse.and(
+    z
+      .object({
+        data: z.array(
+          z
+            .object({
+              job_id: z.string().uuid(),
+              face_detection_id: z.string().uuid().optional(),
+              frame_extraction_id: z.string().uuid().optional(),
+              file_id: z.string().uuid().optional(),
+              status: z.enum(['pending', 'processing', 'completed', 'failed']),
+              created_at: z.number(),
+              source_face_bounding_box: FaceBoundingBox.nullish(),
+              match_count: z.number().int().optional(),
+            })
+            .strict()
+            .passthrough()
+        ),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+  );
 
 export const schemas = {
   SourceImage,
   FaceMatchRequest,
   FaceMatchResult,
   FaceMatch,
+  FaceMatchListResponse,
 };
 
 const endpoints = makeApi([
@@ -142,6 +181,26 @@ const endpoints = makeApi([
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],
+  },
+  {
+    method: 'get',
+    path: '/face-match',
+    alias: 'listFaceMatch',
+    description: `List all face match jobs`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: 'offset',
+        type: 'Query',
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+    ],
+    response: FaceMatchListResponse,
   },
   {
     method: 'get',

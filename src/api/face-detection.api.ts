@@ -34,6 +34,15 @@ export class EnhancedFaceDetectionApi {
     });
   }
 
+  async listFaceDetections(
+    params: {
+      limit?: number;
+      offset?: number;
+    } = {},
+  ) {
+    return this.api.listFaceDetection({ queries: params });
+  }
+
   async waitForReady(
     faceDetectionId: string,
     options: WaitForReadyOptions = {},

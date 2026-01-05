@@ -15,4 +15,20 @@ export class EnhancedChatApi {
       ...params,
     });
   }
+
+  async getCompletion(id: string) {
+    return this.api.getChatCompletion({
+      params: {
+        id,
+      },
+    });
+  }
+
+  async listCompletions(
+    params: z.infer<typeof chatSchemas.ChatCompletionList>,
+  ) {
+    return this.api.listChatCompletions({
+      queries: params,
+    });
+  }
 }

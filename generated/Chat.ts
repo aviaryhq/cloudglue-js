@@ -93,6 +93,27 @@ type ChatMessage = {
   content: string;
   name?: string | undefined;
 };
+type ChatCompletionList = {
+  object: 'list';
+  data: Array<{
+    id: string;
+    created: number;
+    object: 'chat.completion';
+    model: string;
+    usage: Partial<{
+      prompt_tokens: number;
+      completion_tokens: number;
+      total_tokens: number;
+    }>;
+    choices: Array<{
+      index: number;
+      message: ChatMessage;
+    }>;
+  }>;
+  total: number;
+  limit: number;
+  offset: number;
+};
 
 const ChatMessage: z.ZodType<ChatMessage> = z
   .object({
@@ -227,11 +248,47 @@ const ChatCompletionResponse: z.ZodType<ChatCompletionResponse> = z
   .partial()
   .strict()
   .passthrough();
+const ChatCompletionList: z.ZodType<ChatCompletionList> = z
+  .object({
+    object: z.literal('list'),
+    data: z.array(
+      z
+        .object({
+          id: z.string().uuid(),
+          created: z.number(),
+          object: z.literal('chat.completion'),
+          model: z.string(),
+          usage: z
+            .object({
+              prompt_tokens: z.number().int(),
+              completion_tokens: z.number().int(),
+              total_tokens: z.number().int(),
+            })
+            .partial()
+            .strict()
+            .passthrough(),
+          choices: z.array(
+            z
+              .object({ index: z.number().int(), message: ChatMessage })
+              .strict()
+              .passthrough()
+          ),
+        })
+        .strict()
+        .passthrough()
+    ),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
 
 export const schemas = {
   ChatMessage,
   ChatCompletionRequest,
   ChatCompletionResponse,
+  ChatCompletionList,
 };
 
 const endpoints = makeApi([
@@ -269,6 +326,58 @@ const endpoints = makeApi([
       {
         status: 500,
         description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/chat/completions',
+    alias: 'listChatCompletions',
+    description: `List all chat completions with optional filtering`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().lte(100).optional().default(20),
+      },
+      {
+        name: 'offset',
+        type: 'Query',
+        schema: z.number().int().optional().default(0),
+      },
+      {
+        name: 'created_before',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'created_after',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+    ],
+    response: ChatCompletionList,
+  },
+  {
+    method: 'get',
+    path: '/chat/completions/:id',
+    alias: 'getChatCompletion',
+    description: `Retrieve a chat completion`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'id',
+        type: 'Path',
+        schema: z.string(),
+      },
+    ],
+    response: ChatCompletionResponse,
+    errors: [
+      {
+        status: 404,
+        description: `Chat completion not found`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
     ],

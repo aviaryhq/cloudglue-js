@@ -24,9 +24,12 @@ export class EnhancedChatApi {
     });
   }
 
-  async listCompletions(
-    params: z.infer<typeof chatSchemas.ChatCompletionList>,
-  ) {
+  async listCompletions(params: {
+    created_after?: string;
+    created_before?: string;
+    limit?: number;
+    offset?: number;
+  }) {
     return this.api.listChatCompletions({
       queries: params,
     });

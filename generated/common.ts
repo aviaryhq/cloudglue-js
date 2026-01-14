@@ -88,6 +88,40 @@ export type File = {
       )
     | undefined;
 };
+export type SearchFilter = Partial<{
+  metadata: Array<
+    SearchFilterCriteria &
+      Partial<{
+        scope: 'file' | 'segment';
+      }>
+  >;
+  video_info: Array<
+    SearchFilterCriteria &
+      Partial<{
+        path: 'duration_seconds' | 'has_audio';
+      }>
+  >;
+  file: Array<
+    SearchFilterCriteria &
+      Partial<{
+        path: 'bytes' | 'filename' | 'uri' | 'created_at' | 'id';
+      }>
+  >;
+}>;
+export type SearchFilterCriteria = {
+  path: string;
+  operator:
+    | 'NotEqual'
+    | 'Equal'
+    | 'LessThan'
+    | 'GreaterThan'
+    | 'ContainsAny'
+    | 'ContainsAll'
+    | 'In'
+    | 'Like';
+  valueText?: string | undefined;
+  valueTextArray?: Array<string> | undefined;
+};
 export type Segmentation = {
   segmentation_id: string;
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
@@ -423,6 +457,59 @@ export const DescribeOutput = z
     scene_text: z.array(DescribeOutputPart),
     speech: z.array(SpeechOutputPart),
     audio_description: z.array(DescribeOutputPart),
+  })
+  .partial()
+  .strict()
+  .passthrough();
+export const SearchFilterCriteria = z
+  .object({
+    path: z.string(),
+    operator: z.enum([
+      'NotEqual',
+      'Equal',
+      'LessThan',
+      'GreaterThan',
+      'ContainsAny',
+      'ContainsAll',
+      'In',
+      'Like',
+    ]),
+    valueText: z.string().optional(),
+    valueTextArray: z.array(z.string()).optional(),
+  })
+  .strict()
+  .passthrough();
+export const SearchFilter = z
+  .object({
+    metadata: z.array(
+      SearchFilterCriteria.and(
+        z
+          .object({ scope: z.enum(['file', 'segment']).default('file') })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+    ),
+    video_info: z.array(
+      SearchFilterCriteria.and(
+        z
+          .object({ path: z.enum(['duration_seconds', 'has_audio']) })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+    ),
+    file: z.array(
+      SearchFilterCriteria.and(
+        z
+          .object({
+            path: z.enum(['bytes', 'filename', 'uri', 'created_at', 'id']),
+          })
+          .partial()
+          .strict()
+          .passthrough()
+      )
+    ),
   })
   .partial()
   .strict()

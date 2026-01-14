@@ -26,6 +26,22 @@ type SegmentationListItem = {
   thumbnails_config: ThumbnailsConfig;
   total_segments?: number | undefined;
 };
+type FileSegmentListResponse = {
+  object: 'list';
+  data: Array<FileSegment>;
+  total: number;
+  limit: number;
+  offset: number;
+};
+type FileSegment = {
+  id: string;
+  file_id: string;
+  start_time: number;
+  end_time: number;
+  thumbnail_url: string;
+  metadata?: {} | undefined;
+  segmentation_id?: string | undefined;
+};
 type FrameExtractionList = {
   object: 'list';
   data: Array<{
@@ -101,6 +117,28 @@ const FrameExtractionList: z.ZodType<FrameExtractionList> = z
   })
   .strict()
   .passthrough();
+const FileSegment: z.ZodType<FileSegment> = z
+  .object({
+    id: z.string().uuid(),
+    file_id: z.string().uuid(),
+    start_time: z.number(),
+    end_time: z.number(),
+    thumbnail_url: z.string(),
+    metadata: z.object({}).partial().strict().passthrough().optional(),
+    segmentation_id: z.string().uuid().optional(),
+  })
+  .strict()
+  .passthrough();
+const FileSegmentListResponse: z.ZodType<FileSegmentListResponse> = z
+  .object({
+    object: z.literal('list'),
+    data: z.array(FileSegment),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
 const FileUpload = z
   .object({
     file: z.instanceof(File),
@@ -122,18 +160,6 @@ const FileUpdate = z
   .strict()
   .passthrough();
 const createFileSegmentation_Body = SegmentationConfig;
-const FileSegment = z
-  .object({
-    id: z.string().uuid(),
-    file_id: z.string().uuid(),
-    start_time: z.number(),
-    end_time: z.number(),
-    thumbnail_url: z.string(),
-    metadata: z.object({}).partial().strict().passthrough().optional(),
-    segmentation_id: z.string().uuid().optional(),
-  })
-  .strict()
-  .passthrough();
 const createFileFrameExtraction_Body = FrameExtractionConfig;
 
 export const schemas = {
@@ -141,11 +167,12 @@ export const schemas = {
   SegmentationListItem,
   SegmentationList,
   FrameExtractionList,
+  FileSegment,
+  FileSegmentListResponse,
   FileUpload,
   FileDelete,
   FileUpdate,
   createFileSegmentation_Body,
-  FileSegment,
   createFileFrameExtraction_Body,
 };
 
@@ -479,6 +506,41 @@ const endpoints = makeApi([
       },
     ],
     response: ListVideoTagsResponse,
+  },
+  {
+    method: 'get',
+    path: '/files/:file_id/segments',
+    alias: 'listFileSegments',
+    description: `List all segments for a specific file`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'file_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+      {
+        name: 'start_time_after',
+        type: 'Query',
+        schema: z.number().gte(0).optional(),
+      },
+      {
+        name: 'end_time_before',
+        type: 'Query',
+        schema: z.number().gte(0).optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: 'offset',
+        type: 'Query',
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+    ],
+    response: FileSegmentListResponse,
   },
   {
     method: 'get',

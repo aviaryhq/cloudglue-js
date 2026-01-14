@@ -53,4 +53,33 @@ export class EnhancedShareableApi {
       params: { id },
     });
   }
+
+  async getFileShareableAsset(
+    fileId: string,
+    queries: {
+      limit?: number;
+      offset?: number;
+      createdBefore?: string;
+      createdAfter?: string;
+    },
+  ) {
+    return this.api.listShareableAssets({
+      queries: { file_id: fileId, ...queries },
+    });
+  }
+
+  async getFileSegmentShareableAsset(
+    fileId: string,
+    segmentId: string,
+    queries: {
+      limit?: number;
+      offset?: number;
+      createdBefore?: string;
+      createdAfter?: string;
+    },
+  ) {
+    return this.api.listShareableAssets({
+      queries: { file_id: fileId, file_segment_id: segmentId, ...queries },
+    });
+  }
 }

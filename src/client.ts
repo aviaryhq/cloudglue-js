@@ -14,6 +14,7 @@ import { createApiClient as createFramesApiClient } from '../generated/Frames';
 import { createApiClient as createFaceDetectionApiClient } from '../generated/Face_Detection';
 import { createApiClient as createFaceMatchApiClient } from '../generated/Face_Match';
 import { createApiClient as createTagsApiClient } from '../generated/Tags';
+import { createApiClient as createShareableApiClient } from '../generated/Share';
 import { ZodiosOptions } from '@zodios/core';
 import { EnhancedWebhooksApi } from './api/webhooks.api';
 import { EnhancedTagsApi } from './api/tags.api';
@@ -30,6 +31,7 @@ import { EnhancedSegmentsApi } from './api/segments.api';
 import { EnhancedTranscribeApi } from './api/transcribe.api';
 import { EnhancedChatApi } from './api/chat-completion.api';
 import { EnhancedCollectionsApi } from './api/collections.api';
+import { EnhancedShareableApi } from './api/shareable.api';
 
 /**
  * Main CloudGlue client class that provides access to all API functionality
@@ -119,6 +121,12 @@ export class CloudGlue {
    */
   public readonly tags: EnhancedTagsApi;
 
+  /**
+   * Shareable API for managing shareable assets
+   * Provides methods for creating and managing shareable assets
+   */
+  public readonly shareable: EnhancedShareableApi;
+
   constructor(config: CloudGlueConfig = {}) {
     this.apiKey = config.apiKey || process.env.CLOUDGLUE_API_KEY || '';
     this.baseUrl = config.baseUrl || 'https://api.cloudglue.dev/v1';
@@ -170,6 +178,8 @@ export class CloudGlue {
     const faceMatchApi = createFaceMatchApiClient(this.baseUrl, sharedConfig);
     const webhooksApi = createWebhooksApiClient(this.baseUrl, sharedConfig);
     const tagsApi = createTagsApiClient(this.baseUrl, sharedConfig);
+
+    const shareableApi = createShareableApiClient(this.baseUrl, sharedConfig);
     // Configure base URL and axios config for all clients
     [
       filesApi,
@@ -186,6 +196,7 @@ export class CloudGlue {
       faceMatchApi,
       webhooksApi,
       tagsApi,
+      shareableApi,
     ].forEach((client) => {
       Object.assign(client.axios.defaults, axiosConfig);
 
@@ -249,5 +260,6 @@ export class CloudGlue {
     this.faceMatch = new EnhancedFaceMatchApi(faceMatchApi);
     this.webhooks = new EnhancedWebhooksApi(webhooksApi);
     this.tags = new EnhancedTagsApi(tagsApi);
+    this.shareable = new EnhancedShareableApi(shareableApi);
   }
 }

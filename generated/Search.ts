@@ -1,6 +1,9 @@
 import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
 import { z } from 'zod';
 
+import { SearchFilter } from './common';
+import { SearchFilterCriteria } from './common';
+
 type SearchResponse = {
   id: string;
   object: 'search';
@@ -142,40 +145,6 @@ type FaceGroupResult = {
   item_count: number;
   best_score: number;
 };
-type SearchFilter = Partial<{
-  metadata: Array<
-    SearchFilterCriteria &
-      Partial<{
-        scope: 'file' | 'segment';
-      }>
-  >;
-  video_info: Array<
-    SearchFilterCriteria &
-      Partial<{
-        path: 'duration_seconds' | 'has_audio';
-      }>
-  >;
-  file: Array<
-    SearchFilterCriteria &
-      Partial<{
-        path: 'bytes' | 'filename' | 'uri' | 'created_at' | 'id';
-      }>
-  >;
-}>;
-type SearchFilterCriteria = {
-  path: string;
-  operator:
-    | 'NotEqual'
-    | 'Equal'
-    | 'LessThan'
-    | 'GreaterThan'
-    | 'ContainsAny'
-    | 'ContainsAll'
-    | 'In'
-    | 'Like';
-  valueText?: string | undefined;
-  valueTextArray?: Array<string> | undefined;
-};
 type SearchResponseList = {
   object: 'list';
   data: Array<{
@@ -194,59 +163,6 @@ type SearchResponseList = {
   offset: number;
 };
 
-const SearchFilterCriteria: z.ZodType<SearchFilterCriteria> = z
-  .object({
-    path: z.string(),
-    operator: z.enum([
-      'NotEqual',
-      'Equal',
-      'LessThan',
-      'GreaterThan',
-      'ContainsAny',
-      'ContainsAll',
-      'In',
-      'Like',
-    ]),
-    valueText: z.string().optional(),
-    valueTextArray: z.array(z.string()).optional(),
-  })
-  .strict()
-  .passthrough();
-const SearchFilter: z.ZodType<SearchFilter> = z
-  .object({
-    metadata: z.array(
-      SearchFilterCriteria.and(
-        z
-          .object({ scope: z.enum(['file', 'segment']).default('file') })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-    ),
-    video_info: z.array(
-      SearchFilterCriteria.and(
-        z
-          .object({ path: z.enum(['duration_seconds', 'has_audio']) })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-    ),
-    file: z.array(
-      SearchFilterCriteria.and(
-        z
-          .object({
-            path: z.enum(['bytes', 'filename', 'uri', 'created_at', 'id']),
-          })
-          .partial()
-          .strict()
-          .passthrough()
-      )
-    ),
-  })
-  .partial()
-  .strict()
-  .passthrough();
 const SearchModalities = z.array(
   z.enum([
     'general_content',
@@ -460,8 +376,6 @@ const SearchResponse: z.ZodType<SearchResponse> = z
   .passthrough();
 
 export const schemas = {
-  SearchFilterCriteria,
-  SearchFilter,
   SearchModalities,
   SearchRequest,
   SearchResponseList,

@@ -4,11 +4,13 @@ import { z } from 'zod';
 import { DescribeOutput } from './common';
 import { DescribeOutputPart } from './common';
 import { SpeechOutputPart } from './common';
+import { SearchFilter } from './common';
+import { SearchFilterCriteria } from './common';
 
 type ChatCompletionResponse = Partial<{
   id: string;
   object: string;
-  created: number;
+  created_at: number;
   model: string;
   choices: Array<
     Partial<{
@@ -33,6 +35,7 @@ type ChatCompletionResponse = Partial<{
       >;
     }>
   >;
+  payload: ChatCompletionPayload;
   usage: Partial<{
     prompt_tokens: number;
     completion_tokens: number;
@@ -93,11 +96,17 @@ type ChatMessage = {
   content: string;
   name?: string | undefined;
 };
+type ChatCompletionPayload = Partial<{
+  messages: Array<ChatMessage>;
+  temperature: number;
+  filter: SearchFilter;
+  collections: Array<string>;
+}>;
 type ChatCompletionList = {
   object: 'list';
   data: Array<{
     id: string;
-    created: number;
+    created_at: number;
     object: 'chat.completion';
     model: string;
     usage: Partial<{
@@ -109,6 +118,7 @@ type ChatCompletionList = {
       index: number;
       message: ChatMessage;
     }>;
+    payload: ChatCompletionPayload;
   }>;
   total: number;
   limit: number;
@@ -196,11 +206,21 @@ const ChatCompletionRequest: z.ZodType<ChatCompletionRequest> = z
   })
   .strict()
   .passthrough();
+const ChatCompletionPayload: z.ZodType<ChatCompletionPayload> = z
+  .object({
+    messages: z.array(ChatMessage),
+    temperature: z.number(),
+    filter: SearchFilter,
+    collections: z.array(z.string().uuid()),
+  })
+  .partial()
+  .strict()
+  .passthrough();
 const ChatCompletionResponse: z.ZodType<ChatCompletionResponse> = z
   .object({
     id: z.string(),
     object: z.string(),
-    created: z.number().int(),
+    created_at: z.number().int(),
     model: z.string(),
     choices: z.array(
       z
@@ -235,6 +255,7 @@ const ChatCompletionResponse: z.ZodType<ChatCompletionResponse> = z
         .strict()
         .passthrough()
     ),
+    payload: ChatCompletionPayload,
     usage: z
       .object({
         prompt_tokens: z.number().int(),
@@ -255,7 +276,7 @@ const ChatCompletionList: z.ZodType<ChatCompletionList> = z
       z
         .object({
           id: z.string().uuid(),
-          created: z.number(),
+          created_at: z.number(),
           object: z.literal('chat.completion'),
           model: z.string(),
           usage: z
@@ -273,6 +294,7 @@ const ChatCompletionList: z.ZodType<ChatCompletionList> = z
               .strict()
               .passthrough()
           ),
+          payload: ChatCompletionPayload,
         })
         .strict()
         .passthrough()
@@ -287,6 +309,7 @@ const ChatCompletionList: z.ZodType<ChatCompletionList> = z
 export const schemas = {
   ChatMessage,
   ChatCompletionRequest,
+  ChatCompletionPayload,
   ChatCompletionResponse,
   ChatCompletionList,
 };

@@ -20,6 +20,7 @@ import { schemas as faceDetectionSchemas } from '../generated/Face_Detection';
 import { schemas as faceMatchSchemas } from '../generated/Face_Match';
 import { FilterOperator } from './enums';
 import { schemas as tagsSchemas } from '../generated/Tags';
+import { schemas as shareableSchemas } from '../generated/Share';
 
 /**
  * Represents a video file in the Cloudglue system
@@ -201,14 +202,14 @@ export type FaceGroupResult = z.infer<typeof searchSchemas.FaceGroupResult>;
 /**
  * Represents search filter criteria for filtering results
  */
-export type SearchFilterCriteria = z.infer<
-  typeof searchSchemas.SearchFilterCriteria
->;
+export type SearchFilterCriteria = z.infer<typeof searchSchemas.SearchRequest>;
 
 /**
  * Represents search filter options for metadata, video info, and file properties
  */
-export type SearchFilter = z.infer<typeof searchSchemas.SearchFilter>;
+export type SearchFilter = z.infer<
+  typeof searchSchemas.SearchRequest
+>['filter'];
 
 /**
  * Represents the result of a video description request
@@ -376,3 +377,14 @@ export type UpdateVideoTagParams = z.infer<
 >;
 
 export type { ListVideoTagsResponse, VideoTag };
+
+export type ShareableAsset = z.infer<typeof shareableSchemas.ShareableAsset>;
+export type ShareableAssetListResponse = z.infer<
+  typeof shareableSchemas.ShareableAssetListResponse
+>;
+export type CreateShareableAssetRequest = z.infer<
+  typeof shareableSchemas.CreateShareableAssetRequest
+>;
+export type UpdateShareableAssetRequest = z.infer<
+  typeof shareableSchemas.UpdateShareableAssetRequest
+>;

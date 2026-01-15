@@ -20,9 +20,6 @@ export class EnhancedShareableApi {
     title?: string;
     description?: string;
     metadata?: Record<string, unknown>;
-    preview_url?: string;
-    media_download_url: string;
-    media_download_expires_at: Date;
   }) {
     return this.api.createShareableAsset(data);
   }

@@ -4,7 +4,6 @@ export class EnhancedShareableApi {
   constructor(private readonly api: typeof ShareApi) {}
 
   async listShareableAssets(data: {
-    accountId: string;
     limit?: number;
     offset?: number;
     createdBefore?: string;
@@ -21,7 +20,6 @@ export class EnhancedShareableApi {
     title?: string;
     description?: string;
     metadata?: Record<string, unknown>;
-    account_id: string;
     preview_url?: string;
     media_download_url: string;
     media_download_expires_at: Date;

@@ -1,5 +1,5 @@
 import { DescribeApi } from '../../generated';
-import { SegmentationConfig } from '../types';
+import { Modalities, SegmentationConfig } from '../types';
 import { ThumbnailsConfig } from '../../generated/common';
 import { WaitForReadyOptions } from '../types';
 import { CloudGlueError } from '../error';
@@ -32,6 +32,7 @@ export class EnhancedDescribeApi {
       response_format?: 'json' | 'markdown';
       start_time_seconds?: number;
       end_time_seconds?: number;
+      modalities?: Modalities[];
     } = {
       response_format: 'json',
     },
@@ -57,6 +58,7 @@ export class EnhancedDescribeApi {
       url?: string;
       response_format?: 'json' | 'markdown';
       include_data?: boolean;
+      modalities?: Modalities[];
     } = {},
   ) {
     return this.api.listDescribes({ queries: params });

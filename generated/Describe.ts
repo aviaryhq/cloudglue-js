@@ -236,6 +236,23 @@ const endpoints = makeApi([
         type: 'Query',
         schema: z.boolean().optional().default(true),
       },
+      {
+        name: 'modalities',
+        type: 'Query',
+        schema: z
+          .array(
+            z.enum([
+              'speech',
+              'visual_scene_description',
+              'scene_text',
+              'audio_description',
+              'summary',
+              'segment_summary',
+              'title',
+            ])
+          )
+          .optional(),
+      },
     ],
     response: DescribeList,
     errors: [
@@ -277,6 +294,23 @@ const endpoints = makeApi([
         name: 'end_time_seconds',
         type: 'Query',
         schema: z.number().optional(),
+      },
+      {
+        name: 'modalities',
+        type: 'Query',
+        schema: z
+          .array(
+            z.enum([
+              'speech',
+              'visual_scene_description',
+              'scene_text',
+              'audio_description',
+              'summary',
+              'segment_summary',
+              'title',
+            ])
+          )
+          .optional(),
       },
     ],
     response: Describe,

@@ -388,3 +388,5 @@ export type CreateShareableAssetRequest = z.infer<
 export type UpdateShareableAssetRequest = z.infer<
   typeof shareableSchemas.UpdateShareableAssetRequest
 >;
+
+export type Modalities = 'speech' | 'visual_scene_description' | 'scene_text' | 'audio_description' | 'summary' | 'segment_summary' | 'title';

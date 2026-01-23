@@ -85,6 +85,7 @@ export type File = {
         | 'zoom'
         | 'gong'
         | 'recall'
+        | 'gcs'
       )
     | undefined;
 };
@@ -358,6 +359,7 @@ export const File = z
         'zoom',
         'gong',
         'recall',
+        'gcs',
       ])
       .optional(),
   })

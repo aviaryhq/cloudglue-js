@@ -1,5 +1,5 @@
 import { CollectionsApi } from '../../generated';
-import { Filter, SegmentationConfig } from '../types';
+import { Filter, Modalities, SegmentationConfig } from '../types';
 import { ThumbnailsConfig } from '../../generated/common';
 import { CloudGlueError } from '../error';
 import { WaitForReadyOptions } from '../types';
@@ -27,6 +27,7 @@ type ListCollectionEntitiesParams = AddedFilterParams &
 
 type ListCollectionMediaDescriptionsParams = {
   response_format?: 'json' | 'markdown';
+  modalities?: Modalities[];
 } & AddedFilterParams &
   OrderParams &
   PaginationParams;
@@ -176,6 +177,7 @@ export class EnhancedCollectionsApi {
       response_format?: 'markdown' | 'json';
       start_time_seconds?: number;
       end_time_seconds?: number;
+      modalities?: Modalities[];
     } = {},
   ) {
     return this.api.getTranscripts({

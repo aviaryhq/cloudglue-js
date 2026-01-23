@@ -1210,6 +1210,23 @@ const endpoints = makeApi([
         type: 'Query',
         schema: z.number().optional(),
       },
+      {
+        name: 'modalities',
+        type: 'Query',
+        schema: z
+          .array(
+            z.enum([
+              'speech',
+              'visual_scene_description',
+              'scene_text',
+              'audio_description',
+              'summary',
+              'segment_summary',
+              'title',
+            ])
+          )
+          .optional(),
+      },
     ],
     response: RichTranscript,
     errors: [
@@ -1339,6 +1356,23 @@ const endpoints = makeApi([
         type: 'Query',
         schema: z.enum(['json', 'markdown']).optional().default('json'),
       },
+      {
+        name: 'modalities',
+        type: 'Query',
+        schema: z
+          .array(
+            z.enum([
+              'speech',
+              'visual_scene_description',
+              'scene_text',
+              'audio_description',
+              'summary',
+              'segment_summary',
+              'title',
+            ])
+          )
+          .optional(),
+      },
     ],
     response: CollectionRichTranscriptsList,
     errors: [
@@ -1406,6 +1440,23 @@ const endpoints = makeApi([
         type: 'Query',
         schema: z.enum(['json', 'markdown']).optional().default('json'),
       },
+      {
+        name: 'modalities',
+        type: 'Query',
+        schema: z
+          .array(
+            z.enum([
+              'speech',
+              'visual_scene_description',
+              'scene_text',
+              'audio_description',
+              'summary',
+              'segment_summary',
+              'title',
+            ])
+          )
+          .optional(),
+      },
     ],
     response: CollectionMediaDescriptionsList,
     errors: [
@@ -1457,6 +1508,23 @@ const endpoints = makeApi([
         name: 'end_time_seconds',
         type: 'Query',
         schema: z.number().optional(),
+      },
+      {
+        name: 'modalities',
+        type: 'Query',
+        schema: z
+          .array(
+            z.enum([
+              'speech',
+              'visual_scene_description',
+              'scene_text',
+              'audio_description',
+              'summary',
+              'segment_summary',
+              'title',
+            ])
+          )
+          .optional(),
       },
     ],
     response: MediaDescription,

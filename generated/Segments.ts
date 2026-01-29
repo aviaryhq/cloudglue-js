@@ -155,23 +155,28 @@ const endpoints = makeApi([
     method: 'post',
     path: '/segments',
     alias: 'createSegments',
-    description: `Create intelligent video segments based on shot detection or narrative analysis.
+    description: `Create intelligent segments for video or audio files based on shot detection or narrative analysis.
 
-**Note: YouTube URLs are supported for narrative-based segmentation only.** Shot-based segmentation requires direct video file access. Use Cloudglue Files, HTTP URLs, or files from data connectors for shot-based segmentation.
+**Audio File Support:**
+
+- Audio files support **narrative** criteria only (shot detection is not available for audio).
+- Audio files automatically use the &#x27;balanced&#x27; strategy.
+
+**Note: YouTube URLs and audio files are supported for narrative-based segmentation only.** Shot-based segmentation requires direct video file access. Use Cloudglue Files, HTTP URLs, or files from data connectors for shot-based segmentation.
 
 **Narrative Segmentation Strategies:**
 
-- **comprehensive** (default for non-YouTube videos): Uses a VLM to deeply analyze logical segments of video. Only available for non-YouTube videos.
-- **balanced** (default for YouTube videos): Balanced analysis approach using multiple modalities. Supports YouTube URLs.
+- **comprehensive** (default for non-YouTube/non-audio files): Uses a VLM to deeply analyze logical segments of video. Only available for video files (not YouTube or audio).
+- **balanced** (default for YouTube videos and audio files): Balanced analysis approach using multiple modalities. Supports YouTube URLs and audio files.
 
-**YouTube URLs**: Automatically use the &#x27;balanced&#x27; strategy. The strategy field is ignored for YouTube URLs, and other strategies will be rejected with an error.
+**YouTube URLs and Audio Files**: Automatically use the &#x27;balanced&#x27; strategy. The strategy field is ignored, and other strategies will be rejected with an error.
 
 **Chapter Count Parameters:**
 
 - **number_of_chapters**: Target number of chapters. If only this is provided, min_chapters and max_chapters are calculated automatically.
 - **min_chapters**: Minimum number of chapters. If provided with number_of_chapters and max, validates min is less than or equal to number_of_chapters which is less than or equal to max.
 - **max_chapters**: Maximum number of chapters. If provided with number_of_chapters and min, validates min is less than or equal to number_of_chapters which is less than or equal to max.
-- If none are provided, chapter counts are calculated automatically based on video duration.`,
+- If none are provided, chapter counts are calculated automatically based on file duration.`,
     requestFormat: 'json',
     parameters: [
       {

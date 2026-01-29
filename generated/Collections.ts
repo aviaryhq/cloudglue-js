@@ -8,10 +8,10 @@ import { SegmentationManualConfig } from './common';
 import { KeyframeConfig } from './common';
 import { ThumbnailsConfig } from './common';
 import { File } from './common';
-import { FileSegmentationConfig } from './common';
 import { DescribeOutput } from './common';
 import { DescribeOutputPart } from './common';
 import { SpeechOutputPart } from './common';
+import { FileSegmentationConfig } from './common';
 
 type Collection = {
   id: string;
@@ -29,6 +29,7 @@ type Collection = {
         schema: {};
         enable_video_level_entities: boolean;
         enable_segment_level_entities: boolean;
+        enable_transcript_mode: boolean;
       }>
     | undefined;
   transcribe_config?:
@@ -94,6 +95,7 @@ type NewCollection = {
         schema: {};
         enable_video_level_entities: boolean;
         enable_segment_level_entities: boolean;
+        enable_transcript_mode: boolean;
       }>
     | undefined;
   transcribe_config?:
@@ -140,6 +142,13 @@ type CollectionList = {
   limit: number;
   offset: number;
 };
+type CollectionFileList = {
+  object: 'list';
+  data: Array<CollectionFile>;
+  total: number;
+  limit: number;
+  offset: number;
+};
 type CollectionFile = {
   collection_id: string;
   file_id: string;
@@ -160,25 +169,6 @@ type CollectionFile = {
         segmentation_config: SegmentationConfig;
       }
     | undefined;
-};
-type AddCollectionFile = (
-  | {
-      file_id: string;
-    }
-  | {
-      url: string;
-    }
-) &
-  FileSegmentationConfig &
-  Partial<{
-    thumbnails_config: ThumbnailsConfig;
-  }>;
-type CollectionFileList = {
-  object: 'list';
-  data: Array<CollectionFile>;
-  total: number;
-  limit: number;
-  offset: number;
 };
 type RichTranscript = {
   collection_id: string;
@@ -266,6 +256,18 @@ type MediaDescription = {
       >
     | undefined;
 } & DescribeOutput;
+type AddCollectionFile = (
+  | {
+      file_id: string;
+    }
+  | {
+      url: string;
+    }
+) &
+  FileSegmentationConfig &
+  Partial<{
+    thumbnails_config: ThumbnailsConfig;
+  }>;
 
 const Collection: z.ZodType<Collection> = z
   .object({
@@ -285,6 +287,7 @@ const Collection: z.ZodType<Collection> = z
         schema: z.object({}).partial().strict().passthrough(),
         enable_video_level_entities: z.boolean().default(false),
         enable_segment_level_entities: z.boolean().default(true),
+        enable_transcript_mode: z.boolean().default(false),
       })
       .partial()
       .strict()
@@ -387,6 +390,7 @@ const NewCollection: z.ZodType<NewCollection> = z
         schema: z.object({}).partial().strict().passthrough(),
         enable_video_level_entities: z.boolean().default(false),
         enable_segment_level_entities: z.boolean().default(true),
+        enable_transcript_mode: z.boolean().default(false),
       })
       .partial()
       .strict()
@@ -945,44 +949,6 @@ const endpoints = makeApi([
       {
         status: 404,
         description: `Collection not found`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-      {
-        status: 500,
-        description: `An unexpected error occurred on the server`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-    ],
-  },
-  {
-    method: 'post',
-    path: '/collections/:collection_id/videos',
-    alias: 'addVideo',
-    description: `Add a video to a collection`,
-    requestFormat: 'json',
-    parameters: [
-      {
-        name: 'body',
-        description: `File association parameters`,
-        type: 'Body',
-        schema: AddCollectionFile,
-      },
-      {
-        name: 'collection_id',
-        type: 'Path',
-        schema: z.string(),
-      },
-    ],
-    response: CollectionFile,
-    errors: [
-      {
-        status: 400,
-        description: `Invalid request`,
-        schema: z.object({ error: z.string() }).strict().passthrough(),
-      },
-      {
-        status: 404,
-        description: `Collection or file not found`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {
@@ -1584,6 +1550,54 @@ const endpoints = makeApi([
       {
         status: 404,
         description: `Collection, file, or face detection job not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/collections/:collection_id/media',
+    alias: 'addMedia',
+    description: `Add a video or audio file to a collection. This is the recommended endpoint for adding media files to collections.
+
+**Media Type Handling:**
+
+- **Video files**: Processed with full visual analysis (scene description, text extraction, etc.)
+- **Audio files**: Visual features automatically disabled; only speech and audio analysis available
+
+**Audio File Restrictions:**
+
+- Audio files cannot be added to face-analysis collections
+- Shot-detector segmentation is not available for audio files`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        description: `File association parameters`,
+        type: 'Body',
+        schema: AddCollectionFile,
+      },
+      {
+        name: 'collection_id',
+        type: 'Path',
+        schema: z.string(),
+      },
+    ],
+    response: CollectionFile,
+    errors: [
+      {
+        status: 400,
+        description: `Invalid request (e.g., audio files with shot-detector segmentation, audio in face-analysis collections)`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 404,
+        description: `Collection or file not found`,
         schema: z.object({ error: z.string() }).strict().passthrough(),
       },
       {

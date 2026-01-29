@@ -1,21 +1,14 @@
 import { ExtractApi } from '../../generated';
-import { ThumbnailsConfig } from '../../generated/common';
 import { CloudGlueError } from '../error';
-import { SegmentationConfig, WaitForReadyOptions } from '../types';
+import {  WaitForReadyOptions } from '../types';
+import { schemas } from '../../generated/Extract';
+import z from 'zod';
 export class EnhancedExtractApi {
   constructor(private readonly api: typeof ExtractApi) {}
 
   async createExtract(
     url: string,
-    options?: {
-      prompt?: string;
-      schema?: Record<string, any>;
-      enable_video_level_entities?: boolean;
-      enable_segment_level_entities?: boolean;
-      segmentation_config?: SegmentationConfig;
-      segmentation_id?: string;
-      thumbnail_config?: ThumbnailsConfig;
-    },
+    options?: z.infer<typeof schemas.NewExtract>,
   ) {
     return this.api.createExtract({
       url,

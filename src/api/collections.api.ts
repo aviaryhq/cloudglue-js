@@ -85,6 +85,10 @@ export class EnhancedCollectionsApi {
     });
   }
 
+  /**
+   * 
+   * @deprecated Use addMediaByUrl instead
+   */
   async addVideoByUrl({
     collectionId,
     url,
@@ -92,34 +96,54 @@ export class EnhancedCollectionsApi {
   }: {
     collectionId: string;
     url: string;
-    params: {
-      segmentation_config?: SegmentationConfig;
-      segmentation_id?: string;
-      metadata?: Record<string, any>;
-      thumbnail_config?: ThumbnailsConfig;
-    };
+    params: z.infer<typeof collectionsSchemas.AddCollectionFile>;
   }) {
-    return this.api.addVideo(
+    return this.api.addMedia(
       { url, ...params },
       { params: { collection_id: collectionId, ...params } },
     );
   }
 
+  async addMediaByUrl({
+    collectionId,
+    url,
+    params,
+  }: {
+    collectionId: string;
+    url: string;
+    params: z.infer<typeof collectionsSchemas.AddCollectionFile>;
+  }) {
+    return this.api.addMedia(
+      { url, ...params },
+      { params: { collection_id: collectionId, ...params } },
+    );
+  }
+
+  /**
+   * @deprecated Use addMedia instead
+   */
   async addVideo(
     collectionId: string,
     fileId: string,
-    params: {
-      segmentation_config?: SegmentationConfig;
-      segmentation_id?: string;
-      metadata?: Record<string, any>;
-      thumbnail_config?: ThumbnailsConfig;
-    } = {},
+    params: z.infer<typeof collectionsSchemas.AddCollectionFile>,
   ) {
-    return this.api.addVideo(
+    return this.api.addMedia(
       { file_id: fileId, ...params },
       { params: { collection_id: collectionId, ...params } },
     );
   }
+
+  async addMedia(
+    collectionId: string,
+    fileId: string,
+    params: z.infer<typeof collectionsSchemas.AddCollectionFile>,
+  ) {
+    return this.api.addMedia(
+      { file_id: fileId, ...params },
+      { params: { collection_id: collectionId, ...params } },
+    );
+  }
+
 
   async listVideos(
     collectionId: string,

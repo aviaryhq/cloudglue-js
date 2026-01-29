@@ -20,6 +20,7 @@ type Extract = {
         schema: {};
         enable_video_level_entities: boolean;
         enable_segment_level_entities: boolean;
+        enable_transcript_mode: boolean;
       }>
     | undefined;
   segmentation_id?: string | undefined;
@@ -46,6 +47,7 @@ type NewExtract = {
   schema?: {} | undefined;
   enable_video_level_entities?: boolean | undefined;
   enable_segment_level_entities?: boolean | undefined;
+  enable_transcript_mode?: boolean | undefined;
   thumbnails_config?: ThumbnailsConfig | undefined;
 } & FileSegmentationConfig;
 type ExtractList = {
@@ -74,6 +76,7 @@ const Extract: z.ZodType<Extract> = z
         schema: z.object({}).partial().strict().passthrough(),
         enable_video_level_entities: z.boolean().default(false),
         enable_segment_level_entities: z.boolean().default(true),
+        enable_transcript_mode: z.boolean().default(false),
       })
       .partial()
       .strict()
@@ -123,6 +126,7 @@ const NewExtract: z.ZodType<NewExtract> = z
     schema: z.object({}).partial().strict().passthrough().optional(),
     enable_video_level_entities: z.boolean().optional().default(false),
     enable_segment_level_entities: z.boolean().optional().default(true),
+    enable_transcript_mode: z.boolean().optional().default(false),
     thumbnails_config: ThumbnailsConfig.optional(),
   })
   .strict()

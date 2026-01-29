@@ -63,6 +63,19 @@ export type File = {
   filename?: string | undefined;
   uri: string;
   metadata?: ({} | null) | undefined;
+  media_type?: ('video' | 'audio') | undefined;
+  media_info?:
+    | Partial<{
+        duration_seconds: number | null;
+        width: number | null;
+        height: number | null;
+        sample_rate: number | null;
+        channels: number | null;
+        bitrate: number | null;
+        format: string | null;
+        has_audio: boolean | null;
+      }>
+    | undefined;
   video_info?:
     | Partial<{
         duration_seconds: number | null;
@@ -334,6 +347,22 @@ export const File = z
     filename: z.string().optional(),
     uri: z.string(),
     metadata: z.object({}).partial().strict().passthrough().nullish(),
+    media_type: z.enum(['video', 'audio']).optional(),
+    media_info: z
+      .object({
+        duration_seconds: z.number().nullable(),
+        width: z.number().int().nullable(),
+        height: z.number().int().nullable(),
+        sample_rate: z.number().int().nullable(),
+        channels: z.number().int().nullable(),
+        bitrate: z.number().int().nullable(),
+        format: z.string().nullable(),
+        has_audio: z.boolean().nullable(),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .optional(),
     video_info: z
       .object({
         duration_seconds: z.number().nullable(),

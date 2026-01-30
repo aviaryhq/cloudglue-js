@@ -1,7 +1,9 @@
 import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
 import { z } from 'zod';
 
+import { NarrativeConfig } from './common';
 import { Shot } from './common';
+import { Chapter } from './common';
 
 type Segments = {
   job_id: string;
@@ -14,8 +16,10 @@ type Segments = {
   narrative_config?: NarrativeConfig | undefined;
   total_segments?: number | undefined;
   total_shots?: number | undefined;
+  total_chapters?: number | undefined;
   segments?: Array<Segment> | undefined;
   shots?: Array<Shot> | undefined;
+  chapters?: Array<Chapter> | undefined;
 };
 type NewSegments = {
   url: string;
@@ -27,13 +31,6 @@ type ShotConfig = Partial<{
   detector: 'content' | 'adaptive';
   max_duration_seconds: number;
   min_duration_seconds: number;
-}>;
-type NarrativeConfig = Partial<{
-  prompt: string;
-  strategy: 'comprehensive' | 'balanced';
-  number_of_chapters: number;
-  min_chapters: number;
-  max_chapters: number;
 }>;
 type Segment = {
   start_time: number;
@@ -69,17 +66,6 @@ const ShotConfig: z.ZodType<ShotConfig> = z
   .partial()
   .strict()
   .passthrough();
-const NarrativeConfig: z.ZodType<NarrativeConfig> = z
-  .object({
-    prompt: z.string(),
-    strategy: z.enum(['comprehensive', 'balanced']).default('balanced'),
-    number_of_chapters: z.number().int().gte(1),
-    min_chapters: z.number().int().gte(1),
-    max_chapters: z.number().int().gte(1),
-  })
-  .partial()
-  .strict()
-  .passthrough();
 const NewSegments: z.ZodType<NewSegments> = z
   .object({
     url: z.string(),
@@ -111,8 +97,10 @@ const Segments: z.ZodType<Segments> = z
     narrative_config: NarrativeConfig.optional(),
     total_segments: z.number().int().gte(0).optional(),
     total_shots: z.number().int().gte(0).optional(),
+    total_chapters: z.number().int().gte(0).optional(),
     segments: z.array(Segment).optional(),
     shots: z.array(Shot).optional(),
+    chapters: z.array(Chapter).optional(),
   })
   .strict()
   .passthrough();
@@ -142,7 +130,6 @@ const SegmentsList: z.ZodType<SegmentsList> = z
 
 export const schemas = {
   ShotConfig,
-  NarrativeConfig,
   NewSegments,
   Segment,
   Segments,

@@ -15,6 +15,7 @@ import { createApiClient as createFaceDetectionApiClient } from '../generated/Fa
 import { createApiClient as createFaceMatchApiClient } from '../generated/Face_Match';
 import { createApiClient as createTagsApiClient } from '../generated/Tags';
 import { createApiClient as createShareableApiClient } from '../generated/Share';
+import { createApiClient as createResponseApiClient } from '../generated/Response';
 import { ZodiosOptions } from '@zodios/core';
 import { EnhancedWebhooksApi } from './api/webhooks.api';
 import { EnhancedTagsApi } from './api/tags.api';
@@ -32,6 +33,7 @@ import { EnhancedTranscribeApi } from './api/transcribe.api';
 import { EnhancedChatApi } from './api/chat-completion.api';
 import { EnhancedCollectionsApi } from './api/collections.api';
 import { EnhancedShareableApi } from './api/shareable.api';
+import { EnhancedResponseApi } from './api/response.api';
 
 /**
  * Main CloudGlue client class that provides access to all API functionality
@@ -127,6 +129,12 @@ export class CloudGlue {
    */
   public readonly shareable: EnhancedShareableApi;
 
+  /**
+   * Response API for OpenAI Responses-compatible chat completions
+   * Provides methods for creating and managing responses with video collections
+   */
+  public readonly responses: EnhancedResponseApi;
+
   constructor(config: CloudGlueConfig = {}) {
     this.apiKey = config.apiKey || process.env.CLOUDGLUE_API_KEY || '';
     this.baseUrl = config.baseUrl || 'https://api.cloudglue.dev/v1';
@@ -180,6 +188,7 @@ export class CloudGlue {
     const tagsApi = createTagsApiClient(this.baseUrl, sharedConfig);
 
     const shareableApi = createShareableApiClient(this.baseUrl, sharedConfig);
+    const responseApi = createResponseApiClient(this.baseUrl, sharedConfig);
     // Configure base URL and axios config for all clients
     [
       filesApi,
@@ -197,6 +206,7 @@ export class CloudGlue {
       webhooksApi,
       tagsApi,
       shareableApi,
+      responseApi,
     ].forEach((client) => {
       Object.assign(client.axios.defaults, axiosConfig);
 
@@ -261,5 +271,6 @@ export class CloudGlue {
     this.webhooks = new EnhancedWebhooksApi(webhooksApi);
     this.tags = new EnhancedTagsApi(tagsApi);
     this.shareable = new EnhancedShareableApi(shareableApi);
+    this.responses = new EnhancedResponseApi(responseApi);
   }
 }

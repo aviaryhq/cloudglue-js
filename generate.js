@@ -117,18 +117,18 @@ content = newImports + '\n' + transformedRest.trimStart();
 // Write the transformed content back
 fs.writeFileSync(filesPath, content);
 
-// Fix nullish type mismatches across all generated files
-console.log('Fixing nullish type mismatches...');
+// Fix nullish and nullable type mismatches across all generated files
+console.log('Fixing nullish/nullable type mismatches...');
 const generatedDir = path.join(__dirname, 'generated');
 const generatedFiles = fs.readdirSync(generatedDir).filter(f => f.endsWith('.ts'));
 
 for (const file of generatedFiles) {
     const filePath = path.join(generatedDir, file);
     let fileContent = fs.readFileSync(filePath, 'utf8');
-    
-    // Find all Zod schemas that use .nullish()
-    // Pattern: field_name: SomeType.nullish()
-    const nullishPattern = /(\w+):\s*([A-Z]\w+)\.nullish\(\)/g;
+
+    // Find all Zod schemas that use .nullish() or .nullable()
+    // Pattern: field_name: SomeType.nullish() or SomeType.nullable()
+    const nullishPattern = /(\w+):\s*([A-Z]\w+)\.(?:nullish|nullable)\(\)/g;
     const nullishFields = new Set();
     let match;
     
@@ -136,12 +136,12 @@ for (const file of generatedFiles) {
         nullishFields.add(match[1]); // field name
     }
     
-    // Also find standalone .nullish() calls like z.string().nullish() or multi-line z.object().nullish()
-    // Strategy: find all .nullish() and look backwards to find the field name
-    const nullishCallPattern = /\.nullish\(\)/g;
+    // Also find standalone .nullish()/.nullable() calls like z.string().nullish() or multi-line z.object().nullish()
+    // Strategy: find all .nullish()/.nullable() and look backwards to find the field name
+    const nullishCallPattern = /\.(?:nullish|nullable)\(\)/g;
     while ((match = nullishCallPattern.exec(fileContent)) !== null) {
         const nullishIndex = match.index;
-        // Look backwards from .nullish() to find the field name
+        // Look backwards from .nullish()/.nullable() to find the field name
         // We're looking for: field_name: z... or field_name: SomeType...
         const beforeNullish = fileContent.substring(Math.max(0, nullishIndex - 1000), nullishIndex);
         // Get the indent level of the .nullish() line
@@ -181,13 +181,14 @@ for (const file of generatedFiles) {
     //   | Type1
     //   | Type2
     //   | undefined;
+    // And fields inside Partial<{...}> like: field_name: Type;
     for (const fieldName of nullishFields) {
         // First, try to match single-line patterns: fieldName?: Type | undefined
         const singleLinePattern = new RegExp(
             `(\\s+${fieldName}\\?:\\s*)([^|\\n]+?)(\\s*\\|\\s*undefined)`,
             'g'
         );
-        
+
         fileContent = fileContent.replace(singleLinePattern, (fullMatch, before, type, after) => {
             // Skip if already has null
             if (type.includes('| null') || type.includes('|null')) {
@@ -200,6 +201,22 @@ for (const file of generatedFiles) {
             // Wrap the type and add null
             const trimmedType = type.trim();
             return `${before}(${trimmedType} | null)${after}`;
+        });
+
+        // Also handle fields inside Partial<{...}> that don't have explicit | undefined
+        // Pattern: field_name: Type; (inside a Partial, so no ?)
+        // We need to change: field_name: Type; to field_name: Type | null;
+        const partialFieldPattern = new RegExp(
+            `(\\s+${fieldName}:\\s*)([A-Z]\\w+)(\\s*;)`,
+            'g'
+        );
+
+        fileContent = fileContent.replace(partialFieldPattern, (fullMatch, before, type, after) => {
+            // Skip if already has null
+            if (fullMatch.includes('| null') || fullMatch.includes('|null')) {
+                return fullMatch;
+            }
+            return `${before}${type} | null${after}`;
         });
         
         // Now handle multi-line union types:

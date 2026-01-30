@@ -7,6 +7,7 @@ export { TranscribeApi } from './Transcribe';
 export { DescribeApi } from './Describe';
 export { WebhooksApi } from './Webhooks';
 export { SearchApi } from './Search';
+export { ResponseApi } from './Response';
 export { SegmentationsApi } from './Segmentations';
 export { FramesApi } from './Frames';
 export { SegmentsApi } from './Segments';

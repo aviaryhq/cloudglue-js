@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
 import { z } from 'zod';
 import { File as CloudglueFile } from "./common";
-import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, SegmentationManualConfig, KeyframeConfig, ThumbnailsConfig, Shot, ThumbnailList, Thumbnail, ThumbnailType, ListVideoTagsResponse, PaginationResponse, VideoTag, FrameExtraction, FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from "./common";
+import { Segmentation, SegmentationConfig, SegmentationUniformConfig, SegmentationShotDetectorConfig, SegmentationManualConfig, NarrativeConfig, KeyframeConfig, ThumbnailsConfig, Shot, Chapter, ThumbnailList, Thumbnail, ThumbnailType, ListVideoTagsResponse, PaginationResponse, VideoTag, FrameExtraction, FrameExtractionConfig, FrameExtractionUniformConfig, FrameExtractionThumbnailsConfig } from "./common";
 
 type FileList = {
   object: 'list';
@@ -42,6 +42,59 @@ type FileSegment = {
   metadata?: {} | undefined;
   segmentation_id?: string | undefined;
 };
+type SegmentDescribeListResponse = {
+  object: 'list';
+  data: Array<SegmentDescribe>;
+  total: number;
+  limit: number;
+  offset: number;
+};
+type SegmentDescribe = {
+  job_id: string;
+  segment_id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
+  describe_config: DescribeConfig;
+  created_at: number;
+  completed_at?: number | undefined;
+  start_time: number;
+  end_time: number;
+  file_id: string;
+  segmentation_id?: string | undefined;
+  data?: (SegmentDescribeJsonData | SegmentDescribeMarkdownData) | undefined;
+  object: 'segment_describe';
+};
+type DescribeConfig = Partial<{
+  enable_summary: boolean;
+  enable_speech: boolean;
+  enable_visual_scene_description: boolean;
+  enable_scene_text: boolean;
+  enable_audio_description: boolean;
+}>;
+type SegmentDescribeJsonData = Partial<{
+  visual_scene_description: Array<SegmentDescribeOutputEntry>;
+  speech: Array<SegmentDescribeSpeechEntry>;
+  scene_text: Array<SegmentDescribeOutputEntry>;
+  audio_description: Array<SegmentDescribeOutputEntry>;
+  title: string;
+  summary: string;
+  start_time: number;
+  end_time: number;
+  segment_id: string;
+}>;
+type SegmentDescribeOutputEntry = {
+  text: string;
+  start_time: number;
+  end_time: number;
+};
+type SegmentDescribeSpeechEntry = {
+  text: string;
+  start_time: number;
+  end_time: number;
+  speaker?: string | undefined;
+};
+type SegmentDescribeMarkdownData = {
+  content: string;
+};
 type FrameExtractionList = {
   object: 'list';
   data: Array<{
@@ -61,6 +114,84 @@ const FileList: z.ZodType<FileList> = z
   .object({
     object: z.literal('list'),
     data: z.array(CloudglueFile),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
+  .strict()
+  .passthrough();
+const SegmentDescribeOutputEntry: z.ZodType<SegmentDescribeOutputEntry> = z
+  .object({ text: z.string(), start_time: z.number(), end_time: z.number() })
+  .strict()
+  .passthrough();
+const SegmentDescribeSpeechEntry: z.ZodType<SegmentDescribeSpeechEntry> = z
+  .object({
+    text: z.string(),
+    start_time: z.number(),
+    end_time: z.number(),
+    speaker: z.string().optional(),
+  })
+  .strict()
+  .passthrough();
+const SegmentDescribeJsonData: z.ZodType<SegmentDescribeJsonData> = z
+  .object({
+    visual_scene_description: z.array(SegmentDescribeOutputEntry),
+    speech: z.array(SegmentDescribeSpeechEntry),
+    scene_text: z.array(SegmentDescribeOutputEntry),
+    audio_description: z.array(SegmentDescribeOutputEntry),
+    title: z.string(),
+    summary: z.string(),
+    start_time: z.number(),
+    end_time: z.number(),
+    segment_id: z.string().uuid(),
+  })
+  .partial()
+  .strict()
+  .passthrough();
+const DescribeConfig: z.ZodType<DescribeConfig> = z
+  .object({
+    enable_summary: z.boolean().default(true),
+    enable_speech: z.boolean().default(true),
+    enable_visual_scene_description: z.boolean().default(true),
+    enable_scene_text: z.boolean().default(true),
+    enable_audio_description: z.boolean().default(false),
+  })
+  .partial()
+  .strict()
+  .passthrough();
+const SegmentDescribeMarkdownData: z.ZodType<SegmentDescribeMarkdownData> = z
+  .object({ content: z.string() })
+  .strict()
+  .passthrough();
+const SegmentDescribe: z.ZodType<SegmentDescribe> = z
+  .object({
+    job_id: z.string().uuid(),
+    segment_id: z.string().uuid(),
+    status: z.enum([
+      'pending',
+      'processing',
+      'completed',
+      'failed',
+      'not_applicable',
+    ]),
+    describe_config: DescribeConfig,
+    created_at: z.number().int(),
+    completed_at: z.number().int().optional(),
+    start_time: z.number(),
+    end_time: z.number(),
+    file_id: z.string().uuid(),
+    segmentation_id: z.string().uuid().optional(),
+    data: z
+      .union([SegmentDescribeJsonData, SegmentDescribeMarkdownData])
+      .optional(),
+    object: z.literal('segment_describe'),
+  })
+  .strict()
+  .passthrough();
+const SegmentDescribeListResponse: z.ZodType<SegmentDescribeListResponse> = z
+  .object({
+    object: z.literal('list'),
+    data: z.array(SegmentDescribe),
     total: z.number().int(),
     limit: z.number().int(),
     offset: z.number().int(),
@@ -164,6 +295,13 @@ const createFileFrameExtraction_Body = FrameExtractionConfig;
 
 export const schemas = {
   FileList,
+  SegmentDescribeOutputEntry,
+  SegmentDescribeSpeechEntry,
+  SegmentDescribeJsonData,
+  DescribeConfig,
+  SegmentDescribeMarkdownData,
+  SegmentDescribe,
+  SegmentDescribeListResponse,
   SegmentationListItem,
   SegmentationList,
   FrameExtractionList,
@@ -640,6 +778,95 @@ const endpoints = makeApi([
       },
     ],
     response: ListVideoTagsResponse,
+  },
+  {
+    method: 'get',
+    path: '/files/:file_id/segments/:segment_id/describes',
+    alias: 'listFileSegmentDescribes',
+    description: `List all describe outputs for a specific file segment`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'file_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+      {
+        name: 'segment_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+      {
+        name: 'status',
+        type: 'Query',
+        schema: z.string().optional().default('completed'),
+      },
+      {
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
+      },
+      {
+        name: 'include_data',
+        type: 'Query',
+        schema: z.boolean().optional().default(false),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: 'offset',
+        type: 'Query',
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+    ],
+    response: SegmentDescribeListResponse,
+    errors: [
+      {
+        status: 404,
+        description: `File or segment not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/files/:file_id/segments/:segment_id/describes/:job_id',
+    alias: 'getFileSegmentDescribe',
+    description: `Get a specific describe output for a file segment by job ID`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'file_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+      {
+        name: 'segment_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+      {
+        name: 'job_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+      {
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
+      },
+    ],
+    response: SegmentDescribe,
+    errors: [
+      {
+        status: 404,
+        description: `CloudglueFile, segment, or describe job not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
   },
   {
     method: 'post',

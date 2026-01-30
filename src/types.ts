@@ -13,6 +13,10 @@ import {
   SegmentationUniformConfig as SegmentationUniformConfigType,
   SegmentationShotDetectorConfig as SegmentationShotDetectorConfigType,
   SegmentationConfig as SegmentationConfigType,
+  NarrativeConfig as NarrativeConfigType,
+  Chapter as ChapterType,
+  Describe as DescribeType,
+  DescribeList as DescribeListType,
 } from '../generated/common';
 import { schemas as webhooksSchemas } from '../generated/Webhooks';
 import { FrameExtraction } from '../generated/common';
@@ -215,12 +219,12 @@ export type SearchFilter = z.infer<
  * Represents the result of a video description request
  * Contains detailed information about the video content including speech, text, and visual descriptions
  */
-export type Describe = z.infer<typeof describeSchemas.Describe>;
+export type Describe = z.infer<typeof DescribeType>;
 
 /**
  * Represents a list of description jobs
  */
-export type DescribeList = z.infer<typeof describeSchemas.DescribeList>;
+export type DescribeList = z.infer<typeof DescribeListType>;
 
 /**
  * Represents media description data for a video in a collection
@@ -243,7 +247,13 @@ export type FileFaceDetections = z.infer<
   typeof collectionsSchemas.FileFaceDetections
 >;
 
-export type NarrativeConfig = z.infer<typeof segmentsSchemas.NarrativeConfig>;
+export type NarrativeConfig = z.infer<typeof NarrativeConfigType>;
+
+/**
+ * Represents a chapter within a narrative segmentation
+ * Contains timing and description information for the chapter
+ */
+export type Chapter = z.infer<typeof ChapterType>;
 
 export type ShotConfig = z.infer<typeof segmentsSchemas.ShotConfig>;
 
@@ -390,3 +400,54 @@ export type UpdateShareableAssetRequest = z.infer<
 >;
 
 export type Modalities = 'speech' | 'visual_scene_description' | 'scene_text' | 'audio_description' | 'summary' | 'segment_summary' | 'title';
+
+// Response API types
+import { schemas as responseSchemas } from '../generated/Response';
+
+/**
+ * Represents a Response API response object
+ */
+export type Response = z.infer<typeof responseSchemas.Response>;
+
+/**
+ * Represents a list of Response API responses
+ */
+export type ResponseList = z.infer<typeof responseSchemas.ResponseList>;
+
+/**
+ * Represents a Response API list item (without full output data)
+ */
+export type ResponseListItem = z.infer<typeof responseSchemas.ResponseListItem>;
+
+/**
+ * Represents a Response API input message
+ */
+export type ResponseInputMessage = z.infer<
+  typeof responseSchemas.ResponseInputMessage
+>;
+
+/**
+ * Represents a Response API output message
+ */
+export type ResponseOutputMessage = z.infer<
+  typeof responseSchemas.ResponseOutputMessage
+>;
+
+/**
+ * Represents a citation annotation in a Response API response
+ */
+export type ResponseAnnotation = z.infer<
+  typeof responseSchemas.ResponseAnnotation
+>;
+
+/**
+ * Represents usage information for a Response API response
+ */
+export type ResponseUsage = z.infer<typeof responseSchemas.ResponseUsage>;
+
+/**
+ * Represents knowledge base configuration for the Response API
+ */
+export type ResponseKnowledgeBase = z.infer<
+  typeof responseSchemas.ResponseKnowledgeBase
+>;

@@ -49,4 +49,26 @@ export class EnhancedSegmentationsApi {
       },
     });
   }
+
+  /**
+   * List all describe jobs that referenced the specified segmentation.
+   * Returns describe job records associated with the segmentation.
+   * @param segmentationId - The ID of the segmentation
+   * @param params - Optional parameters for filtering and pagination
+   * @returns List of describe jobs for the segmentation
+   */
+  async listSegmentationDescribes(
+    segmentationId: string,
+    params: {
+      include_data?: boolean;
+      response_format?: 'json' | 'markdown';
+      limit?: number;
+      offset?: number;
+    } = {},
+  ) {
+    return this.api.listSegmentationDescribes({
+      params: { segmentation_id: segmentationId },
+      queries: params,
+    });
+  }
 }

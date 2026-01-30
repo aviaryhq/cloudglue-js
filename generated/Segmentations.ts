@@ -6,12 +6,19 @@ import { SegmentationConfig } from './common';
 import { SegmentationUniformConfig } from './common';
 import { SegmentationShotDetectorConfig } from './common';
 import { SegmentationManualConfig } from './common';
+import { NarrativeConfig } from './common';
 import { KeyframeConfig } from './common';
 import { ThumbnailsConfig } from './common';
 import { Shot } from './common';
+import { Chapter } from './common';
 import { ThumbnailList } from './common';
 import { Thumbnail } from './common';
 import { ThumbnailType } from './common';
+import { DescribeList } from './common';
+import { Describe } from './common';
+import { DescribeOutput } from './common';
+import { DescribeOutputPart } from './common';
+import { SpeechOutputPart } from './common';
 
 const endpoints = makeApi([
   {
@@ -112,6 +119,53 @@ const endpoints = makeApi([
       },
     ],
     response: ThumbnailList,
+    errors: [
+      {
+        status: 404,
+        description: `Segmentation not found`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+      {
+        status: 500,
+        description: `An unexpected error occurred on the server`,
+        schema: z.object({ error: z.string() }).strict().passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/segmentations/:segmentation_id/describes',
+    alias: 'listSegmentationDescribes',
+    description: `List all describe jobs that referenced the specified segmentation. Returns describe job records associated with the segmentation.`,
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'segmentation_id',
+        type: 'Path',
+        schema: z.string().uuid(),
+      },
+      {
+        name: 'include_data',
+        type: 'Query',
+        schema: z.boolean().optional().default(false),
+      },
+      {
+        name: 'response_format',
+        type: 'Query',
+        schema: z.enum(['json', 'markdown']).optional().default('json'),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(50),
+      },
+      {
+        name: 'offset',
+        type: 'Query',
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+    ],
+    response: DescribeList,
     errors: [
       {
         status: 404,

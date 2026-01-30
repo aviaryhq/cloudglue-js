@@ -10,6 +10,7 @@ import { SegmentationConfig } from './common';
 import { SegmentationUniformConfig } from './common';
 import { SegmentationShotDetectorConfig } from './common';
 import { SegmentationManualConfig } from './common';
+import { NarrativeConfig } from './common';
 import { KeyframeConfig } from './common';
 
 type Transcribe = {

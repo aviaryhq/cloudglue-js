@@ -1,6 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
 import { z } from 'zod';
 
+import { Describe } from './common';
 import { DescribeOutput } from './common';
 import { DescribeOutputPart } from './common';
 import { SpeechOutputPart } from './common';
@@ -10,41 +11,10 @@ import { SegmentationConfig } from './common';
 import { SegmentationUniformConfig } from './common';
 import { SegmentationShotDetectorConfig } from './common';
 import { SegmentationManualConfig } from './common';
+import { NarrativeConfig } from './common';
 import { KeyframeConfig } from './common';
+import { DescribeList } from './common';
 
-type Describe = {
-  job_id: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
-  url?: string | undefined;
-  duration_seconds?: number | undefined;
-  created_at?: number | undefined;
-  describe_config?:
-    | Partial<{
-        enable_summary: boolean;
-        enable_speech: boolean;
-        enable_visual_scene_description: boolean;
-        enable_scene_text: boolean;
-        enable_audio_description: boolean;
-      }>
-    | undefined;
-  data?:
-    | (Partial<{
-        content: string;
-        title: string;
-        summary: string;
-        segment_summary: Array<
-          Partial<{
-            title: string;
-            summary: string;
-            start_time: number;
-            end_time: number;
-          }>
-        >;
-      }> &
-        DescribeOutput)
-    | undefined;
-  error?: string | undefined;
-};
 type NewDescribe = {
   url: string;
   enable_summary?: boolean | undefined;
@@ -54,12 +24,6 @@ type NewDescribe = {
   enable_audio_description?: boolean | undefined;
   thumbnails_config?: ThumbnailsConfig | undefined;
 } & FileSegmentationConfig;
-type DescribeList = {
-  object: 'list';
-  data: Array<Describe>;
-  total: number;
-  limit: number;
-};
 
 const NewDescribe: z.ZodType<NewDescribe> = z
   .object({
@@ -74,72 +38,9 @@ const NewDescribe: z.ZodType<NewDescribe> = z
   .strict()
   .passthrough()
   .and(FileSegmentationConfig);
-const Describe: z.ZodType<Describe> = z
-  .object({
-    job_id: z.string(),
-    status: z.enum([
-      'pending',
-      'processing',
-      'completed',
-      'failed',
-      'not_applicable',
-    ]),
-    url: z.string().optional(),
-    duration_seconds: z.number().optional(),
-    created_at: z.number().int().optional(),
-    describe_config: z
-      .object({
-        enable_summary: z.boolean(),
-        enable_speech: z.boolean(),
-        enable_visual_scene_description: z.boolean(),
-        enable_scene_text: z.boolean(),
-        enable_audio_description: z.boolean(),
-      })
-      .partial()
-      .strict()
-      .passthrough()
-      .optional(),
-    data: z
-      .object({
-        content: z.string(),
-        title: z.string(),
-        summary: z.string(),
-        segment_summary: z.array(
-          z
-            .object({
-              title: z.string(),
-              summary: z.string(),
-              start_time: z.number(),
-              end_time: z.number(),
-            })
-            .partial()
-            .strict()
-            .passthrough()
-        ),
-      })
-      .partial()
-      .strict()
-      .passthrough()
-      .and(DescribeOutput)
-      .optional(),
-    error: z.string().optional(),
-  })
-  .strict()
-  .passthrough();
-const DescribeList: z.ZodType<DescribeList> = z
-  .object({
-    object: z.literal('list'),
-    data: z.array(Describe),
-    total: z.number().int(),
-    limit: z.number().int(),
-  })
-  .strict()
-  .passthrough();
 
 export const schemas = {
   NewDescribe,
-  Describe,
-  DescribeList,
 };
 
 const endpoints = makeApi([

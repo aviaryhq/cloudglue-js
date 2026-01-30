@@ -25,10 +25,11 @@ export type FileSegmentationConfig = Partial<{
   segmentation_config: SegmentationConfig;
 }>;
 export type SegmentationConfig = {
-  strategy: 'uniform' | 'shot-detector' | 'manual';
+  strategy: 'uniform' | 'shot-detector' | 'manual' | 'narrative';
   uniform_config?: SegmentationUniformConfig | undefined;
   shot_detector_config?: SegmentationShotDetectorConfig | undefined;
   manual_config?: SegmentationManualConfig | undefined;
+  narrative_config?: NarrativeConfig | undefined;
   keyframe_config?: KeyframeConfig | undefined;
   start_time_seconds?: number | undefined;
   end_time_seconds?: number | undefined;
@@ -51,6 +52,13 @@ export type SegmentationManualConfig = {
     }>
   >;
 };
+export type NarrativeConfig = Partial<{
+  prompt: string;
+  strategy: 'comprehensive' | 'balanced';
+  number_of_chapters: number;
+  min_chapters: number;
+  max_chapters: number;
+}>;
 export type KeyframeConfig = {
   frames_per_segment: number;
   max_width?: number | undefined;
@@ -136,6 +144,47 @@ export type SearchFilterCriteria = {
   valueText?: string | undefined;
   valueTextArray?: Array<string> | undefined;
 };
+export type Describe = {
+  job_id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
+  url?: string | undefined;
+  duration_seconds?: (number | null) | undefined;
+  created_at?: number | undefined;
+  describe_config?:
+    | Partial<{
+        enable_summary: boolean;
+        enable_speech: boolean;
+        enable_visual_scene_description: boolean;
+        enable_scene_text: boolean;
+        enable_audio_description: boolean;
+      }>
+    | undefined;
+  data?:
+    | (Partial<{
+        content: string;
+        title: string;
+        summary: string;
+        segment_summary: Array<
+          Partial<{
+            title: string;
+            summary: string;
+            start_time: number;
+            end_time: number;
+          }>
+        >;
+      }> &
+        DescribeOutput)
+    | undefined;
+  error?: string | undefined;
+  segmentation_id?: string | undefined;
+};
+export type DescribeList = {
+  object: 'list';
+  data: Array<Describe>;
+  total: number;
+  limit: number;
+  offset: number;
+};
 export type Segmentation = {
   segmentation_id: string;
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_applicable';
@@ -145,6 +194,7 @@ export type Segmentation = {
   thumbnails_config: ThumbnailsConfig;
   total_segments?: number | undefined;
   total_shots?: number | undefined;
+  total_chapters?: number | undefined;
   data?:
     | {
         object: 'list';
@@ -157,6 +207,7 @@ export type Segmentation = {
             }>
           | undefined;
         shots?: Array<Shot> | undefined;
+        chapters?: Array<Chapter> | undefined;
         total: number;
         limit: number;
         offset: number;
@@ -167,6 +218,12 @@ export type Shot = {
   index: number;
   start_time: number;
   end_time: number;
+};
+export type Chapter = {
+  index: number;
+  start_time: number;
+  end_time: number;
+  description: string;
 };
 export type FrameExtractionConfig = {
   strategy: 'uniform';
@@ -305,6 +362,17 @@ export const SegmentationManualConfig = z
   })
   .strict()
   .passthrough();
+export const NarrativeConfig = z
+  .object({
+    prompt: z.string(),
+    strategy: z.enum(['comprehensive', 'balanced']).default('balanced'),
+    number_of_chapters: z.number().int().gte(1),
+    min_chapters: z.number().int().gte(1),
+    max_chapters: z.number().int().gte(1),
+  })
+  .partial()
+  .strict()
+  .passthrough();
 export const KeyframeConfig = z
   .object({
     frames_per_segment: z.number().gte(0).lte(8),
@@ -314,10 +382,11 @@ export const KeyframeConfig = z
   .passthrough();
 export const SegmentationConfig = z
   .object({
-    strategy: z.enum(['uniform', 'shot-detector', 'manual']),
+    strategy: z.enum(['uniform', 'shot-detector', 'manual', 'narrative']),
     uniform_config: SegmentationUniformConfig.optional(),
     shot_detector_config: SegmentationShotDetectorConfig.optional(),
     manual_config: SegmentationManualConfig.optional(),
+    narrative_config: NarrativeConfig.optional(),
     keyframe_config: KeyframeConfig.optional(),
     start_time_seconds: z.number().gte(0).optional(),
     end_time_seconds: z.number().gte(0).optional(),
@@ -402,6 +471,15 @@ export const Shot = z
   })
   .strict()
   .passthrough();
+export const Chapter = z
+  .object({
+    index: z.number().int(),
+    start_time: z.number().gte(0),
+    end_time: z.number().gte(0),
+    description: z.string(),
+  })
+  .strict()
+  .passthrough();
 export const Segmentation = z
   .object({
     segmentation_id: z.string().uuid(),
@@ -418,6 +496,7 @@ export const Segmentation = z
     thumbnails_config: ThumbnailsConfig,
     total_segments: z.number().gte(0).optional(),
     total_shots: z.number().gte(0).optional(),
+    total_chapters: z.number().gte(0).optional(),
     data: z
       .object({
         object: z.literal('list'),
@@ -435,6 +514,7 @@ export const Segmentation = z
           )
           .optional(),
         shots: z.array(Shot).optional(),
+        chapters: z.array(Chapter).optional(),
         total: z.number().int(),
         limit: z.number().int(),
         offset: z.number().int(),
@@ -543,6 +623,69 @@ export const SearchFilter = z
     ),
   })
   .partial()
+  .strict()
+  .passthrough();
+export const Describe = z
+  .object({
+    job_id: z.string(),
+    status: z.enum([
+      'pending',
+      'processing',
+      'completed',
+      'failed',
+      'not_applicable',
+    ]),
+    url: z.string().optional(),
+    duration_seconds: z.number().optional(),
+    created_at: z.number().int().optional(),
+    describe_config: z
+      .object({
+        enable_summary: z.boolean(),
+        enable_speech: z.boolean(),
+        enable_visual_scene_description: z.boolean(),
+        enable_scene_text: z.boolean(),
+        enable_audio_description: z.boolean(),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .optional(),
+    data: z
+      .object({
+        content: z.string(),
+        title: z.string(),
+        summary: z.string(),
+        segment_summary: z.array(
+          z
+            .object({
+              title: z.string(),
+              summary: z.string(),
+              start_time: z.number(),
+              end_time: z.number(),
+            })
+            .partial()
+            .strict()
+            .passthrough()
+        ),
+      })
+      .partial()
+      .strict()
+      .passthrough()
+      .and(DescribeOutput)
+      .optional(),
+    error: z.string().optional(),
+    segmentation_id: z.string().uuid().optional(),
+  })
+  .strict()
+  .passthrough();
+export const DescribeList = z
+  .object({
+    object: z.literal('list'),
+    data: z.array(Describe),
+    total: z.number().int(),
+    limit: z.number().int(),
+    offset: z.number().int(),
+  })
   .strict()
   .passthrough();
 export const FrameExtractionUniformConfig = z

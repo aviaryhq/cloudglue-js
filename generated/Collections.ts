@@ -5,6 +5,7 @@ import { SegmentationConfig } from './common';
 import { SegmentationUniformConfig } from './common';
 import { SegmentationShotDetectorConfig } from './common';
 import { SegmentationManualConfig } from './common';
+import { NarrativeConfig } from './common';
 import { KeyframeConfig } from './common';
 import { ThumbnailsConfig } from './common';
 import { File } from './common';
@@ -128,9 +129,10 @@ type NewCollection = {
     | undefined;
 };
 type DefaultSegmentationConfig = {
-  strategy: 'uniform' | 'shot-detector';
+  strategy: 'uniform' | 'shot-detector' | 'narrative';
   uniform_config?: SegmentationUniformConfig | undefined;
   shot_detector_config?: SegmentationShotDetectorConfig | undefined;
+  narrative_config?: NarrativeConfig | undefined;
   keyframe_config?: KeyframeConfig | undefined;
   start_time_seconds?: number | undefined;
   end_time_seconds?: number | undefined;
@@ -353,9 +355,10 @@ const Collection: z.ZodType<Collection> = z
   .passthrough();
 const DefaultSegmentationConfig: z.ZodType<DefaultSegmentationConfig> = z
   .object({
-    strategy: z.enum(['uniform', 'shot-detector']),
+    strategy: z.enum(['uniform', 'shot-detector', 'narrative']),
     uniform_config: SegmentationUniformConfig.optional(),
     shot_detector_config: SegmentationShotDetectorConfig.optional(),
+    narrative_config: NarrativeConfig.optional(),
     keyframe_config: KeyframeConfig.optional(),
     start_time_seconds: z.number().gte(0).optional(),
     end_time_seconds: z.number().gte(0).optional(),

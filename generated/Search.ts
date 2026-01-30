@@ -187,7 +187,7 @@ const SearchRequest: z.ZodType<SearchRequest> = z
     threshold: z.number(),
     group_by_key: z.literal('file'),
     sort_by: z.enum(['score', 'item_count']).default('score'),
-    search_modalities: SearchModalities,
+    search_modalities: SearchModalities.max(5),
     label_filters: z.array(z.string()),
   })
   .partial()
@@ -205,7 +205,7 @@ const SearchResponseList: z.ZodType<SearchResponseList> = z
           scope: z.enum(['file', 'segment', 'face']),
           group_by_key: z.literal('file').optional(),
           group_count: z.number().int().optional(),
-          search_modalities: SearchModalities.optional(),
+          search_modalities: SearchModalities.max(5).optional(),
           total: z.number().int(),
           limit: z.number().int(),
         })
@@ -359,7 +359,7 @@ const SearchResponse: z.ZodType<SearchResponse> = z
     scope: z.enum(['file', 'segment', 'face']),
     group_by_key: z.literal('file').optional(),
     group_count: z.number().int().optional(),
-    search_modalities: SearchModalities.optional(),
+    search_modalities: SearchModalities.max(5).optional(),
     results: z.array(
       z.union([
         FileSearchResult,

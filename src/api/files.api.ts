@@ -191,6 +191,52 @@ export class EnhancedFilesApi {
   }
 
   /**
+   * List all describe outputs for a specific file segment
+   * @param fileId - The ID of the file
+   * @param segmentId - The ID of the segment
+   * @param params - Optional parameters for filtering and pagination
+   * @returns List of describe outputs for the segment
+   */
+  async listFileSegmentDescribes(
+    fileId: string,
+    segmentId: string,
+    params: {
+      status?: string;
+      response_format?: 'json' | 'markdown';
+      include_data?: boolean;
+      limit?: number;
+      offset?: number;
+    } = {},
+  ) {
+    return this.api.listFileSegmentDescribes({
+      params: { file_id: fileId, segment_id: segmentId },
+      queries: params,
+    });
+  }
+
+  /**
+   * Get a specific describe output for a file segment by job ID
+   * @param fileId - The ID of the file
+   * @param segmentId - The ID of the segment
+   * @param jobId - The ID of the describe job
+   * @param params - Optional parameters
+   * @returns The describe output for the segment
+   */
+  async getFileSegmentDescribe(
+    fileId: string,
+    segmentId: string,
+    jobId: string,
+    params: {
+      response_format?: 'json' | 'markdown';
+    } = {},
+  ) {
+    return this.api.getFileSegmentDescribe({
+      params: { file_id: fileId, segment_id: segmentId, job_id: jobId },
+      queries: params,
+    });
+  }
+
+  /**
    * Waits for a file to finish processing by polling the getFile endpoint until the file
    * reaches a terminal state (completed, failed, or not_applicable) or until maxAttempts is reached.
    *

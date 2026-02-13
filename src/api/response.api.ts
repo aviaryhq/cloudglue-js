@@ -1,4 +1,5 @@
 import { IncomingMessage } from 'http';
+import { StringDecoder } from 'string_decoder';
 import { ResponseApi } from '../../generated';
 import type { SearchFilter } from '../../generated/common';
 import { WaitForReadyOptions } from '../types';
@@ -8,7 +9,7 @@ type ResponseStatus = 'in_progress' | 'completed' | 'failed' | 'cancelled';
 
 export interface CreateResponseParams {
   /** The model to use for the response */
-  model: string;
+  model: 'nimbus-001' | 'nimbus-002-preview' | (string & {});
   /** The input message(s) - can be a simple string or array of structured messages */
   input:
     | string
@@ -124,39 +125,62 @@ export type ResponseStreamEventType =
   | ResponseErrorEvent;
 
 /**
+ * Process buffered lines, yielding parsed SSE events.
+ * Returns true if a [DONE] sentinel was encountered.
+ */
+function* processLines(
+  buffer: { value: string },
+): Generator<ResponseStreamEventType | 'DONE'> {
+  let newlineIdx: number;
+  while ((newlineIdx = buffer.value.indexOf('\n')) !== -1) {
+    const line = buffer.value.slice(0, newlineIdx).trimEnd();
+    buffer.value = buffer.value.slice(newlineIdx + 1);
+
+    // Skip empty lines and event: lines (type is in the JSON data)
+    if (!line || line.startsWith('event:')) {
+      continue;
+    }
+
+    if (line.startsWith('data: ')) {
+      const jsonStr = line.slice(6);
+      if (jsonStr === '[DONE]') {
+        yield 'DONE';
+        return;
+      }
+      try {
+        yield JSON.parse(jsonStr) as ResponseStreamEventType;
+      } catch {
+        // Skip malformed JSON lines
+      }
+    }
+  }
+}
+
+/**
  * Parse an SSE stream from an IncomingMessage into an async iterable of typed events.
+ * Uses StringDecoder to correctly handle multi-byte UTF-8 characters split across chunks.
  */
 async function* parseSSEStream(
   stream: IncomingMessage,
 ): AsyncGenerator<ResponseStreamEventType> {
-  let buffer = '';
+  const decoder = new StringDecoder('utf-8');
+  const buffer = { value: '' };
 
   for await (const chunk of stream) {
-    buffer += typeof chunk === 'string' ? chunk : chunk.toString('utf-8');
+    buffer.value += typeof chunk === 'string' ? chunk : decoder.write(chunk);
 
-    // Process complete lines
-    let newlineIdx: number;
-    while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
-      const line = buffer.slice(0, newlineIdx).trimEnd();
-      buffer = buffer.slice(newlineIdx + 1);
+    for (const event of processLines(buffer)) {
+      if (event === 'DONE') return;
+      yield event;
+    }
+  }
 
-      // Skip empty lines and event: lines (type is in the JSON data)
-      if (!line || line.startsWith('event:')) {
-        continue;
-      }
-
-      if (line.startsWith('data: ')) {
-        const jsonStr = line.slice(6);
-        if (jsonStr === '[DONE]') {
-          return;
-        }
-        try {
-          const event = JSON.parse(jsonStr) as ResponseStreamEventType;
-          yield event;
-        } catch {
-          // Skip malformed JSON lines
-        }
-      }
+  // Flush any remaining bytes from the decoder and process trailing lines
+  buffer.value += decoder.end();
+  if (buffer.value) {
+    for (const event of processLines(buffer)) {
+      if (event === 'DONE') return;
+      yield event;
     }
   }
 }

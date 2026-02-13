@@ -244,8 +244,10 @@ export class EnhancedResponseApi {
       let responseData: any;
       try {
         responseData = await response.json();
-        if (responseData?.error) {
+        if (typeof responseData?.error === 'string') {
           errorMessage = responseData.error;
+        } else if (responseData?.error?.message) {
+          errorMessage = responseData.error.message;
         }
       } catch {
         // Could not parse error body

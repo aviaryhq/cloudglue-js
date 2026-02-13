@@ -1,5 +1,39 @@
 import { z } from 'zod';
 
+export type SearchFilter = Partial<{
+  metadata: Array<
+    SearchFilterCriteria &
+      Partial<{
+        scope: 'file' | 'segment';
+      }>
+  >;
+  video_info: Array<
+    SearchFilterCriteria &
+      Partial<{
+        path: 'duration_seconds' | 'has_audio';
+      }>
+  >;
+  file: Array<
+    SearchFilterCriteria &
+      Partial<{
+        path: 'bytes' | 'filename' | 'uri' | 'created_at' | 'id';
+      }>
+  >;
+}>;
+export type SearchFilterCriteria = {
+  path: string;
+  operator:
+    | 'NotEqual'
+    | 'Equal'
+    | 'LessThan'
+    | 'GreaterThan'
+    | 'ContainsAny'
+    | 'ContainsAll'
+    | 'In'
+    | 'Like';
+  valueText?: string | undefined;
+  valueTextArray?: Array<string> | undefined;
+};
 export type DescribeOutput = Partial<{
   visual_scene_description: Array<DescribeOutputPart>;
   scene_text: Array<DescribeOutputPart>;
@@ -109,40 +143,6 @@ export type File = {
         | 'gcs'
       )
     | undefined;
-};
-export type SearchFilter = Partial<{
-  metadata: Array<
-    SearchFilterCriteria &
-      Partial<{
-        scope: 'file' | 'segment';
-      }>
-  >;
-  video_info: Array<
-    SearchFilterCriteria &
-      Partial<{
-        path: 'duration_seconds' | 'has_audio';
-      }>
-  >;
-  file: Array<
-    SearchFilterCriteria &
-      Partial<{
-        path: 'bytes' | 'filename' | 'uri' | 'created_at' | 'id';
-      }>
-  >;
-}>;
-export type SearchFilterCriteria = {
-  path: string;
-  operator:
-    | 'NotEqual'
-    | 'Equal'
-    | 'LessThan'
-    | 'GreaterThan'
-    | 'ContainsAny'
-    | 'ContainsAll'
-    | 'In'
-    | 'Like';
-  valueText?: string | undefined;
-  valueTextArray?: Array<string> | undefined;
 };
 export type Describe = {
   job_id: string;

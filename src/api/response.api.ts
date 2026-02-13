@@ -1,4 +1,7 @@
+import { IncomingMessage } from 'http';
+import { StringDecoder } from 'string_decoder';
 import { ResponseApi } from '../../generated';
+import type { SearchFilter } from '../../generated/common';
 import { WaitForReadyOptions } from '../types';
 import { CloudGlueError } from '../error';
 
@@ -6,7 +9,7 @@ type ResponseStatus = 'in_progress' | 'completed' | 'failed' | 'cancelled';
 
 export interface CreateResponseParams {
   /** The model to use for the response */
-  model: 'nimbus-001';
+  model: 'nimbus-001' | 'nimbus-002-preview' | (string & {});
   /** The input message(s) - can be a simple string or array of structured messages */
   input:
     | string
@@ -21,15 +24,24 @@ export interface CreateResponseParams {
   temperature?: number;
   /** Knowledge base configuration specifying collections to search */
   knowledge_base: {
+    type?: 'general_question_answering' | 'entity_backed_knowledge';
     collections: string[];
-    filter?: {
-      file_ids?: string[];
+    filter?: SearchFilter;
+    entity_backed_knowledge_config?: {
+      entity_collections: Array<{
+        name: string;
+        description: string;
+        collection_id: string;
+      }>;
+      description?: string;
     };
   };
   /** Include additional data in response annotations */
   include?: Array<'cloudglue_citations.media_descriptions'>;
   /** Run the response generation in background (async) */
   background?: boolean;
+  /** Enable server-sent events streaming */
+  stream?: boolean;
 }
 
 export interface ListResponsesParams {
@@ -38,6 +50,139 @@ export interface ListResponsesParams {
   status?: ResponseStatus;
   created_before?: string;
   created_after?: string;
+}
+
+// --- Streaming event types ---
+
+export interface ResponseCreatedEvent {
+  type: 'response.created';
+  response: Record<string, any>;
+}
+
+export interface ResponseOutputItemAddedEvent {
+  type: 'response.output_item.added';
+  output_index: number;
+  item: Record<string, any>;
+}
+
+export interface ResponseContentPartAddedEvent {
+  type: 'response.content_part.added';
+  output_index: number;
+  content_index: number;
+  part: Record<string, any>;
+}
+
+export interface ResponseOutputTextDeltaEvent {
+  type: 'response.output_text.delta';
+  output_index: number;
+  content_index: number;
+  delta: string;
+}
+
+export interface ResponseOutputTextDoneEvent {
+  type: 'response.output_text.done';
+  output_index: number;
+  content_index: number;
+  text: string;
+}
+
+export interface ResponseContentPartDoneEvent {
+  type: 'response.content_part.done';
+  output_index: number;
+  content_index: number;
+  part: Record<string, any>;
+}
+
+export interface ResponseOutputItemDoneEvent {
+  type: 'response.output_item.done';
+  output_index: number;
+  item: Record<string, any>;
+}
+
+export interface ResponseCompletedEvent {
+  type: 'response.completed';
+  response: Record<string, any>;
+}
+
+export interface ResponseErrorEvent {
+  type: 'error';
+  error: {
+    message: string;
+    type?: string;
+    code?: string;
+  };
+}
+
+export type ResponseStreamEventType =
+  | ResponseCreatedEvent
+  | ResponseOutputItemAddedEvent
+  | ResponseContentPartAddedEvent
+  | ResponseOutputTextDeltaEvent
+  | ResponseOutputTextDoneEvent
+  | ResponseContentPartDoneEvent
+  | ResponseOutputItemDoneEvent
+  | ResponseCompletedEvent
+  | ResponseErrorEvent;
+
+/**
+ * Process buffered lines, yielding parsed SSE events.
+ * Returns true if a [DONE] sentinel was encountered.
+ */
+function* processLines(
+  buffer: { value: string },
+): Generator<ResponseStreamEventType | 'DONE'> {
+  let newlineIdx: number;
+  while ((newlineIdx = buffer.value.indexOf('\n')) !== -1) {
+    const line = buffer.value.slice(0, newlineIdx).trimEnd();
+    buffer.value = buffer.value.slice(newlineIdx + 1);
+
+    // Skip empty lines and event: lines (type is in the JSON data)
+    if (!line || line.startsWith('event:')) {
+      continue;
+    }
+
+    if (line.startsWith('data: ')) {
+      const jsonStr = line.slice(6);
+      if (jsonStr === '[DONE]') {
+        yield 'DONE';
+        return;
+      }
+      try {
+        yield JSON.parse(jsonStr) as ResponseStreamEventType;
+      } catch {
+        // Skip malformed JSON lines
+      }
+    }
+  }
+}
+
+/**
+ * Parse an SSE stream from an IncomingMessage into an async iterable of typed events.
+ * Uses StringDecoder to correctly handle multi-byte UTF-8 characters split across chunks.
+ */
+async function* parseSSEStream(
+  stream: IncomingMessage,
+): AsyncGenerator<ResponseStreamEventType> {
+  const decoder = new StringDecoder('utf-8');
+  const buffer = { value: '' };
+
+  for await (const chunk of stream) {
+    buffer.value += typeof chunk === 'string' ? chunk : decoder.write(chunk);
+
+    for (const event of processLines(buffer)) {
+      if (event === 'DONE') return;
+      yield event;
+    }
+  }
+
+  // Flush any remaining bytes from the decoder and process trailing lines
+  buffer.value += decoder.end();
+  if (buffer.value) {
+    for (const event of processLines(buffer)) {
+      if (event === 'DONE') return;
+      yield event;
+    }
+  }
 }
 
 export class EnhancedResponseApi {
@@ -52,6 +197,35 @@ export class EnhancedResponseApi {
    */
   async createResponse(params: CreateResponseParams) {
     return this.api.createResponse(params);
+  }
+
+  /**
+   * Create a streaming response using the Response API with server-sent events.
+   * Returns an async iterable that yields events as they arrive from the server.
+   *
+   * @param params - Response creation parameters (stream and background are set automatically)
+   * @returns Async iterable of streaming events
+   */
+  async createStreamingResponse(
+    params: Omit<CreateResponseParams, 'stream' | 'background'>,
+  ): Promise<AsyncIterable<ResponseStreamEventType>> {
+    const body = {
+      ...params,
+      stream: true,
+      background: false,
+    };
+
+    const response = await this.api.axios({
+      method: 'post',
+      url: '/responses',
+      data: body,
+      headers: {
+        Accept: 'text/event-stream',
+      },
+      responseType: 'stream',
+    });
+
+    return parseSSEStream(response.data as IncomingMessage);
   }
 
   /**

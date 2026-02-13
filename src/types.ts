@@ -451,3 +451,33 @@ export type ResponseUsage = z.infer<typeof responseSchemas.ResponseUsage>;
 export type ResponseKnowledgeBase = z.infer<
   typeof responseSchemas.ResponseKnowledgeBase
 >;
+
+/**
+ * Represents an entity collection configuration for entity-backed knowledge
+ */
+export type EntityCollectionConfig = z.infer<
+  typeof responseSchemas.EntityCollectionConfig
+>;
+
+/**
+ * Represents the entity-backed knowledge configuration
+ */
+export type EntityBackedKnowledgeConfig = z.infer<
+  typeof responseSchemas.EntityBackedKnowledgeConfig
+>;
+
+// Re-export streaming event types and params from the response API wrapper
+export type {
+  CreateResponseParams,
+  ListResponsesParams,
+  ResponseCreatedEvent,
+  ResponseOutputItemAddedEvent,
+  ResponseContentPartAddedEvent,
+  ResponseOutputTextDeltaEvent,
+  ResponseOutputTextDoneEvent,
+  ResponseContentPartDoneEvent,
+  ResponseOutputItemDoneEvent,
+  ResponseCompletedEvent,
+  ResponseErrorEvent,
+  ResponseStreamEventType,
+} from './api/response.api';

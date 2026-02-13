@@ -1,6 +1,9 @@
 import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
 import { z } from 'zod';
 
+import { SearchFilter } from './common';
+import { SearchFilterCriteria } from './common';
+
 type Response = Partial<{
   id: string;
   object: 'response';
@@ -13,13 +16,14 @@ type Response = Partial<{
   error: ResponseError | null;
 }>;
 type CreateResponseRequest = {
-  model: 'nimbus-001';
+  model: string;
   input: string | Array<ResponseInputMessage>;
   instructions?: (string | null) | undefined;
   temperature?: number | undefined;
   knowledge_base: ResponseKnowledgeBase;
   include?: Array<'cloudglue_citations.media_descriptions'> | undefined;
   background?: boolean | undefined;
+  stream?: boolean | undefined;
 };
 type ResponseOutputMessage = Partial<{
   type: 'message';
@@ -31,20 +35,20 @@ type ResponseOutputContent = Partial<{
   text: string;
   annotations: Array<ResponseAnnotation>;
 }>;
-type ResponseAnnotation = Partial<{
+type ResponseAnnotation = {
   type: 'cloudglue_citation';
   collection_id: string;
   file_id: string;
-  segment_id: string;
+  segment_id?: string | undefined;
   start_time: number;
-  end_time: number;
-  context: string;
-  relevant_sources: Array<string>;
-  visual_scene_description: Array<string>;
-  scene_text: Array<string>;
-  speech: Array<string>;
-  audio_description: Array<string>;
-}>;
+  end_time?: number | undefined;
+  context?: string | undefined;
+  relevant_sources?: Array<string> | undefined;
+  visual_scene_description?: Array<string> | undefined;
+  scene_text?: Array<string> | undefined;
+  speech?: Array<string> | undefined;
+  audio_description?: Array<string> | undefined;
+};
 type ResponseUsage = Partial<{
   input_tokens: number;
   output_tokens: number;
@@ -65,12 +69,19 @@ type ResponseInputContent = {
   text: string;
 };
 type ResponseKnowledgeBase = {
+  type?: ('general_question_answering' | 'entity_backed_knowledge') | undefined;
   collections: Array<string>;
-  filter?:
-    | Partial<{
-        file_ids: Array<string>;
-      }>
-    | undefined;
+  filter?: SearchFilter | undefined;
+  entity_backed_knowledge_config?: EntityBackedKnowledgeConfig | undefined;
+};
+type EntityBackedKnowledgeConfig = {
+  entity_collections: Array<EntityCollectionConfig>;
+  description?: string | undefined;
+};
+type EntityCollectionConfig = {
+  name: string;
+  description: string;
+  collection_id: string;
 };
 type ResponseList = Partial<{
   object: 'list';
@@ -101,29 +112,45 @@ const ResponseInputMessage: z.ZodType<ResponseInputMessage> = z
   })
   .strict()
   .passthrough();
+const EntityCollectionConfig: z.ZodType<EntityCollectionConfig> = z
+  .object({
+    name: z.string(),
+    description: z.string(),
+    collection_id: z.string().uuid(),
+  })
+  .strict()
+  .passthrough();
+const EntityBackedKnowledgeConfig: z.ZodType<EntityBackedKnowledgeConfig> = z
+  .object({
+    entity_collections: z.array(EntityCollectionConfig).min(1),
+    description: z.string().max(2000).optional(),
+  })
+  .strict()
+  .passthrough();
 const ResponseKnowledgeBase: z.ZodType<ResponseKnowledgeBase> = z
   .object({
+    type: z
+      .enum(['general_question_answering', 'entity_backed_knowledge'])
+      .optional()
+      .default('general_question_answering'),
     collections: z.array(z.string().uuid()).min(1),
-    filter: z
-      .object({ file_ids: z.array(z.string().uuid()) })
-      .partial()
-      .strict()
-      .passthrough()
-      .optional(),
+    filter: SearchFilter.optional(),
+    entity_backed_knowledge_config: EntityBackedKnowledgeConfig.optional(),
   })
   .strict()
   .passthrough();
 const CreateResponseRequest: z.ZodType<CreateResponseRequest> = z
   .object({
-    model: z.literal('nimbus-001'),
+    model: z.string().min(1),
     input: z.union([z.string(), z.array(ResponseInputMessage)]),
     instructions: z.string().optional(),
-    temperature: z.number().gte(0).lte(2).optional().default(0.7),
+    temperature: z.number().gte(0).lte(2).optional(),
     knowledge_base: ResponseKnowledgeBase,
     include: z
       .array(z.literal('cloudglue_citations.media_descriptions'))
       .optional(),
     background: z.boolean().optional().default(false),
+    stream: z.boolean().optional().default(false),
   })
   .strict()
   .passthrough();
@@ -132,17 +159,16 @@ const ResponseAnnotation: z.ZodType<ResponseAnnotation> = z
     type: z.literal('cloudglue_citation'),
     collection_id: z.string().uuid(),
     file_id: z.string().uuid(),
-    segment_id: z.string().uuid(),
+    segment_id: z.string().uuid().optional(),
     start_time: z.number(),
-    end_time: z.number(),
-    context: z.string(),
-    relevant_sources: z.array(z.string()),
-    visual_scene_description: z.array(z.string()),
-    scene_text: z.array(z.string()),
-    speech: z.array(z.string()),
-    audio_description: z.array(z.string()),
+    end_time: z.number().optional(),
+    context: z.string().optional(),
+    relevant_sources: z.array(z.string()).optional(),
+    visual_scene_description: z.array(z.string()).optional(),
+    scene_text: z.array(z.string()).optional(),
+    speech: z.array(z.string()).optional(),
+    audio_description: z.array(z.string()).optional(),
   })
-  .partial()
   .strict()
   .passthrough();
 const ResponseOutputContent: z.ZodType<ResponseOutputContent> = z
@@ -229,6 +255,8 @@ const DeleteResponseResult = z
 export const schemas = {
   ResponseInputContent,
   ResponseInputMessage,
+  EntityCollectionConfig,
+  EntityBackedKnowledgeConfig,
   ResponseKnowledgeBase,
   CreateResponseRequest,
   ResponseAnnotation,

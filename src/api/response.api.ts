@@ -223,17 +223,18 @@ export class EnhancedResponseApi {
     };
 
     const baseURL = this.api.axios.defaults.baseURL;
-    const defaults = this.api.axios.defaults.headers;
     const url = `${baseURL}/responses`;
 
+    // Headers are set at the top level of defaults.headers by Object.assign in client.ts
+    const h = this.api.axios.defaults.headers as Record<string, any>;
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
-        Authorization: defaults.common?.['Authorization'] as string,
-        'x-sdk-client': defaults.common?.['x-sdk-client'] as string,
-        'x-sdk-version': defaults.common?.['x-sdk-version'] as string,
+        Authorization: h['Authorization'] as string,
+        'x-sdk-client': h['x-sdk-client'] as string,
+        'x-sdk-version': h['x-sdk-version'] as string,
       },
       body: JSON.stringify(body),
     });

@@ -1,5 +1,3 @@
-import { IncomingMessage } from 'http';
-import { StringDecoder } from 'string_decoder';
 import { ResponseApi } from '../../generated';
 import type { SearchFilter } from '../../generated/common';
 import { WaitForReadyOptions } from '../types';
@@ -157,31 +155,40 @@ function* processLines(
 }
 
 /**
- * Parse an SSE stream from an IncomingMessage into an async iterable of typed events.
- * Uses StringDecoder to correctly handle multi-byte UTF-8 characters split across chunks.
+ * Parse an SSE stream into an async iterable of typed events.
+ * Uses the web-standard ReadableStream and TextDecoder APIs for cross-environment compatibility
+ * (works in both Node.js 18+ and modern browsers).
  */
 async function* parseSSEStream(
-  stream: IncomingMessage,
+  stream: ReadableStream<Uint8Array>,
 ): AsyncGenerator<ResponseStreamEventType> {
-  const decoder = new StringDecoder('utf-8');
+  const decoder = new TextDecoder('utf-8');
   const buffer = { value: '' };
+  const reader = stream.getReader();
 
-  for await (const chunk of stream) {
-    buffer.value += typeof chunk === 'string' ? chunk : decoder.write(chunk);
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    for (const event of processLines(buffer)) {
-      if (event === 'DONE') return;
-      yield event;
+      buffer.value += decoder.decode(value, { stream: true });
+
+      for (const event of processLines(buffer)) {
+        if (event === 'DONE') return;
+        yield event;
+      }
     }
-  }
 
-  // Flush any remaining bytes from the decoder and process trailing lines
-  buffer.value += decoder.end();
-  if (buffer.value) {
-    for (const event of processLines(buffer)) {
-      if (event === 'DONE') return;
-      yield event;
+    // Flush any remaining bytes from the decoder and process trailing lines
+    buffer.value += decoder.decode();
+    if (buffer.value) {
+      for (const event of processLines(buffer)) {
+        if (event === 'DONE') return;
+        yield event;
+      }
     }
+  } finally {
+    reader.releaseLock();
   }
 }
 
@@ -215,17 +222,47 @@ export class EnhancedResponseApi {
       background: false,
     };
 
-    const response = await this.api.axios({
-      method: 'post',
-      url: '/responses',
-      data: body,
+    const baseURL = this.api.axios.defaults.baseURL;
+    const defaults = this.api.axios.defaults.headers;
+    const url = `${baseURL}/responses`;
+
+    const response = await fetch(url, {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         Accept: 'text/event-stream',
+        Authorization: defaults.common?.['Authorization'] as string,
+        'x-sdk-client': defaults.common?.['x-sdk-client'] as string,
+        'x-sdk-version': defaults.common?.['x-sdk-version'] as string,
       },
-      responseType: 'stream',
+      body: JSON.stringify(body),
     });
 
-    return parseSSEStream(response.data as IncomingMessage);
+    if (!response.ok) {
+      let errorMessage = `Request failed with status ${response.status}`;
+      let responseData: any;
+      try {
+        responseData = await response.json();
+        if (responseData?.error) {
+          errorMessage = responseData.error;
+        }
+      } catch {
+        // Could not parse error body
+      }
+      throw new CloudGlueError(
+        errorMessage,
+        response.status,
+        JSON.stringify(body),
+        Object.fromEntries(response.headers.entries()),
+        responseData,
+      );
+    }
+
+    if (!response.body) {
+      throw new CloudGlueError('Response body is empty — streaming not supported in this environment');
+    }
+
+    return parseSSEStream(response.body);
   }
 
   /**

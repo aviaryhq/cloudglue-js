@@ -79,8 +79,8 @@ type EntityBackedKnowledgeConfig = {
   description?: string | undefined;
 };
 type EntityCollectionConfig = {
-  name: string;
-  description: string;
+  name?: string | undefined;
+  description?: string | undefined;
   collection_id: string;
 };
 type ResponseList = Partial<{
@@ -114,8 +114,8 @@ const ResponseInputMessage: z.ZodType<ResponseInputMessage> = z
   .passthrough();
 const EntityCollectionConfig: z.ZodType<EntityCollectionConfig> = z
   .object({
-    name: z.string(),
-    description: z.string(),
+    name: z.string().optional(),
+    description: z.string().optional(),
     collection_id: z.string().uuid(),
   })
   .strict()
